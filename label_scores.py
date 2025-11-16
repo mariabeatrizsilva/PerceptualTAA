@@ -5,8 +5,8 @@ import os
 # --- Configuration ---
 # Define the quality labels globally
 QLABELS = ['very annoying', 'annoying', 'slightly annoying', 'perceptible but not annoying', 'imperceptible']
-INPUT_JSON_PATH = 'outputs/scores/vary_alpha_weight_scores.json'
-OUTPUT_JSON_PATH = 'outputs/scores/vary_alpha_weight_scores_labeled.json'
+INPUT_JSON_PATH = 'outputs/scores/vary_num_samples_scores.json'
+OUTPUT_JSON_PATH = 'outputs/scores/vary_num_samples_scores_labeled.json'
 
 # --- Helper Function ---
 def get_quality_label(score):
