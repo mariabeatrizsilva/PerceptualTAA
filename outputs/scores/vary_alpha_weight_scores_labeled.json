@@ -1,0 +1,42 @@
+{
+    "vary_alpha_weight_0.01": {
+        "score": 53.711891174316406,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_0.01_errmap.mp4",
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.02": {
+        "score": 54.29848098754883,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_0.02_errmap.mp4",
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.04": {
+        "score": 55.30088424682617,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_0.04_errmap.mp4",
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.06": {
+        "score": 55.99948501586914,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_0.06_errmap.mp4",
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.1": {
+        "score": 56.90017318725586,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_0.1_errmap.mp4",
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.2": {
+        "score": 57.948143005371094,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_0.2_errmap.mp4",
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.5": {
+        "score": 58.82521057128906,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_0.5_errmap.mp4",
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_1.0": {
+        "score": 58.95653533935547,
+        "errmap_path_rel": "outputs/err_maps/vary_alpha_weight_1.0_errmap.mp4",
+        "label": "slightly annoying"
+    }
+}

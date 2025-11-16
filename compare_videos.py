@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import numpy as np
 import json # Used for saving results to a JSON file
 import glob # Used for finding files easily
@@ -19,6 +20,15 @@ CGVQM_CONFIG = {
     'patch_pool': 'mean'     # Choose from {'max', 'mean'}
 }
 
+import torch
+
+if not torch.cuda.is_available():
+    print("!!! WARNING: CUDA is NOT available. Running on CPU.")
+    CGVQM_CONFIG['device'] = 'cpu' # Force CPU if CUDA isn't detected
+else:
+    print(f"CUDA is available. Using device: {CGVQM_CONFIG['device']}")
+    print(f"Current GPU: {torch.cuda.get_device_name(0)}") # Prints the name of the GPU
+    
 # 4. Import the main functions/classes
 from cgvqm.cgvqm import run_cgvqm, visualize_emap, CGVQM_TYPE
 
@@ -123,7 +133,9 @@ def batch_process_cgvqm(subfolder_name):
     
 if __name__ == '__main__':    
     folders_to_process = [
-        'vary_alpha_weight',  # Your current folder
+        'vary_filter_size',
+        'vary_num_samples',
+        'vary_hist_percent'  # Your current folder
         # 'another_folder_name', # Uncomment and add more folders when ready
         # 'final_runs',
     ]
