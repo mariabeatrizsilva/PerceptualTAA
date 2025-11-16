@@ -6,9 +6,6 @@ import glob # Used for finding files easily
 from enum import Enum
 
 REF_VID_PATH_REL = 'data/16SSAA.mp4'
-DIST_VID_DIR_REL = 'data/vary_alpha_weight'
-ERR_MAP_DIR_REL = 'outputs/err_maps'
-ERR_SCORES_PATH_REL = 'outputs/vary_alpha_weight_scores.json'
 
 # --- Setup for CGVQM Import ---
 project_root = os.path.dirname(os.path.abspath(__file__))
@@ -21,8 +18,6 @@ CGVQM_CONFIG = {
     'patch_scale': 4,        # Increase this value if low on available GPU memory
     'patch_pool': 'mean'     # Choose from {'max', 'mean'}
 }
-
-qlabels = ['very annoying', 'annoying', 'slightly annoying', 'perceptible but not annoying', 'imperceptible']
 
 # 4. Import the main functions/classes
 from cgvqm.cgvqm import run_cgvqm, visualize_emap, CGVQM_TYPE
@@ -54,46 +49,86 @@ def run_single_comparison(dist_vid_path, ref_vid_path, errmap_output_path, confi
     
     return score
     
+def batch_process_cgvqm(subfolder_name):
+    """
+    Processes all videos within a specific subfolder against the reference video.
 
-if __name__ == '__main__':
-    # You might need to add a try-except block here to catch errors related 
-    # to missing files, weights, or device setup (e.g., CUDA errors).
-    ref_video_rel = REF_VID_PATH_REL
-    dist_video_rel = os.path.join(DIST_VID_DIR_REL, 'vary_alpha_weight_0.1.mp4') # Assuming this test video exists
+    Args:
+        subfolder_name (str): The name of the folder inside 'data/' 
+                              (e.g., 'vary_alpha_weight').
+    """
     
-    # Resolve absolute paths
-    ref_vid_path = os.path.join(project_root, ref_video_rel)
-    dist_vid_path = os.path.join(project_root, dist_video_rel)
+    print(f"\n--- Starting Batch Process for Folder: {subfolder_name} ---")
     
-    # Define a specific output path for the test error map
-    test_errmap_dir = os.path.join(project_root, 'outputs/test_output')
-    os.makedirs(test_errmap_dir, exist_ok=True)
-    test_errmap_path = os.path.join(test_errmap_dir, 'single_test_err_map.mp4')
+    # Path where distorted videos are located (e.g., /PTAA/data/vary_alpha_weight)
+    distorted_vid_path = os.path.join(project_root, 'data', subfolder_name)
+    
+    # Path for saving error maps (e.g., /PTAA/outputs/err_maps)
+    err_map_root = os.path.join(project_root, 'outputs/err_maps')
+    
+    # Path for saving the score JSON file (e.g., /PTAA/outputs/scores/vary_alpha_weight_scores.json)
+    err_scores_root = os.path.join(project_root, 'outputs/scores')
+    err_scores_path = os.path.join(err_scores_root, f'{subfolder_name}_scores.json')
+    
+    # Static Reference Video Path
+    ref_vid_path = os.path.join(project_root, REF_VID_PATH_REL)
 
-    if not os.path.exists(dist_vid_path):
-        print(f"FATAL ERROR: Distorted video not found at: {dist_vid_path}")
-        sys.exit(1)
-    if not os.path.exists(ref_vid_path):
-        print(f"FATAL ERROR: Reference video not found at: {ref_vid_path}")
-        sys.exit(1)
-    try:
-        print(f"Reference: {os.path.basename(ref_vid_path)}")
-        print(f"Distorted: {os.path.basename(dist_vid_path)}")
+    # Ensure output directories exist
+    os.makedirs(err_map_root, exist_ok=True)
+    os.makedirs(err_scores_root, exist_ok=True)
+
+    distorted_videos = sorted(glob.glob(os.path.join(distorted_vid_path, '*.mp4')))
+    
+    if not distorted_videos:
+        print(f"!!! Error: No MP4 files found in {distorted_vid_path}. Skipping.")
+        return
+
+    all_results = {}
+    total_videos = len(distorted_videos)
+    print(f"Found {total_videos} videos to process.")
+    
+    for i, dist_vid_path in enumerate(distorted_videos):
+        video_file = os.path.basename(dist_vid_path)        # (e.g., vary_alpha_weight_0.1.mp4)
+        name_only = os.path.splitext(video_file)[0]         # remove extension
+        errmap_output_path = os.path.join(err_map_root, f'{name_only}_errmap.mp4')
         
-        # Call the dedicated function with the resolved paths and global config
-        final_score = run_single_comparison(
-            dist_vid_path=dist_vid_path, 
-            ref_vid_path=ref_vid_path, 
-            errmap_output_path=test_errmap_path, 
-            config=CGVQM_CONFIG
-        )
+        print(f"\nProcessing {i+1}/{total_videos}: {video_file}")
         
-        print("\n--- Test Results ---")
-        print(f"✅ CGVQM Score: {final_score:.4f}")
-        print(f"Error Map saved to: {os.path.relpath(test_errmap_path, project_root)}")
+        try:
+            score = run_single_comparison(
+                dist_vid_path=dist_vid_path, 
+                ref_vid_path=ref_vid_path, 
+                errmap_output_path=errmap_output_path, 
+                config=CGVQM_CONFIG
+            )
+            
+            # Save score and path to results dictionary
+            all_results[name_only] = {
+                'score': score,
+                'errmap_path_rel': os.path.relpath(errmap_output_path, project_root)
+            }
+            print(f'   ✅ Score: {score:.4f}')
+
+        except Exception as e:
+            print(f"   !!! Failed to process {video_file}: {e}")
+            all_results[name_only] = {'error': str(e)}
+
+
+    # Put all scores in one file for the whole folder
+    with open(err_scores_path, 'w') as f:
+        json.dump(all_results, f, indent=4)
         
-    except Exception as e:
-        print(f"\n❌ Test Failed: {e}")
-        print("Please ensure your videos and CUDA/PyTorch setup are correct.")
-        
-    print("------------------------------------------")
+    print(f"\nCompleted processing for {subfolder_name}.")
+    print(f"Scores saved to: {os.path.relpath(err_scores_path, project_root)}")
+    
+if __name__ == '__main__':    
+    folders_to_process = [
+        'vary_alpha_weight',  # Your current folder
+        # 'another_folder_name', # Uncomment and add more folders when ready
+        # 'final_runs',
+    ]
+
+    for folder_name in folders_to_process:
+        batch_process_cgvqm(folder_name)
+    
+    print("\n\n--- ALL BATCH PROCESSING COMPLETE ---")
