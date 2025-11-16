@@ -112,6 +112,8 @@ def batch_process_cgvqm(subfolder_name):
                 config=CGVQM_CONFIG
             )
             
+            time.sleep(7.5)
+            
             # Save score and path to results dictionary
             all_results[name_only] = {
                 'score': score,
