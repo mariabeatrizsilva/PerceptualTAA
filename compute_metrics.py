@@ -31,7 +31,7 @@ class Metric(Enum):
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(project_root, 'src'))
 sys.path.append(os.path.join(project_root, 'src', 'cgvqm'))
-# from cgvqm.cgvqm import run_cgvqm, visualize_emap, CGVQM_TYPE
+from cgvqm.cgvqm import run_cgvqm, visualize_emap, CGVQM_TYPE
 
 CGVQM_CONFIG = {
     'cgvqm_type': 'CGVQM_2', # Will be converted to CGVQM_TYPE.CGVQM_2
@@ -46,21 +46,108 @@ def get_paths(folder_name: str, metric: Metric):
     if (metric == Metric.CGVQM):
         video_path = os.path.join(project_root, BASE_MP4, folder_name)
         output_scores_path = os.path.join(project_root, 'outputs/scores_cgvqm', score_file_name)
-        err_map_path = os.path.join(project_root, 'outputs/err_map_cgvqm', score_file_name)
     else:
         video_path = os.path.join(project_root, BASE_FRAMES, folder_name)
         output_scores_path = os.path.join(project_root, 'outputs/scores_cvvdp',score_file_name)
-        err_map_path = None
-    return video_path, output_scores_path, err_map_path
+    return video_path, output_scores_path
 
-def compute_metric_cgvqm():
-    return 6
+def compute_score_cgvqm(ref_path: str, dist_path: str, config: dict, 
+                         err_map_path: str) -> float:
+    """
+    Compute CGVQM score for a single video pair.
+    
+    Args:
+        ref_path: Path to reference video
+        dist_path: Path to distorted video
+        config: CGVQM configuration dict
+        err_map_path: Optional path to save error map visualization
+    
+    Returns:
+        Quality score as float
+    """
+    
+    # Map string config to the Enum type required by the library
+    cgvqm_type_enum = getattr(CGVQM_TYPE, config['cgvqm_type'])
+    
+    # Run CGVQM
+    q, emap = run_cgvqm(
+        dist_path,      # distorted video
+        ref_path,       # reference video
+        cgvqm_type=cgvqm_type_enum, 
+        device=config['device'], 
+        patch_pool=config['patch_pool'], 
+        patch_scale=config['patch_scale']
+    )
+    
+    score = q.item()
+    
+    # Save the error map visualization if path provided
+    if err_map_path:
+        # Create error map for this specific video
+        video_name = os.path.splitext(os.path.basename(dist_path))[0]
+        err_map_file = os.path.join(err_map_path, f'{video_name}_errmap.mp4')
+        
+        os.makedirs(err_map_path, exist_ok=True)
+        visualize_emap(emap, dist_path, 100, err_map_file)
+        print(f"    Error map saved to: {err_map_file}")
+    
+    return score
 
-def compute_metric_cvvdp():
-    return 5
+
+def compute_score_cvvdp(ref_path: str, dist_path: str) -> float:
+    """
+    Compute ColorVideoVDP score for a frame sequence pair.
+    
+    Args:
+        ref_pattern: Path pattern to reference frames (e.g., 'path/to/ref/%04d.png')
+        dist_pattern: Path pattern to distorted frames (e.g., 'path/to/dist/%04d.png')
+    
+    Returns:
+        Quality score as float
+    """
+    # CVVDP parameters
+    CVVDP_EXECUTABLE = 'cvvdp'
+    DISPLAY_MODE = 'standard_4k'
+    FPS_VALUE = 30
+    
+    # Construct the command
+    command = [
+        CVVDP_EXECUTABLE,
+        '--test', dist_path,
+        '--ref', ref_path,
+        '--display', DISPLAY_MODE,
+        '--fps', str(FPS_VALUE)
+    ]
+    
+    try:
+        # Execute the command
+        result = subprocess.run(
+            command,
+            check=True,
+            text=True,
+            capture_output=True,
+            shell=False
+        )
+        
+        # Extract the score from output using regex
+        score_pattern = re.compile(r"cvvdp=(\d+\.?\d*)")
+        match = score_pattern.search(result.stdout)
+        
+        if match:
+            score = float(match.group(1))
+            return score
+        else:
+            raise ValueError("Could not extract score from CVVDP output")
+            
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"CVVDP command failed with exit code {e.returncode}: {e.stderr}")
+    
+    except FileNotFoundError:
+        raise RuntimeError(f"CVVDP executable '{CVVDP_EXECUTABLE}' not found. "
+                         "Ensure cvvdp is installed and in PATH.")
 
 def compute_score_single(test_name: str, folder_path: str, ref_path: str, 
-                        metric: Metric, err_map_path = None) -> float:
+                        metric: Metric) -> float:
     """
     Compute metric for a single video/frame sequence.
     
@@ -79,8 +166,14 @@ def compute_score_single(test_name: str, folder_path: str, ref_path: str,
         
         if not os.path.exists(dist_path):
             raise FileNotFoundError(f"Video not found: {dist_path}")
-        
-        score = compute_metric_cgvqm()
+        err_map_name = f"{test_name}_err_map.mp4"
+        err_map_path = os.path.join(project_root, 'outputs/err_maps', err_map_name)
+        score = compute_score_cgvqm(
+            ref_path=ref_path,
+            dist_path=dist_path,
+            config=CGVQM_CONFIG,
+            err_map_path=err_map_path
+        )
         
     else:  # CVVDP
         dist_folder = os.path.join(folder_path, test_name)
@@ -88,8 +181,11 @@ def compute_score_single(test_name: str, folder_path: str, ref_path: str,
         
         if not os.path.exists(dist_folder):
             raise FileNotFoundError(f"Frames folder not found: {dist_folder}")
-        
-        score = compute_metric_cvvdp()
+                
+        score = compute_score_cvvdp(
+            ref_path=ref_path,
+            dist_path=dist_path
+        )
     
     return score
 
@@ -100,22 +196,20 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     For CGVQM: Processes .mp4 files directly in folder_path
     For CVVDP: Processes PNG sequences in subfolders of folder_path
     """
-    folder_path, output_scores_path, err_map_path = get_paths(
+    folder_path, output_scores_path = get_paths(
         folder_name=folder_name, metric=metric
     )
     
     # Ensure output directories exist
     os.makedirs(os.path.dirname(output_scores_path), exist_ok=True)
-    if err_map_path:
-        os.makedirs(os.path.dirname(err_map_path), exist_ok=True)
     
     results = {}
     
     # Set up reference path
     if metric == Metric.CGVQM:
         ref_path = os.path.join(folder_path, f"{REF_NAME}.mp4")
-        # if not os.path.exists(ref_path):
-        #     raise FileNotFoundError(f"Reference video not found: {ref_path}")
+        if not os.path.exists(ref_path):
+            raise FileNotFoundError(f"Reference video not found: {ref_path}")
 
         # Get all mp4 files except reference
         video_files = glob.glob(os.path.join(folder_path, "*.mp4"))
@@ -128,8 +222,8 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     else:  # CVVDP
         ref_path = os.path.join(folder_path, REF_NAME, FRAMES_SUFFIX)
         ref_folder = os.path.join(folder_path, REF_NAME)
-        # if not os.path.exists(ref_folder):
-        #     raise FileNotFoundError(f"Reference video not found: {ref_path}")
+        if not os.path.exists(ref_folder):
+            raise FileNotFoundError(f"Reference video not found: {ref_path}")
 
         # Get all subfolders except reference
         test_names = [
