@@ -2,6 +2,7 @@
 import os
 import json
 from enum import Enum
+import argparse
 
 
 ## Config for CGVQM
@@ -11,7 +12,7 @@ import numpy as np
 import glob # Used for finding files easily
 
 
-## Convig for ColorVideoVDP (CVVDP)S
+## Config for ColorVideoVDP (CVVDP)
 import subprocess
 import shlex
 import re 
@@ -27,7 +28,7 @@ class Metric(Enum):
     CVVDP = "ColorVideoVDP"
     CGVQM = "CGVQM"
 
-# Needed for CGVQM 
+# CGVQM Setup
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(project_root, 'src'))
 sys.path.append(os.path.join(project_root, 'src', 'cgvqm'))
@@ -40,18 +41,23 @@ CGVQM_CONFIG = {
     'patch_pool': 'mean'     # Choose from {'max', 'mean'}
 }
 
+# CVVDP Setup
+CVVDP_EXECUTABLE = 'cvvdp'
+DISPLAY_MODE = 'standard_4k'
+FPS_VALUE = 30
+
 def get_paths(folder_name: str, metric: Metric):
-    """ returns path for folder containing videos (or frames) and error map"""
+    """Returns path for folder containing videos (or frames) and output scores path"""
     score_file_name = f"{folder_name}_scores.json"
-    if (metric == Metric.CGVQM):
+    if metric == Metric.CGVQM:
         video_path = os.path.join(project_root, BASE_MP4, folder_name)
         output_scores_path = os.path.join(project_root, 'outputs/scores_cgvqm', score_file_name)
     else:
         video_path = os.path.join(project_root, BASE_FRAMES, folder_name)
-        output_scores_path = os.path.join(project_root, 'outputs/scores_cvvdp',score_file_name)
+        output_scores_path = os.path.join(project_root, 'outputs/scores_cvvdp', score_file_name)
     return video_path, output_scores_path
 
-def compute_score_cgvqm(ref_path: str, dist_path: str, config: dict, 
+def compute_metric_cgvqm(ref_path: str, dist_path: str, config: dict, 
                          err_map_path: str) -> float:
     """
     Compute CGVQM score for a single video pair.
@@ -60,7 +66,7 @@ def compute_score_cgvqm(ref_path: str, dist_path: str, config: dict,
         ref_path: Path to reference video
         dist_path: Path to distorted video
         config: CGVQM configuration dict
-        err_map_path: Optional path to save error map visualization
+        err_map_path: Full path (including filename) to save error map visualization
     
     Returns:
         Quality score as float
@@ -81,34 +87,25 @@ def compute_score_cgvqm(ref_path: str, dist_path: str, config: dict,
     
     score = q.item()
     
-    # Save the error map visualization if path provided
-    if err_map_path:
-        # Create error map for this specific video
-        video_name = os.path.splitext(os.path.basename(dist_path))[0]
-        err_map_file = os.path.join(err_map_path, f'{video_name}_errmap.mp4')
-        
-        os.makedirs(err_map_path, exist_ok=True)
-        visualize_emap(emap, dist_path, 100, err_map_file)
-        print(f"    Error map saved to: {err_map_file}")
+    # Save the error map visualization
+    os.makedirs(os.path.dirname(err_map_path), exist_ok=True)
+    visualize_emap(emap, dist_path, 100, err_map_path)
+    print(f"    Error map saved to: {err_map_path}")
     
     return score
 
 
-def compute_score_cvvdp(ref_path: str, dist_path: str) -> float:
+def compute_metric_cvvdp(ref_path: str, dist_path: str) -> float:
     """
     Compute ColorVideoVDP score for a frame sequence pair.
     
     Args:
-        ref_pattern: Path pattern to reference frames (e.g., 'path/to/ref/%04d.png')
-        dist_pattern: Path pattern to distorted frames (e.g., 'path/to/dist/%04d.png')
+        ref_path: Path pattern to reference frames
+        dist_path: Path pattern to distorted frames
     
     Returns:
         Quality score as float
     """
-    # CVVDP parameters
-    CVVDP_EXECUTABLE = 'cvvdp'
-    DISPLAY_MODE = 'standard_4k'
-    FPS_VALUE = 30
     
     # Construct the command
     command = [
@@ -156,7 +153,6 @@ def compute_score_single(test_name: str, folder_path: str, ref_path: str,
         folder_path: Base folder containing videos/frames
         ref_path: Path to reference video or frame pattern
         metric: Which metric to compute
-        err_map_path: Optional path for error map output (CGVQM only)
     
     Returns:
         Quality score as float
@@ -166,9 +162,12 @@ def compute_score_single(test_name: str, folder_path: str, ref_path: str,
         
         if not os.path.exists(dist_path):
             raise FileNotFoundError(f"Video not found: {dist_path}")
-        err_map_name = f"{test_name}_err_map.mp4"
+        
+        # Create error map path for this video
+        err_map_name = f"{test_name}_errmap.mp4"
         err_map_path = os.path.join(project_root, 'outputs/err_maps', err_map_name)
-        score = compute_score_cgvqm(
+        
+        score = compute_metric_cgvqm(
             ref_path=ref_path,
             dist_path=dist_path,
             config=CGVQM_CONFIG,
@@ -182,7 +181,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_path: str,
         if not os.path.exists(dist_folder):
             raise FileNotFoundError(f"Frames folder not found: {dist_folder}")
                 
-        score = compute_score_cvvdp(
+        score = compute_metric_cvvdp(
             ref_path=ref_path,
             dist_path=dist_path
         )
@@ -223,7 +222,7 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
         ref_path = os.path.join(folder_path, REF_NAME, FRAMES_SUFFIX)
         ref_folder = os.path.join(folder_path, REF_NAME)
         if not os.path.exists(ref_folder):
-            raise FileNotFoundError(f"Reference video not found: {ref_path}")
+            raise FileNotFoundError(f"Reference frames folder not found: {ref_folder}")
 
         # Get all subfolders except reference
         test_names = [
@@ -243,8 +242,7 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
                 test_name=test_name,
                 folder_path=folder_path,
                 ref_path=ref_path,
-                metric=metric,
-                err_map_path=err_map_path
+                metric=metric
             )
             
             results[test_name] = score
@@ -272,6 +270,63 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     return results
 
 
-if __name__ == '__main__':    
-    folder_name = "vary_alpha_weight"
-    compute_score_folder(folder_name=folder_name)
+def main():
+    """Main function to parse arguments and run metric computation."""
+    parser = argparse.ArgumentParser(
+        description='Compute video quality metrics (CGVQM or CVVDP) for video folders.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Compute CGVQM for a single folder
+  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight
+  
+  # Compute CVVDP for multiple folders
+  python compute_metrics.py --metric CVVDP --folders vary_filter_size vary_num_samples
+  
+  # Use short flags
+  python compute_metrics.py -m CGVQM -f vary_alpha_weight vary_hist_percent
+        """
+    )
+    
+    parser.add_argument(
+        '--metric', '-m',
+        type=str,
+        required=True,
+        choices=['CGVQM', 'CVVDP'],
+        help='Video quality metric to compute (CGVQM or CVVDP)'
+    )
+    
+    parser.add_argument(
+        '--folders', '-f',
+        type=str,
+        nargs='+',
+        required=True,
+        help='Folder name(s) to process. Can specify multiple folders separated by spaces.'
+    )
+    
+    args = parser.parse_args()
+    
+    # Convert string to Metric enum
+    metric = Metric.CGVQM if args.metric == 'CGVQM' else Metric.CVVDP
+    
+    print(f"\n{'='*60}")
+    print(f"Video Quality Metric Computation")
+    print(f"Metric: {metric.value}")
+    print(f"Folders: {', '.join(args.folders)}")
+    print(f"{'='*60}\n")
+    
+    # Process each folder
+    for folder_name in args.folders:
+        try:
+            compute_score_folder(folder_name=folder_name, metric=metric)
+        except Exception as e:
+            print(f"\n Failed to process folder '{folder_name}': {e}\n")
+            continue
+    
+    print(f"\n{'='*60}")
+    print("ALL PROCESSING COMPLETE")
+    print(f"{'='*60}\n")
+
+
+if __name__ == '__main__':
+    main()
