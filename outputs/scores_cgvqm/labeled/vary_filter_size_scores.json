@@ -1,0 +1,30 @@
+{
+    "vary_filter_size_0.1": {
+        "score": 55.29731750488281,
+        "label": "slightly annoying"
+    },
+    "vary_filter_size_0.25": {
+        "score": 55.29301834106445,
+        "label": "slightly annoying"
+    },
+    "vary_filter_size_0.5": {
+        "score": 55.30134201049805,
+        "label": "slightly annoying"
+    },
+    "vary_filter_size_0.7": {
+        "score": 55.29490280151367,
+        "label": "slightly annoying"
+    },
+    "vary_filter_size_0.9": {
+        "score": 55.299556732177734,
+        "label": "slightly annoying"
+    },
+    "vary_filter_size_0.95": {
+        "score": 55.29866027832031,
+        "label": "slightly annoying"
+    },
+    "vary_filter_size_1.0": {
+        "score": 55.293819427490234,
+        "label": "slightly annoying"
+    }
+}
