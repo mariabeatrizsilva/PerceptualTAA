@@ -246,7 +246,7 @@ def plot_render_scores_from_dict(
     
     return df
 
-def compare_render_experiments(data_sets: Dict[str, Dict[str, float]], score_metric: str = "CGVQM Score"):
+def compare_render_experiments(data_sets: Dict[str, Dict[str, float]], score_metric: str = "CGVQM Score", plot = False):
     """
     Loads multiple experiment data sets (dictionaries) and plots data on a single graph.
     
@@ -254,7 +254,8 @@ def compare_render_experiments(data_sets: Dict[str, Dict[str, float]], score_met
         data_sets: Dictionary where keys are labels (e.g., 'Alpha Test') 
                    and values are the data dictionaries (e.g., DATASET).
     """
-    fig, ax = plt.subplots(figsize=(12, 7))
+    if plot:
+        fig, ax = plt.subplots(figsize=(12, 7))
     all_data = []
 
     for label, data_dict in data_sets.items():
@@ -267,29 +268,28 @@ def compare_render_experiments(data_sets: Dict[str, Dict[str, float]], score_met
         df['experiment_type'] = label
         
         # Plotting against the numerical value
-        ax.plot(
-            df['num_val'], 
-            df['score'], 
-            marker='o', 
-            linestyle='-', 
-            label=f'{label}'
-        )
+        if plot:
+            ax.plot(
+                df['num_val'], 
+                df['score'], 
+                marker='o', 
+                linestyle='-', 
+                label=f'{label}'
+            )
         
         all_data.append(df)
         print(f"✅ Loaded and sorted data for: {label}")
 
     # --- Final Plot Customization ---
-    ax.set_title(f'Comparison of {score_metric} vs. Varied Parameters', fontsize=16)
-    ax.set_xlabel('Parameter Value', fontsize=14)
-    ax.set_ylabel(score_metric, fontsize=14)
-    
-    # Optional: Use log scale if values span multiple orders of magnitude
-    # ax.set_xscale('log') 
-    
-    ax.legend(title='Experiment Type')
-    ax.grid(True, linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    plt.show()
+    if plot:
+        ax.set_title(f'Comparison of {score_metric} vs. Varied Parameters', fontsize=16)
+        ax.set_xlabel('Parameter Value', fontsize=14)
+        ax.set_ylabel(score_metric, fontsize=14)
+        ax.set_xscale('log') 
+        ax.legend(title='Experiment Type')
+        ax.grid(True, linestyle='--', alpha=0.6)
+        plt.tight_layout()
+        plt.show()
 
     if all_data:
         return pd.concat(all_data, ignore_index=True)
