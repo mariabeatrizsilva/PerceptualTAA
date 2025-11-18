@@ -220,9 +220,9 @@ def get_paths(folder_name: str, metric: Metric):
     frames_path = os.path.join(project_root, BASE_FRAMES, folder_name)
     
     if metric == Metric.CGVQM:
-        output_scores_path = os.path.join(project_root, 'outputs/scores_cgvqm', score_file_name)
+        output_scores_path = os.path.join(project_root, 'outputs/scores_cgvqm_frames', score_file_name)
     else:
-        output_scores_path = os.path.join(project_root, 'outputs/scores_cvvdp', score_file_name)
+        output_scores_path = os.path.join(project_root, 'outputs/scores_cvvdp_new', score_file_name)
     
     return frames_path, output_scores_path
 
@@ -345,7 +345,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         
         # Create error map path for this video
         err_map_name = f"{test_name}_errmap.mp4"
-        err_map_path = os.path.join(project_root, 'outputs/err_maps', err_map_name)
+        err_map_path = os.path.join(project_root, 'outputs/err_maps_frames', err_map_name)
         
         # Optional: if you still have MP4s and want to use them for visualization
         dist_video_path = os.path.join(project_root, BASE_MP4, folder_path.split('/')[-1], f"{test_name}.mp4")
