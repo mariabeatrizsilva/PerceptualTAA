@@ -21,8 +21,6 @@ REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
 BASE_FRAMES = 'data/frames/'
 FRAMES_SUFFIX = '%04d.png'
-ref_path_cvvdp = '/data/frames/16SSAA'
-ref_path_cgvqm = '/data/16SSAA.mp4'
 
 
 class Metric(Enum):
@@ -47,6 +45,12 @@ CGVQM_CONFIG = {
 CVVDP_EXECUTABLE = 'cvvdp'
 DISPLAY_MODE = 'standard_4k'
 FPS_VALUE = 30
+
+def get_reference_paths():
+    """Returns absolute paths to reference video and frames."""
+    ref_video_path = os.path.join(project_root, BASE_MP4, f'{REF_NAME}.mp4')
+    ref_frames_path = os.path.join(project_root, BASE_FRAMES, REF_NAME, FRAMES_SUFFIX)
+    return ref_video_path, ref_frames_path
 
 def get_paths(folder_name: str, metric: Metric):
     """Returns path for folder containing videos (or frames) and output scores path"""
@@ -206,9 +210,12 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     
     results = {}
     
-    # Set up reference path
+    # Get reference paths
+    ref_video_path, ref_frames_path = get_reference_paths()
+    
+    # Set up reference path and get test names based on metric
     if metric == Metric.CGVQM:
-        ref_path = ref_path_cgvqm
+        ref_path = ref_video_path
         if not os.path.exists(ref_path):
             raise FileNotFoundError(f"Reference video not found: {ref_path}")
 
@@ -221,10 +228,10 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
         ]
         
     else:  # CVVDP
-        ref_path = ref_path_cgvqm
-        # ref_folder = os.path.join(folder_path, REF_NAME)
-        # if not os.path.exists(ref_folder):
-        #     raise FileNotFoundError(f"Reference frames folder not found: {ref_folder}")
+        ref_path = ref_frames_path
+        ref_folder = os.path.join(project_root, BASE_FRAMES, REF_NAME)
+        if not os.path.exists(ref_folder):
+            raise FileNotFoundError(f"Reference frames folder not found: {ref_folder}")
 
         # Get all subfolders except reference
         test_names = [
@@ -234,6 +241,7 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     
     print(f"Processing {len(test_names)} items with {metric.value}...")
     print(f"Reference: {REF_NAME}")
+    print(f"Reference path: {ref_path}")
     
     # Process each test
     for test_name in sorted(test_names):
