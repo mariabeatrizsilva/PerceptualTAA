@@ -1,26 +1,10 @@
 {
-    "vary_alpha_weight_0.02": {
-        "score": 8.444
-    },
-    "vary_alpha_weight_0.2": {
-        "score": 8.7638
-    },
-    "vary_alpha_weight_0.04": {
-        "score": 8.5378
-    },
-    "vary_alpha_weight_0.5": {
-        "score": 8.9488
-    },
-    "vary_alpha_weight_0.06": {
-        "score": 8.5906
-    },
-    "vary_alpha_weight_0.1": {
-        "score": 8.6582
-    },
-    "vary_alpha_weight_1.0": {
-        "score": 9.0798
-    },
-    "vary_alpha_weight_0.01": {
-        "score": 8.3546
-    }
+    "vary_alpha_weight_0.02": 8.444,
+    "vary_alpha_weight_0.2": 8.7638,
+    "vary_alpha_weight_0.04": 8.5378,
+    "vary_alpha_weight_0.5": 8.9488,
+    "vary_alpha_weight_0.06": 5906,
+    "vary_alpha_weight_0.1": 8.6582,
+    "vary_alpha_weight_1.0": 9.0798,
+    "vary_alpha_weight_0.01": 8.3546
 }
