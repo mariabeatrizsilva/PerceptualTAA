@@ -21,6 +21,8 @@ REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
 BASE_FRAMES = 'data/frames/'
 FRAMES_SUFFIX = '%04d.png'
+ref_path_cvvdp = '/data/frames/16SSAA'
+ref_path_cgvqm = '/data/16SSAA.mp4'
 
 
 class Metric(Enum):
@@ -206,7 +208,7 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     
     # Set up reference path
     if metric == Metric.CGVQM:
-        ref_path = os.path.join(folder_path, f"{REF_NAME}.mp4")
+        ref_path = ref_path_cgvqm
         if not os.path.exists(ref_path):
             raise FileNotFoundError(f"Reference video not found: {ref_path}")
 
@@ -219,10 +221,10 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
         ]
         
     else:  # CVVDP
-        ref_path = os.path.join(folder_path, REF_NAME, FRAMES_SUFFIX)
-        ref_folder = os.path.join(folder_path, REF_NAME)
-        if not os.path.exists(ref_folder):
-            raise FileNotFoundError(f"Reference frames folder not found: {ref_folder}")
+        ref_path = ref_path_cgvqm
+        # ref_folder = os.path.join(folder_path, REF_NAME)
+        # if not os.path.exists(ref_folder):
+        #     raise FileNotFoundError(f"Reference frames folder not found: {ref_folder}")
 
         # Get all subfolders except reference
         test_names = [

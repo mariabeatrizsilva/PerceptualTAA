@@ -1,0 +1,17 @@
+{
+    "vary_num_samples_16": {
+        "score": 8.5403
+    },
+    "vary_num_samples_32": {
+        "score": 8.5352
+    },
+    "vary_num_samples_8": {
+        "score": 8.537
+    },
+    "vary_num_samples_64": {
+        "score": 8.5354
+    },
+    "vary_num_samples_4": {
+        "score": 8.5958
+    }
+}
