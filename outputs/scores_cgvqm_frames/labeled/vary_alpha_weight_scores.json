@@ -1,0 +1,34 @@
+{
+    "vary_alpha_weight_0.01": {
+        "score": 54.719017028808594,
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.02": {
+        "score": 55.33747482299805,
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.04": {
+        "score": 56.40989303588867,
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.06": {
+        "score": 57.16516876220703,
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.1": {
+        "score": 58.135475158691406,
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.2": {
+        "score": 59.258609771728516,
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_0.5": {
+        "score": 60.20058059692383,
+        "label": "slightly annoying"
+    },
+    "vary_alpha_weight_1.0": {
+        "score": 60.31888961791992,
+        "label": "slightly annoying"
+    }
+}
