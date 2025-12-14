@@ -329,6 +329,10 @@ Minimal changes to fix CVVDP error map generation
 Replace your compute_metric_cvvdp function with this version
 """
 
+"""
+Fixed compute_metric_cvvdp with robust score extraction
+"""
+
 def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str = None):
     """
     Compute ColorVideoVDP score for a frame sequence pair.
@@ -365,7 +369,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
     # Add heatmap output if requested
     if temp_heatmap_video:
         command.extend([
-            '--heatmap', 'srgb',  # Use 'srgb' instead of 'raw'
+            '--heatmap', 'srgb',
             '-o', temp_heatmap_video
         ])
     
@@ -380,13 +384,26 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
             shell=False
         )
         
-        # Extract the score from output using regex
-        score_pattern = re.compile(r"cvvdp=(\d+\.?\d*)")
-        match = score_pattern.search(result.stdout)
+        # Try multiple patterns to extract the score
+        # Pattern 1: cvvdp=X.XX
+        score_pattern1 = re.compile(r"cvvdp\s*=\s*(\d+\.?\d*)")
+        # Pattern 2: cvvdp: X.XX
+        score_pattern2 = re.compile(r"cvvdp\s*:\s*(\d+\.?\d*)")
+        # Pattern 3: just a number that looks like a score
+        score_pattern3 = re.compile(r"(\d+\.\d+)")
+        
+        match = score_pattern1.search(result.stdout)
+        if not match:
+            match = score_pattern2.search(result.stdout)
+        if not match:
+            match = score_pattern3.search(result.stdout)
         
         if match:
             score = float(match.group(1))
         else:
+            # Print the output to help debug
+            print(f"    CVVDP stdout: {result.stdout}")
+            print(f"    CVVDP stderr: {result.stderr}")
             raise ValueError("Could not extract score from CVVDP output")
         
         # Just verify the heatmap was created if requested
@@ -396,12 +413,14 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
         return score
         
     except subprocess.CalledProcessError as e:
+        print(f"    CVVDP stdout: {e.stdout}")
+        print(f"    CVVDP stderr: {e.stderr}")
         raise RuntimeError(f"CVVDP command failed with exit code {e.returncode}: {e.stderr}")
     
     except FileNotFoundError:
         raise RuntimeError(f"CVVDP executable '{CVVDP_EXECUTABLE}' not found. "
                          "Ensure cvvdp is installed and in PATH.")
-
+    
 
 """
 Update your compute_score_single function to handle simplified CVVDP return
