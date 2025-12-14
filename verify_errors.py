@@ -69,7 +69,10 @@ def analyze_errors(json_file_path):
     # ============================================================================
     
     # Get output directory (same as input file)
-    output_dir = os.path.dirname(json_file_path)
+    json_dir = os.path.dirname(json_file_path)
+    parent_dir=os.path.dirname(json_dir)
+    output_dir=os.path.join(parent_dir, 'error_plots')
+    os.makedirs(output_dir,exist_ok=True)
     if not output_dir:
         output_dir = '.'
     base_name = os.path.splitext(os.path.basename(json_file_path))[0]
@@ -87,7 +90,7 @@ def analyze_errors(json_file_path):
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    plot_path = os.path.join(output_dir, f'{base_name}_per_frame_errors.png')
+    plot_path = os.path.join(output_dir, f'per_frame_errors.png')
     plt.savefig(plot_path, dpi=150, bbox_inches='tight')
     print(f"\nSaved plot: {plot_path}")
     
@@ -103,7 +106,7 @@ def analyze_errors(json_file_path):
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    plot_path = os.path.join(output_dir, f'{base_name}_error_distribution.png')
+    plot_path = os.path.join(output_dir, f'distribution.png')
     plt.savefig(plot_path, dpi=150)
     print(f"Saved plot: {plot_path}")
     
@@ -117,7 +120,7 @@ def analyze_errors(json_file_path):
     plt.grid(True, alpha=0.3, axis='y')
     plt.tight_layout()
     
-    plot_path = os.path.join(output_dir, f'{base_name}_boxplot.png')
+    plot_path = os.path.join(output_dir, f'boxplot.png')
     plt.savefig(plot_path, dpi=150, bbox_inches='tight')
     print(f"Saved plot: {plot_path}")
     
@@ -142,7 +145,7 @@ def analyze_errors(json_file_path):
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    plot_path = os.path.join(output_dir, f'{base_name}_score_vs_error.png')
+    plot_path = os.path.join(output_dir, f'score_vs_error.png')
     plt.savefig(plot_path, dpi=150, bbox_inches='tight')
     print(f"Saved plot: {plot_path}")
     
