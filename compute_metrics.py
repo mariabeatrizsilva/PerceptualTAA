@@ -20,11 +20,13 @@ import subprocess
 import shlex
 import re 
 
-REF_NAME = '16SSAA'
+REF_NAME = '16SSAA-418'
 BASE_MP4 = 'data/'
-BASE_FRAMES = 'data/parkenv/'
+BASE_FRAMES = 'data/frames/'
 FRAMES_SUFFIX = '%04d.png'
 
+MISC_FOLDER = 'misc_params'
+MISC_SCORES = 'misc_scores'
 
 class Metric(Enum):
     """Available video quality metrics."""
@@ -220,14 +222,14 @@ def get_paths(folder_name: str, metric: Metric):
     frames_path = os.path.join(project_root, BASE_FRAMES, folder_name)
     
     if metric == Metric.CGVQM:
-        output_scores_path = os.path.join(project_root, 'outputs/parkenv/scores_cgvqm_frames', score_file_name)
+        output_scores_path = os.path.join(project_root, 'outputs/factory/scores_cgvqm_frames', score_file_name)
     else:
-        output_scores_path = os.path.join(project_root, 'outputs/parkenv/scores_cvvdp', score_file_name)
+        output_scores_path = os.path.join(project_root, 'outputs/factory/scores_cvvdp', score_file_name)
     
     return frames_path, output_scores_path
 
 def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config: dict, 
-                         err_map_path: str, dist_video_path: str = None) -> float:
+                         err_map_path: str, dist_video_path: str = None, return_emap: bool = True) -> float:
     """
     Compute CGVQM score for a single video pair using PNG frames.
     
@@ -271,7 +273,12 @@ def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config
     visualize_emap(emap, viz_path, 100, err_map_path)
     print(f"    Error map saved to: {err_map_path}")
     
+    if return_emap:
+        return score, emap
     return score
+
+def get_cgvqm_per_frame_errors(emap):
+    return emap.mean(dim=(1,2))
 
 
 def compute_metric_cvvdp(ref_path: str, dist_path: str) -> float:
@@ -323,7 +330,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str) -> float:
                          "Ensure cvvdp is installed and in PATH.")
 
 def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: str, 
-                        metric: Metric) -> float:
+                        metric: Metric, return_per_frame: bool = True) -> float:
     """
     Compute metric for a single video/frame sequence.
     
@@ -345,20 +352,28 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         
         # Create error map path for this video
         err_map_name = f"{test_name}_errmap.mp4"
-        err_map_path = os.path.join(project_root, 'outputs/citypark/err_maps_frames', err_map_name)
+        err_map_path = os.path.join(project_root, 'outputs/factory/err_maps_frames', err_map_name)
         
         # Optional: if you still have MP4s and want to use them for visualization
         dist_video_path = os.path.join(project_root, BASE_MP4, folder_path.split('/')[-1], f"{test_name}.mp4")
         if not os.path.exists(dist_video_path):
             dist_video_path = None
         
-        score = compute_metric_cgvqm(
+        result = compute_metric_cgvqm(
             ref_frames_folder=ref_frames_folder,
             dist_frames_folder=dist_frames_folder,
             config=CGVQM_CONFIG,
             err_map_path=err_map_path,
-            dist_video_path=dist_video_path
+            dist_video_path=dist_video_path,
+            return_emap=return_per_frame
         )
+
+        if return_per_frame:
+            score, emap = result
+            per_frame_errors = get_cgvqm_per_frame_errors(emap)
+            return score, per_frame_errors.cpu().numpy()
+        else:
+            return result
         
     else:  # CVVDP
         dist_folder = os.path.join(folder_path, test_name)
