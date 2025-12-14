@@ -81,6 +81,8 @@ def get_output_paths(folder_name: str, metric: Metric):
     if err_maps_dir:
         os.makedirs(err_maps_dir, exist_ok=True)
 
+    return scores_dir, err_maps_dir
+
 def get_reference_paths():
     """Returns absolute paths to reference video and frames."""
     ref_video_path = os.path.join(project_root, BASE_MP4, f'{REF_NAME}.mp4')
