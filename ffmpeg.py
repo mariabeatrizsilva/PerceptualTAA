@@ -6,10 +6,10 @@ import sys
 # --- Configuration ---
 
 # **IMPORTANT**: Update these paths to match your system.
-BASE_SOURCE_DIR = "/Users/bia/Documents/PerceptualTAA/RenderedFrames_9-10-2025"
+BASE_SOURCE_DIR = "data/frames"
 
 # The root directory where the final MP4 videos will be saved.
-VIDEOS_ROOT = "/Users/bia/Documents/PerceptualTAA/Videos/"
+VIDEOS_ROOT = "outputs/factory/videos"
 
 # Define the structure of the main folders and their corresponding output directories
 # This dictionary makes the logic clean and easy to scale.
