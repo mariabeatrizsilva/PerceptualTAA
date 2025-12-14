@@ -52,7 +52,7 @@ CGVQM_CONFIG = {
     'device': 'cuda',        # Change to 'cpu' if no CUDA GPU is available
     'patch_scale': 4,        # Increase this value if low on available GPU memory
     'patch_pool': 'mean',    # Choose from {'max', 'mean'}
-    'sleep_between_videos': 1.0  # Seconds to sleep between videos to let GPU cool down
+    'sleep_between_videos': 2.0  # Seconds to sleep between videos to let GPU cool down
 }
 
 # CVVDP Setup
