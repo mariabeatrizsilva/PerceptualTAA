@@ -544,12 +544,22 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     For CVVDP: Processes PNG sequences in subfolders of folder_path
     
     Both metrics now load frames from PNG files to avoid compression artifacts.
+    
+    Results are saved incrementally after each video to prevent data loss.
+    If the script crashes, it will resume from where it left off.
     """
     folder_path, output_scores_path, err_maps_dir = get_paths(
         folder_name=folder_name, metric=metric
     )
     
-    results = {}
+    # Load existing results if they exist (for resuming)
+    if os.path.exists(output_scores_path):
+        print(f"Found existing results file: {output_scores_path}")
+        with open(output_scores_path, 'r') as f:
+            results = json.load(f)
+        print(f"Loaded {len(results)} existing results. Will skip already-processed videos.")
+    else:
+        results = {}
     
     # Get reference paths
     ref_video_path, ref_frames_path = get_reference_paths()
@@ -580,17 +590,24 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
             if os.path.isdir(os.path.join(folder_path, f)) and f != REF_NAME
         ]
     
-    print(f"Processing {len(test_names)} items with {metric.value}...")
+    # Filter out already-processed videos
+    remaining_test_names = [name for name in test_names if name not in results]
+    
+    print(f"Total videos: {len(test_names)}")
+    print(f"Already processed: {len(results)}")
+    print(f"Remaining to process: {len(remaining_test_names)}")
+    print(f"Processing with {metric.value}...")
     print(f"Reference: {REF_NAME}")
     print(f"Reference path: {ref_path}")
     print(f"Scene: {SCENE_NAME}")
     print(f"Output scores: {output_scores_path}")
     if err_maps_dir:
         print(f"Error maps: {err_maps_dir}")
+    print()
     
     # Process each test
-    for test_name in sorted(test_names):
-        print(f"  Computing metric for: {test_name}")
+    for idx, test_name in enumerate(sorted(remaining_test_names), 1):
+        print(f"[{idx}/{len(remaining_test_names)}] Computing metric for: {test_name}")
         
         try:
             result = compute_score_single(
@@ -601,6 +618,7 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
                 err_maps_dir=err_maps_dir
             )
             
+            # Store result based on metric type
             if metric == Metric.CGVQM:
                 score, per_frame_errors = result
                 results[test_name] = {
@@ -609,10 +627,24 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
                 }
                 print(f"    Score: {score:.4f}")
                 print(f"    Per-frame errors: {len(per_frame_errors)} frames")
-            else:
-                score = result
-                results[test_name] = score
-                print(f"    Score: {score:.4f}")
+            else:  # CVVDP
+                if isinstance(result, tuple):
+                    score, per_frame_errors = result
+                    results[test_name] = {
+                        'score': score,
+                        'per_frame_errors': per_frame_errors
+                    }
+                    print(f"    Score: {score:.4f}")
+                    print(f"    Per-frame errors: {len(per_frame_errors)} frames")
+                else:
+                    score = result
+                    results[test_name] = score
+                    print(f"    Score: {score:.4f}")
+            
+            # IMPORTANT: Save results immediately after each video
+            with open(output_scores_path, 'w') as f:
+                json.dump(results, f, indent=2)
+            print(f"    ✓ Results saved to: {output_scores_path}")
             
         except FileNotFoundError as e:
             print(f"    Warning: {e}, skipping...")
@@ -633,13 +665,13 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
     
-    # Save results
-    with open(output_scores_path, 'w') as f:
-        json.dump(results, f, indent=2)
-    
-    print(f"\nResults saved to: {output_scores_path}")
+    # Final summary
+    print(f"\n{'='*60}")
+    print(f"PROCESSING COMPLETE FOR: {folder_name}")
+    print(f"{'='*60}")
+    print(f"Results saved to: {output_scores_path}")
     if results:
-        print(f"Processed: {len(results)}/{len(test_names)} items")
+        print(f"Total processed: {len(results)}/{len(test_names)} items")
         
         if metric == Metric.CGVQM:
             # Extract scores for statistics
@@ -647,13 +679,21 @@ def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
             print(f"Average score: {np.mean(scores):.4f}")
             print(f"Score range: [{min(scores):.4f}, {max(scores):.4f}]")
         else:
-            print(f"Average score: {np.mean(list(results.values())):.4f}")
-            print(f"Score range: [{min(results.values()):.4f}, {max(results.values()):.4f}]")
+            # Handle both old format (just score) and new format (dict with score and per_frame_errors)
+            scores = []
+            for v in results.values():
+                if isinstance(v, dict):
+                    scores.append(v['score'])
+                else:
+                    scores.append(v)
+            
+            if scores:
+                print(f"Average score: {np.mean(scores):.4f}")
+                print(f"Score range: [{min(scores):.4f}, {max(scores):.4f}]")
     else:
         print("Warning: No results computed!")
     
     return results
-
 
 def main():
     """Main function to parse arguments and run metric computation."""
