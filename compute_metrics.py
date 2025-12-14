@@ -322,103 +322,32 @@ def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config
     return score, per_frame_errors_array
 
 
-def compute_metric_cvvdp_per_frame(ref_frames_folder: str, dist_frames_folder: str, 
-                                   heatmap_output_dir: str = None):
-    """
-    Compute ColorVideoVDP score by running on individual frames.
-    
-    Args:
-        ref_frames_folder: Path to reference frames folder
-        dist_frames_folder: Path to distorted frames folder
-        heatmap_output_dir: Directory to save per-frame heatmaps
-    
-    Returns:
-        tuple: (overall_score, per_frame_scores_array)
-    """    
-    # Get list of all frames
-    ref_frames = sorted(glob.glob(os.path.join(ref_frames_folder, "*.png")))
-    dist_frames = sorted(glob.glob(os.path.join(dist_frames_folder, "*.png")))
-    
-    if len(ref_frames) != len(dist_frames):
-        raise ValueError(f"Frame count mismatch: ref={len(ref_frames)}, dist={len(dist_frames)}")
-    
-    if len(ref_frames) == 0:
-        raise FileNotFoundError(f"No frames found in {ref_frames_folder}")
-    
-    print(f"    Processing {len(ref_frames)} frames individually...")
-    
-    # Create heatmap output directory if specified
-    if heatmap_output_dir:
-        os.makedirs(heatmap_output_dir, exist_ok=True)
-    
-    per_frame_scores = []
-    
-    # Process each frame
-    for i, (ref_frame, dist_frame) in enumerate(zip(ref_frames, dist_frames)):
-        # Construct the command for single frame
-        command = [
-            CVVDP_EXECUTABLE,
-            '--test', dist_frame,
-            '--ref', ref_frame,
-            '--display', DISPLAY_MODE
-        ]
-        
-        # Add heatmap output if requested
-        if heatmap_output_dir:
-            frame_num = os.path.splitext(os.path.basename(dist_frame))[0]
-            heatmap_file = os.path.join(heatmap_output_dir, f'frame_{frame_num}_heatmap.png')
-            command.extend(['--heatmap', 'supra-threshold', '-o', heatmap_file])
-        
-        try:
-            # Execute the command
-            result = subprocess.run(
-                command,
-                check=True,
-                text=True,
-                capture_output=True,
-                shell=False
-            )
-            
-            # Extract the score from output using regex
-            score_pattern = re.compile(r"cvvdp=(\d+\.?\d*)")
-            match = score_pattern.search(result.stdout)
-            
-            if match:
-                score = float(match.group(1))
-                per_frame_scores.append(score)
-            else:
-                print(f"    Warning: Could not extract score for frame {i}, using 0")
-                per_frame_scores.append(0.0)
-                
-        except subprocess.CalledProcessError as e:
-            print(f"    Warning: CVVDP failed for frame {i}: {e.stderr}")
-            per_frame_scores.append(0.0)
-            continue
-        
-        # Progress indicator
-        if (i + 1) % 50 == 0:
-            print(f"    Processed {i + 1}/{len(ref_frames)} frames...")
-    
-    # Calculate overall score as mean of per-frame scores
-    overall_score = np.mean(per_frame_scores)
-    
-    print(f"    Completed all {len(per_frame_scores)} frames")
-    print(f"    Overall score (mean): {overall_score:.4f}")
-    
-    return overall_score, per_frame_scores
-
-
-def compute_metric_cvvdp(ref_path: str, dist_path: str) -> float:
+def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str = None):
     """
     Compute ColorVideoVDP score for a frame sequence pair.
     
     Args:
         ref_path: Path pattern to reference frames
-        dist_path: Path pattern to distorted frames
+        dist_path: Path pattern to distorted frames (e.g., /path/to/video_name/%04d.png)
+        heatmap_output_dir: Optional directory to save heatmap and extract per-frame errors
     
     Returns:
-        Quality score as float
+        If heatmap_output_dir: tuple (score, per_frame_errors_array)
+        Else: just score
     """
+    
+    # Determine if we need to save heatmap
+    temp_heatmap_video = None
+    if heatmap_output_dir:
+        os.makedirs(heatmap_output_dir, exist_ok=True)
+        
+        # Extract video name from dist_path
+        # dist_path is like: /path/to/video_name/%04d.png
+        # We want to get 'video_name'
+        dist_folder = os.path.dirname(dist_path)
+        video_name = os.path.basename(dist_folder)
+        
+        temp_heatmap_video = os.path.join(heatmap_output_dir, f'{video_name}.mp4')
     
     # Construct the command
     command = [
@@ -429,8 +358,16 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str) -> float:
         '--fps', str(FPS_VALUE)
     ]
     
+    # Add heatmap output if requested
+    if temp_heatmap_video:
+        command.extend([
+            '--heatmap', 'raw',
+            '-o', temp_heatmap_video
+        ])
+    
     try:
         # Execute the command
+        print(f"    Running CVVDP...")
         result = subprocess.run(
             command,
             check=True,
@@ -445,16 +382,94 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str) -> float:
         
         if match:
             score = float(match.group(1))
-            return score
         else:
             raise ValueError("Could not extract score from CVVDP output")
-            
+        
+        # If heatmap was generated, extract per-frame errors
+        if temp_heatmap_video and os.path.exists(temp_heatmap_video):
+            print(f"    Extracting per-frame errors from heatmap...")
+            per_frame_errors = extract_per_frame_errors_from_heatmap_ffmpeg(
+                temp_heatmap_video, 
+                heatmap_output_dir
+            )
+            return score, per_frame_errors
+        
+        return score
+        
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"CVVDP command failed with exit code {e.returncode}: {e.stderr}")
     
     except FileNotFoundError:
         raise RuntimeError(f"CVVDP executable '{CVVDP_EXECUTABLE}' not found. "
                          "Ensure cvvdp is installed and in PATH.")
+
+
+def extract_per_frame_errors_from_heatmap_ffmpeg(heatmap_video_path: str, output_dir: str):
+    """
+    Extract frames from CVVDP heatmap video using ffmpeg and compute per-frame errors.
+    
+    Args:
+        heatmap_video_path: Path to the heatmap video generated by CVVDP
+        output_dir: Directory to save extracted frames temporarily
+    
+    Returns:
+        per_frame_errors: List of average intensity per frame
+    """
+    # Create temporary directory for frames
+    temp_frames_dir = os.path.join(output_dir, 'temp_heatmap_frames')
+    os.makedirs(temp_frames_dir, exist_ok=True)
+    
+    # Extract frames using ffmpeg
+    print(f"    Extracting frames with ffmpeg...")
+    ffmpeg_cmd = [
+        'ffmpeg',
+        '-i', heatmap_video_path,
+        '-f', 'image2',
+        os.path.join(temp_frames_dir, 'frame_%04d.png'),
+        '-y',  # Overwrite if exists
+        '-loglevel', 'error'  # Only show errors
+    ]
+    
+    try:
+        subprocess.run(ffmpeg_cmd, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"ffmpeg failed: {e.stderr.decode()}")
+    
+    # Load frames and compute average intensity
+    frame_files = sorted(glob.glob(os.path.join(temp_frames_dir, 'frame_*.png')))
+    
+    if not frame_files:
+        raise RuntimeError(f"No frames extracted from heatmap video: {heatmap_video_path}")
+    
+    per_frame_errors = []
+    
+    print(f"    Computing per-frame errors from {len(frame_files)} frames...")
+    for frame_file in frame_files:
+        img = Image.open(frame_file)
+        img_array = np.array(img)
+        
+        # For 'raw' heatmap, the values should be direct error values
+        # Average across all pixels (and color channels if present)
+        if len(img_array.shape) == 3:
+            # RGB image - average across all dimensions
+            avg_error = img_array.mean()
+        else:
+            # Grayscale image
+            avg_error = img_array.mean()
+        
+        per_frame_errors.append(avg_error)
+    
+    # Clean up temporary frames
+    import shutil
+    shutil.rmtree(temp_frames_dir)
+    print(f"    Cleaned up temporary frames")
+    
+    print(f"    Extracted {len(per_frame_errors)} per-frame error values")
+    
+    return per_frame_errors
+
+
+
 
 def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: str, 
                         metric: Metric, err_maps_dir: str = None):
@@ -499,24 +514,25 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         return score, per_frame_errors
         
     else:  # CVVDP
-        dist_frames_folder = os.path.join(folder_path, test_name)
-        
-        if not os.path.exists(dist_frames_folder):
-            raise FileNotFoundError(f"Frames folder not found: {dist_frames_folder}")
-        
-        # Create heatmap output directory for this video
-        if err_maps_dir:
-            heatmap_output_dir = os.path.join(err_maps_dir, test_name)
-        else:
-            heatmap_output_dir = None
-        
-        score, per_frame_scores = compute_metric_cvvdp_per_frame(
-            ref_frames_folder=ref_frames_folder,
-            dist_frames_folder=dist_frames_folder,
-            heatmap_output_dir=heatmap_output_dir
-        )
-        
-        return score, per_frame_scores
+            dist_folder = os.path.join(folder_path, test_name)
+            dist_path = os.path.join(dist_folder, FRAMES_SUFFIX)
+            
+            if not os.path.exists(dist_folder):
+                raise FileNotFoundError(f"Frames folder not found: {dist_folder}")
+            
+            # For CVVDP, heatmap_output_dir is where we'll save the heatmap video
+            # The video will be named {test_name}.mp4
+            result = compute_metric_cvvdp(
+                ref_path=ref_frames_folder,  # Pattern like /path/%04d.png
+                dist_path=dist_path,         # Pattern like /path/test_name/%04d.png
+                heatmap_output_dir=err_maps_dir
+            )
+            
+            if isinstance(result, tuple):
+                score, per_frame_errors = result
+                return score, per_frame_errors
+            else:
+                return result, None
 
 def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     """
