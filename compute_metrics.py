@@ -25,9 +25,9 @@ import re
 # ============================================================================
 SCENE_NAME = 'factory'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
 
-REF_NAME = '16SSAA-418'
+REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
-BASE_FRAMES = 'data/frames/'
+BASE_FRAMES = f'data/{SCENE_NAME}/'
 FRAMES_SUFFIX = '%04d.png'
 
 MISC_FOLDER = 'misc_params'
@@ -68,8 +68,8 @@ def get_output_paths(folder_name: str, metric: Metric):
     base_output = os.path.join(project_root, 'outputs', SCENE_NAME)
     
     if metric == Metric.CGVQM:
-        scores_dir = os.path.join(base_output, 'scores_cgvqm_frames')
-        err_maps_dir = os.path.join(base_output, 'err_maps_frames')
+        scores_dir = os.path.join(base_output, 'scores_cgvqm')
+        err_maps_dir = os.path.join(base_output, 'err_maps')
     else:
         scores_dir = os.path.join(base_output, 'scores_cvvdp')
         err_maps_dir = None  # CVVDP doesn't use err_maps in the same way
