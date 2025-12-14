@@ -328,18 +328,13 @@ def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config
 Minimal changes to fix CVVDP error map generation
 Replace your compute_metric_cvvdp function with this version
 """
-
-"""
-Fixed compute_metric_cvvdp with robust score extraction
-"""
-
 def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str = None):
     """
     Compute ColorVideoVDP score for a frame sequence pair.
     
     Args:
-        ref_path: Path pattern to reference frames
-        dist_path: Path pattern to distorted frames
+        ref_path: Path pattern to reference frames (e.g., /path/to/ref/%04d.png)
+        dist_path: Path pattern to distorted frames (e.g., /path/to/video_name/%04d.png)
         heatmap_output_dir: Optional directory to save heatmap video
     
     Returns:
@@ -351,11 +346,16 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
     if heatmap_output_dir:
         os.makedirs(heatmap_output_dir, exist_ok=True)
         
-        # Extract video name from dist_path
-        dist_folder = os.path.dirname(dist_path)
-        video_name = os.path.basename(dist_folder)
+        # FIXED: Extract video name correctly from the path pattern
+        # dist_path is like: /path/to/folder/video_name/%04d.png
+        # We want: video_name
+        # First remove the frame pattern (%04d.png)
+        dist_folder = os.path.dirname(dist_path)  # Gets /path/to/folder/video_name
+        video_name = os.path.basename(dist_folder)  # Gets video_name
         
-        temp_heatmap_video = os.path.join(heatmap_output_dir, f'{video_name}_heatmap.mp4')
+        # Save directly in heatmap_output_dir, not in a subfolder
+        temp_heatmap_video = os.path.join(heatmap_output_dir, f'{video_name}.mp4')
+        print(f"    Will save heatmap to: {temp_heatmap_video}")
     
     # Construct the command
     command = [
@@ -369,7 +369,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
     # Add heatmap output if requested
     if temp_heatmap_video:
         command.extend([
-            '--heatmap', 'srgb',
+            '--heatmap', 'raw',  # Changed back to 'raw' as requested
             '-o', temp_heatmap_video
         ])
     
@@ -385,11 +385,8 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
         )
         
         # Try multiple patterns to extract the score
-        # Pattern 1: cvvdp=X.XX
         score_pattern1 = re.compile(r"cvvdp\s*=\s*(\d+\.?\d*)")
-        # Pattern 2: cvvdp: X.XX
         score_pattern2 = re.compile(r"cvvdp\s*:\s*(\d+\.?\d*)")
-        # Pattern 3: just a number that looks like a score
         score_pattern3 = re.compile(r"(\d+\.\d+)")
         
         match = score_pattern1.search(result.stdout)
@@ -401,14 +398,20 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
         if match:
             score = float(match.group(1))
         else:
-            # Print the output to help debug
             print(f"    CVVDP stdout: {result.stdout}")
             print(f"    CVVDP stderr: {result.stderr}")
             raise ValueError("Could not extract score from CVVDP output")
         
-        # Just verify the heatmap was created if requested
-        if temp_heatmap_video and os.path.exists(temp_heatmap_video):
-            print(f"    Heatmap saved: {temp_heatmap_video}")
+        # Verify the heatmap was created and is valid
+        if temp_heatmap_video:
+            if os.path.exists(temp_heatmap_video):
+                file_size = os.path.getsize(temp_heatmap_video)
+                print(f"    Heatmap saved: {temp_heatmap_video} ({file_size} bytes)")
+                
+                if file_size < 1000:  # Suspiciously small file
+                    print(f"    WARNING: Heatmap file is very small, may be corrupted")
+            else:
+                print(f"    WARNING: Heatmap file was not created at {temp_heatmap_video}")
         
         return score
         
