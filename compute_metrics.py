@@ -25,7 +25,7 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-SCENE_NAME = 'factory'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
+SCENE_NAME = 'parkenv'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
 
 REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
@@ -74,7 +74,7 @@ def get_output_paths(folder_name: str, metric: Metric):
         err_maps_dir = os.path.join(base_output, 'err_maps')
     else:
         scores_dir = os.path.join(base_output, 'scores_cvvdp')
-        err_maps_dir = os.path.join(base_output, 'err_maps')  # For per-frame heatmaps
+        err_maps_dir = os.path.join(base_output, 'err_maps_cvvdp')  # For per-frame heatmaps
     
     # Create directories if they don't exist
     os.makedirs(scores_dir, exist_ok=True)
