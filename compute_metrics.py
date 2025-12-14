@@ -3,6 +3,8 @@ import os
 import json
 from enum import Enum
 import argparse
+import glob
+
 
 
 ## Config for CGVQM
@@ -72,14 +74,12 @@ def get_output_paths(folder_name: str, metric: Metric):
         err_maps_dir = os.path.join(base_output, 'err_maps')
     else:
         scores_dir = os.path.join(base_output, 'scores_cvvdp')
-        err_maps_dir = None  # CVVDP doesn't use err_maps in the same way
+        err_maps_dir = os.path.join(base_output, 'err_maps')  # For per-frame heatmaps
     
     # Create directories if they don't exist
     os.makedirs(scores_dir, exist_ok=True)
     if err_maps_dir:
         os.makedirs(err_maps_dir, exist_ok=True)
-    
-    return scores_dir, err_maps_dir
 
 def get_reference_paths():
     """Returns absolute paths to reference video and frames."""
@@ -322,6 +322,92 @@ def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config
     return score, per_frame_errors_array
 
 
+def compute_metric_cvvdp_per_frame(ref_frames_folder: str, dist_frames_folder: str, 
+                                   heatmap_output_dir: str = None):
+    """
+    Compute ColorVideoVDP score by running on individual frames.
+    
+    Args:
+        ref_frames_folder: Path to reference frames folder
+        dist_frames_folder: Path to distorted frames folder
+        heatmap_output_dir: Directory to save per-frame heatmaps
+    
+    Returns:
+        tuple: (overall_score, per_frame_scores_array)
+    """    
+    # Get list of all frames
+    ref_frames = sorted(glob.glob(os.path.join(ref_frames_folder, "*.png")))
+    dist_frames = sorted(glob.glob(os.path.join(dist_frames_folder, "*.png")))
+    
+    if len(ref_frames) != len(dist_frames):
+        raise ValueError(f"Frame count mismatch: ref={len(ref_frames)}, dist={len(dist_frames)}")
+    
+    if len(ref_frames) == 0:
+        raise FileNotFoundError(f"No frames found in {ref_frames_folder}")
+    
+    print(f"    Processing {len(ref_frames)} frames individually...")
+    
+    # Create heatmap output directory if specified
+    if heatmap_output_dir:
+        os.makedirs(heatmap_output_dir, exist_ok=True)
+    
+    per_frame_scores = []
+    
+    # Process each frame
+    for i, (ref_frame, dist_frame) in enumerate(zip(ref_frames, dist_frames)):
+        # Construct the command for single frame
+        command = [
+            CVVDP_EXECUTABLE,
+            '--test', dist_frame,
+            '--ref', ref_frame,
+            '--display', DISPLAY_MODE
+        ]
+        
+        # Add heatmap output if requested
+        if heatmap_output_dir:
+            frame_num = os.path.splitext(os.path.basename(dist_frame))[0]
+            heatmap_file = os.path.join(heatmap_output_dir, f'frame_{frame_num}_heatmap.png')
+            command.extend(['--heatmap', 'supra-threshold', '-o', heatmap_file])
+        
+        try:
+            # Execute the command
+            result = subprocess.run(
+                command,
+                check=True,
+                text=True,
+                capture_output=True,
+                shell=False
+            )
+            
+            # Extract the score from output using regex
+            score_pattern = re.compile(r"cvvdp=(\d+\.?\d*)")
+            match = score_pattern.search(result.stdout)
+            
+            if match:
+                score = float(match.group(1))
+                per_frame_scores.append(score)
+            else:
+                print(f"    Warning: Could not extract score for frame {i}, using 0")
+                per_frame_scores.append(0.0)
+                
+        except subprocess.CalledProcessError as e:
+            print(f"    Warning: CVVDP failed for frame {i}: {e.stderr}")
+            per_frame_scores.append(0.0)
+            continue
+        
+        # Progress indicator
+        if (i + 1) % 50 == 0:
+            print(f"    Processed {i + 1}/{len(ref_frames)} frames...")
+    
+    # Calculate overall score as mean of per-frame scores
+    overall_score = np.mean(per_frame_scores)
+    
+    print(f"    Completed all {len(per_frame_scores)} frames")
+    print(f"    Overall score (mean): {overall_score:.4f}")
+    
+    return overall_score, per_frame_scores
+
+
 def compute_metric_cvvdp(ref_path: str, dist_path: str) -> float:
     """
     Compute ColorVideoVDP score for a frame sequence pair.
@@ -384,7 +470,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
     
     Returns:
         For CGVQM: tuple (score, per_frame_errors_array)
-        For CVVDP: score
+        For CVVDP: tuple (score, per_frame_scores_array)
     """
     if metric == Metric.CGVQM:
         # For CGVQM, we now use frame folders
@@ -413,18 +499,24 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         return score, per_frame_errors
         
     else:  # CVVDP
-        dist_folder = os.path.join(folder_path, test_name)
-        dist_path = os.path.join(dist_folder, FRAMES_SUFFIX)
+        dist_frames_folder = os.path.join(folder_path, test_name)
         
-        if not os.path.exists(dist_folder):
-            raise FileNotFoundError(f"Frames folder not found: {dist_folder}")
-                
-        score = compute_metric_cvvdp(
-            ref_path=ref_frames_folder,  # This is already a pattern for CVVDP
-            dist_path=dist_path
+        if not os.path.exists(dist_frames_folder):
+            raise FileNotFoundError(f"Frames folder not found: {dist_frames_folder}")
+        
+        # Create heatmap output directory for this video
+        if err_maps_dir:
+            heatmap_output_dir = os.path.join(err_maps_dir, test_name)
+        else:
+            heatmap_output_dir = None
+        
+        score, per_frame_scores = compute_metric_cvvdp_per_frame(
+            ref_frames_folder=ref_frames_folder,
+            dist_frames_folder=dist_frames_folder,
+            heatmap_output_dir=heatmap_output_dir
         )
         
-        return score
+        return score, per_frame_scores
 
 def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     """
