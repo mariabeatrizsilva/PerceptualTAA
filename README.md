@@ -14,20 +14,17 @@ This project examines how varying TAA parameters affects perceptually-based qual
 ## Features
 
 - **Automated Rendering Pipeline**: Generate video sequences with systematic TAA parameter variations using Unreal Engine's Movie Render Queue (MRQ)
-- **Dual Perceptual Metrics**: 
-  - **CVVDP** (Color Video Visual Difference Predictor) - Models human visual system for detecting differences
-  - **CGVQM** (Contrast Gain Video Quality Metric) - Assesses quality based on contrast perception
+- **Video Evaluation with Two Reference-Based Perceptual Quality Metrics**: [CGVQM: Computer Graphics Video Quality Metric](https://github.com/IntelLabs/cgvqm) and [ColorVideoVDP](https://github.com/gfxdisp/ColorVideoVDP/tree/main)
 - **Batch Processing**: Compute metrics across multiple parameter folders efficiently
-- **Reference-Based Evaluation**: All metrics computed against 16xSSAA reference renders
 - **Visualization Tools**: Generate plots analyzing parameter impact on perceptual quality
 
 ## Tested Scenes
 
 This toolkit has been validated with:
-- **City Park Environment** - Organic, nature-heavy scenes with vegetation and complex motion ([Free City Park Collection](https://www.unrealengine.com/en-US/blog/free-city-park-environment-collection-now-available))
-- **Factory Environment** - Rigid, industrial settings with geometric structures ([Free Factory Collection](https://www.unrealengine.com/en-US/blog/free-factory-environment-collection-now-available))
+- **City Park Environment** - Organic, nature-heavy scene ([City Park Collection](https://www.unrealengine.com/en-US/blog/free-city-park-environment-collection-now-available))
+- **Factory Environment** - Rigid, industrial setting ([Free Factory Collection](https://www.unrealengine.com/en-US/blog/free-factory-environment-collection-now-available))
 
-The framework scales to any Unreal Engine scene.
+The framework can be extended to other Unreal Scenes.
 
 ## Repository Structure
 
@@ -50,12 +47,8 @@ PerceptualTAA/
 │           └── {parameter_name}/
 ├── generate_mrq.py                # Unreal Engine MRQ automation
 ├── compute_metrics.py             # Main metric computation script
-├── verify_errors.py               # Generate plots from computed metrics
-├── compare_videos_cgvqm.py        # Standalone CGVQM comparison
-├── compare_videos_cvvdp.py        # Standalone CVVDP comparison
-├── ffmpeg.py                      # Video processing utilities
-├── trim.py                        # Video trimming tool
-└── label_scores.py                # Score labeling utilities
+├── verify_errors.py               # Generates per-frame error plots
+├── ffmpeg.py                      # Converts generated frames to mp4 in batches using FFMPEG
 ```
 
 ## Installation
@@ -140,7 +133,7 @@ data/
 - **Format**: PNG (recommended for lossless quality) or JPG
 - **Naming**: Sequential frames with 4-digit padding (`%04d.png`)
 - **Reference**: Must have a `16SSAA` folder with reference renders
-  - 16xSSAA (16x supersampling anti-aliasing) provides ground truth quality
+  - 16xSSAA (16x supersampling anti-aliasing) provides ground truth quality to compare parameter variations using the metrics.
 
 ## Usage
 
@@ -215,6 +208,7 @@ outputs/
     ├── scores_cgvqm/
     │   ├── vary_alpha_weight_scores.json
     │   ├── vary_filter_size_scores.json
+    │   ├── vary_hist_percent_scores.json
     │   └── vary_num_samples_scores.json
     └── scores_cvvdp/
         ├── vary_alpha_weight_scores.json
@@ -242,36 +236,12 @@ outputs/
 ## Workflow Summary
 
 1. **Scene Preparation**: Set up Unreal Engine scene with MRQ
-2. **Automated Rendering**: Run `generate_mrq.py` to render with parameter variations
+2. **Automated Rendering**: Run `generate_mrq.py` to populate queue with parameter variations, and click render in MRQ to obtain the render grames.
 3. **Data Organization**: Ensure renders are in correct `data/{scene_name}/` structure
 4. **Configuration**: Update `SCENE_NAME` in `compute_metrics.py`
 5. **Metric Computation**: Run `compute_metrics.py` for desired metrics and folders
 6. **Visualization**: Run `verify_errors.py` to generate analysis plots
 7. **Analysis**: Review JSON scores and plots to understand parameter impacts
-
-## Additional Utilities
-
-### Video Comparison
-
-For standalone metric computation on two videos:
-
-```bash
-# CGVQM comparison
-python compare_videos_cgvqm.py --reference ref_video.mp4 --test test_video.mp4
-
-# CVVDP comparison
-python compare_videos_cvvdp.py --reference ref_video.mp4 --test test_video.mp4
-```
-
-### Video Processing
-
-```bash
-# Trim video
-python trim.py --input video.mp4 --start 00:00:05 --end 00:00:30
-
-# Process with FFmpeg
-python ffmpeg.py --input input.mp4 --output output.mp4
-```
 
 ## Research Context
 
@@ -283,40 +253,9 @@ Temporal Anti-Aliasing (TAA) is critical for reducing flickering and edge crawli
 
 By analyzing diverse scenes (organic vs. rigid, motion-heavy vs. static), this work reveals how TAA performance varies across visual contexts and provides guidelines for adaptive anti-aliasing strategies.
 
-## Citation
-
-If you use this code in your research, please cite:
-
-```
-[Add citation here when published]
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to:
-- Add support for additional perceptual metrics
-- Extend to other rendering engines
-- Improve visualization tools
-- Share results from new scene types
-
-## License
-
-[Add license information]
-
-## Author
-
-**Maria Beatriz Silva**  
-Presidential Honors Scholar, NYU Courant Institute  
-Computer Science & Mathematics
-
-[GitHub](https://github.com/mariabeatrizsilva) | [LinkedIn](https://www.linkedin.com/in/mariabiasilva/)
-
 ## Acknowledgments
 
 - Unreal Engine for providing high-quality rendering capabilities
 - CVVDP and CGVQM authors for perceptual metric implementations
 - Epic Games for the City Park and Factory environment collections
 
-## Contact
-
-For questions, issues, or collaboration inquiries, please open an issue on GitHub.
