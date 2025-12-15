@@ -1,0 +1,13 @@
+Scene,Parameter,Param Value,Overall Score,Best Frame,Best Frame Error,Worst Frame,Worst Frame Error,Mean Error,Std Dev,Median Error,Total Frames
+factory,hist_percent,50.0,89.33,390,4.4,91,13.62,10.68,1.8,11.11,419
+factory,hist_percent,75.0,89.33,390,4.4,91,13.64,10.68,1.8,11.11,419
+factory,hist_percent,100.0,89.33,390,4.4,91,13.65,10.69,1.8,11.11,419
+factory,hist_percent,125.0,89.58,390,4.29,121,13.15,10.43,1.65,10.91,419
+factory,hist_percent,150.0,90.22,390,3.98,121,12.37,9.79,1.56,10.22,419
+factory,hist_percent,200.0,90.54,390,3.92,121,11.93,9.47,1.45,9.89,419
+parking,hist_percent,50.0,65.73,29,11.31,267,52.26,33.43,9.48,36.88,309
+parking,hist_percent,75.0,65.73,29,11.31,267,52.26,33.43,9.48,36.88,309
+parking,hist_percent,100.0,65.73,29,11.31,267,52.26,33.43,9.48,36.88,309
+parking,hist_percent,125.0,67.03,29,11.13,267,50.23,32.12,8.84,35.31,309
+parking,hist_percent,150.0,68.63,29,10.81,267,47.64,30.53,8.18,33.52,309
+parking,hist_percent,200.0,70.24,29,10.48,267,45.14,28.93,7.49,31.54,309

@@ -1,0 +1,7 @@
+Parameter,Value,factory_Score,parking_Score,Score_Diff,factory_Worst_Frame,factory_Worst_Error,parking_Worst_Frame,parking_Worst_Error,factory_Mean_Error,parking_Mean_Error,factory_Std,parking_Std
+filter_size,0.1,89.33,65.73,23.6,91,13.63,267,52.26,10.68,33.43,1.8,9.48
+filter_size,0.25,89.33,65.73,23.6,121,13.62,267,52.26,10.68,33.43,1.8,9.48
+filter_size,0.5,89.33,65.73,23.6,91,13.62,267,52.25,10.68,33.43,1.8,9.48
+filter_size,0.7,89.33,65.73,23.6,91,13.63,267,52.26,10.68,33.43,1.8,9.48
+filter_size,0.9,89.33,65.73,23.6,91,13.61,267,52.26,10.68,33.43,1.8,9.48
+filter_size,0.95,89.33,65.74,23.6,91,13.62,267,52.25,10.68,33.43,1.8,9.48

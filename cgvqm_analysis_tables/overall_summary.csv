@@ -1,0 +1,5 @@
+Parameter,factory_Best_Score,factory_Worst_Score,factory_Score_Range,parking_Best_Score,parking_Worst_Score,parking_Score_Range,factory_Mean_Error_Range,parking_Mean_Error_Range
+alpha_weight,93.67,87.53,6.14,80.54,61.99,18.54,6.15,18.51
+num_samples,90.01,89.33,0.68,65.51,65.26,0.25,0.68,0.25
+filter_size,89.33,89.33,0.0,65.74,65.73,0.01,0.0,0.01
+hist_percent,90.54,89.33,1.21,70.24,65.73,4.5,1.21,4.5

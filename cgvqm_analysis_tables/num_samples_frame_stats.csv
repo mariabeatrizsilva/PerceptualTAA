@@ -1,0 +1,9 @@
+Scene,Parameter,Value,Overall Score,25th Percentile,Median (50th),75th Percentile,95th Percentile,IQR (75th-25th),Frames Above Mean,% Frames Above Mean
+factory,num_samples,4.0,90.01,8.9,10.48,11.23,11.99,2.33,236,56.3
+factory,num_samples,8.0,89.33,9.34,11.12,12.07,12.95,2.73,231,55.1
+factory,num_samples,16.0,89.49,9.27,10.99,11.82,12.69,2.55,234,55.8
+factory,num_samples,32.0,89.37,9.34,11.09,11.98,12.9,2.64,232,55.4
+factory,num_samples,64.0,89.4,9.32,11.07,11.96,12.86,2.64,233,55.6
+parking,num_samples,16.0,65.26,27.78,37.46,41.65,45.03,13.87,172,55.7
+parking,num_samples,32.0,65.44,27.81,37.37,41.42,44.77,13.62,172,55.7
+parking,num_samples,64.0,65.51,27.69,37.22,41.36,44.74,13.67,172,55.7
