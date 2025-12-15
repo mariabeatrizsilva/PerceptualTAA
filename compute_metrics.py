@@ -355,7 +355,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
         dist_folder = os.path.dirname(dist_path)
         video_name = os.path.basename(dist_folder)
         
-        temp_heatmap_video = os.path.join(heatmap_output_dir, f'{video_name}_heatmap.mp4')
+        temp_heatmap_video = os.path.join(heatmap_output_dir, f'{video_name}_heatmap')
     
     # Construct the command
     command = [
@@ -369,7 +369,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
     # Add heatmap output if requested
     if temp_heatmap_video:
         command.extend([
-            '--heatmap', 'srgb',
+            '--heatmap', 'raw',
             '-o', temp_heatmap_video
         ])
     
