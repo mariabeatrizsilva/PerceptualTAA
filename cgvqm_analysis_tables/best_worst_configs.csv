@@ -1,0 +1,17 @@
+Scene,Parameter,Config Type,Param Value,Overall Score,Mean Error,Std Dev,Worst Frame,Worst Frame Error
+factory,alpha_weight,Best,1.0,93.67,6.34,0.94,327,7.89
+factory,alpha_weight,Worst,0.01,87.53,12.49,2.05,121,15.93
+factory,num_samples,Best,4.0,90.01,10.0,1.61,91,12.59
+factory,num_samples,Worst,8.0,89.33,10.68,1.8,91,13.61
+factory,filter_size,Best,0.9,89.33,10.68,1.8,91,13.61
+factory,filter_size,Worst,0.25,89.33,10.68,1.8,121,13.62
+factory,hist_percent,Best,200.0,90.54,9.47,1.45,121,11.93
+factory,hist_percent,Worst,100.0,89.33,10.69,1.8,91,13.65
+parking,alpha_weight,Best,0.5,80.54,18.69,3.56,267,27.47
+parking,alpha_weight,Worst,0.01,61.99,37.2,11.23,267,60.99
+parking,num_samples,Best,64.0,65.51,33.64,9.41,267,52.07
+parking,num_samples,Worst,16.0,65.26,33.89,9.54,267,52.89
+parking,filter_size,Best,0.95,65.74,33.43,9.48,267,52.25
+parking,filter_size,Worst,0.25,65.73,33.43,9.48,267,52.26
+parking,hist_percent,Best,200.0,70.24,28.93,7.49,267,45.14
+parking,hist_percent,Worst,75.0,65.73,33.43,9.48,267,52.26

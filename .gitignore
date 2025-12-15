@@ -4,3 +4,4 @@ outputs/err_maps/
 *.png
 outputs/parkenv/legacy
 outputs/factory/legacy
+legacy

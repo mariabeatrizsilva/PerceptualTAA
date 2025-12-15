@@ -1,0 +1,13 @@
+Scene,Parameter,Param Value,Overall Score,Best Frame,Best Frame Error,Worst Frame,Worst Frame Error,Mean Error,Std Dev,Median Error,Total Frames
+factory,filter_size,0.1,89.33,390,4.4,91,13.63,10.68,1.8,11.12,419
+factory,filter_size,0.25,89.33,390,4.4,121,13.62,10.68,1.8,11.11,419
+factory,filter_size,0.5,89.33,390,4.4,91,13.62,10.68,1.8,11.12,419
+factory,filter_size,0.7,89.33,390,4.4,91,13.63,10.68,1.8,11.11,419
+factory,filter_size,0.9,89.33,390,4.4,91,13.61,10.68,1.8,11.11,419
+factory,filter_size,0.95,89.33,390,4.4,91,13.62,10.68,1.8,11.11,419
+parking,filter_size,0.1,65.73,29,11.32,267,52.26,33.43,9.48,36.88,309
+parking,filter_size,0.25,65.73,29,11.32,267,52.26,33.43,9.48,36.88,309
+parking,filter_size,0.5,65.73,29,11.32,267,52.25,33.43,9.48,36.88,309
+parking,filter_size,0.7,65.73,29,11.32,267,52.26,33.43,9.48,36.88,309
+parking,filter_size,0.9,65.73,29,11.31,267,52.26,33.43,9.48,36.88,309
+parking,filter_size,0.95,65.74,29,11.31,267,52.25,33.43,9.48,36.87,309
