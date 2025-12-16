@@ -1,6 +1,6 @@
 # PerceptualTAA
 
-A research toolkit for investigating the perceptual foundations of Temporal Anti-Aliasing (TAA) through systematic parameter analysis and quality metric evaluation.
+Code used for project investigating the perceptual foundations of Temporal Anti-Aliasing (TAA) through systematic parameter analysis and quality metric evaluation.
 
 ## Overview
 
