@@ -25,7 +25,7 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-SCENE_NAME = 'abandoned'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
+SCENE_NAME = 'cubetest'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
 
 REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
