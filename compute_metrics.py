@@ -25,7 +25,7 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-SCENE_NAME = 'parkenv'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
+SCENE_NAME = 'abandoned'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
 
 REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
@@ -71,7 +71,7 @@ def get_output_paths(folder_name: str, metric: Metric):
     
     if metric == Metric.CGVQM:
         scores_dir = os.path.join(base_output, 'scores_cgvqm')
-        err_maps_dir = os.path.join(base_output, 'err_maps')
+        err_maps_dir = os.path.join(base_output, 'err_maps_cgvqm')
     else:
         scores_dir = os.path.join(base_output, 'scores_cvvdp')
         err_maps_dir = os.path.join(base_output, 'err_maps_cvvdp')  # For per-frame heatmaps
@@ -664,10 +664,16 @@ Examples:
         '--folders', '-f',
         type=str,
         nargs='+',
-        required=True,
-        help='Folder name(s) to process. Can specify multiple folders separated by spaces.'
+        help='Folder name(s) to process.'
     )
     
+    # Added the --all flag
+    parser.add_argument(
+        '--all', '-a',
+        action='store_true',
+        help=f'Compute metrics over all subfolders in data/{SCENE_NAME}, excluding {REF_NAME}.'
+    )
+
     parser.add_argument(
         '--single', '-s',
         type=str,
@@ -677,14 +683,33 @@ Examples:
     
     args = parser.parse_args()
     
+    target_folders = []
+    if args.all:
+        root_dir = os.path.join(project_root, 'data', SCENE_NAME)
+        if not os.path.exists(root_dir):
+            print(f"Error: Root directory {root_dir} does not exist.")
+            return
+
+        # Get all subdirectories and exclude the reference folder
+        subfolders = [
+            d for d in os.listdir(root_dir) 
+            if os.path.isdir(os.path.join(root_dir, d)) and d != REF_NAME
+        ]
+        target_folders = sorted(subfolders)
+        print(f"Found {len(target_folders)} subfolders in {root_dir} (excluding {REF_NAME})")
+    elif args.folders:
+        target_folders = args.folders
+    else:
+        print("Error: You must provide either --folders or use the --all flag.")
+        return
+
     # Convert string to Metric enum
-    metric = Metric.CGVQM if args.metric == 'CGVQM' else Metric.CVVDP
-    
+    metric = Metric.CGVQM if args.metric == 'CGVQM' else Metric.CVVDP    
     print(f"\n{'='*60}")
     print(f"Video Quality Metric Computation")
     print(f"Scene: {SCENE_NAME}")
     print(f"Metric: {metric.value}")
-    print(f"Folders: {', '.join(args.folders)}")
+    print(f"Folders to process: {', '.join(target_folders)}")
     if args.single:
         print(f"Single Video Mode: {args.single}")
     print(f"{'='*60}\n")
@@ -750,7 +775,7 @@ Examples:
         return
     
     # Normal mode: Process all videos in folders
-    for folder_name in args.folders:
+    for folder_name in target_folders:
         try:
             compute_score_folder(folder_name=folder_name, metric=metric)
         except Exception as e:
