@@ -5,133 +5,100 @@ import sys
 
 # --- Configuration ---
 
-# **IMPORTANT**: Update these paths to match your system.
-BASE_SOURCE_DIR = "data/frames"
+BASE_SOURCE_DIR = "data/plantshow"
+VIDEOS_ROOT = "outputs/plantshow/videos"
 
-# The root directory where the final MP4 videos will be saved.
-VIDEOS_ROOT = "outputs/factory/videos"
-
-# Define the structure of the main folders and their corresponding output directories
-# This dictionary makes the logic clean and easy to scale.
-FOLDER_CONFIG = {
-    # Main Folder Name: (Output Directory Path, Input Frame Extension)
-    "vary_alpha_weight": (os.path.join(VIDEOS_ROOT, "vary_alpha_weight"), 'png'),
-    "vary_num_samples": (os.path.join(VIDEOS_ROOT, "vary_num_samples"), 'png'),
-    "vary_hist_percent": (os.path.join(VIDEOS_ROOT, "vary_hist_percent"), 'png'),
-    "vary_filter_size": (os.path.join(VIDEOS_ROOT, "vary_filter_size"), 'png')
-}
+# The dictionary now just lists the top-level folders we want to process.
+# We will detect automatically if they contain subfolders or direct frames.
+FOLDERS_TO_PROCESS = [
+    "vary_alpha_weight",
+    "vary_num_samples",
+    "vary_num_samples_TAA",
+    "vary_hist_percent",
+    "vary_filter_size",
+    "16SSAA" 
+]
 
 # --- Utility Functions ---
 
 def ensure_ffmpeg_installed():
-    """Checks if the ffmpeg command is available in the system's PATH."""
     try:
-        # Run a simple, non-intrusive command
         subprocess.run(['ffmpeg', '-version'], check=True, capture_output=True)
         return True
-    except subprocess.CalledProcessError:
-        print("\nERROR: FFmpeg command failed to run. Check your installation.")
-        return False
-    except FileNotFoundError:
-        print("\nERROR: FFmpeg command not found.")
-        print("Please ensure ffmpeg is installed and available in your system's PATH.")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("\nERROR: FFmpeg not found. Please ensure it is in your PATH.")
         return False
 
-def run_ffmpeg(input_pattern, output_path, subfolder_name):
+def run_ffmpeg(input_pattern, output_path, display_name):
     """Executes the ffmpeg command."""
-    
-    # The base ffmpeg command structure
+    # Check if video already exists to avoid re-running
+    if os.path.exists(output_path):
+        print(f"  ⏩ SKIPPING: {display_name}.mp4 already exists.")
+        return
+
     ffmpeg_command = [
-        'ffmpeg',
-        '-y', # Overwrite output files without asking
-        '-framerate', '30',
-        '-i', input_pattern, # Input file pattern (e.g., /path/to/frames/%04d.png)
-        '-c:v', 'libx264',
-        '-profile:v', 'high',
-        '-crf', '10', # Lower CRF means higher quality, 10 is very high quality
-        '-pix_fmt', 'yuv420p', # Recommended for compatibility (e.g., YouTube, players)
-        output_path # Output path
+        'ffmpeg', '-y', '-framerate', '30',
+        '-i', input_pattern,
+        '-c:v', 'libx264', '-profile:v', 'high', '-crf', '10',
+        '-pix_fmt', 'yuv420p',
+        output_path
     ]
     
-    print(f"  Input Pattern: {input_pattern}")
-    print(f"  Output File: {output_path}")
-
     try:
-        # Execute the command
-        result = subprocess.run(
-            ffmpeg_command,
-            capture_output=True,
-            text=True,
-            check=True # Raise an exception for non-zero return codes
-        )
-        print(f"  ✅ SUCCESS: Video created for {subfolder_name}.")
-        # Optional: Uncomment the line below to see verbose ffmpeg output
-        # print(f"FFmpeg Output:\n{result.stderr}") 
-
+        print(f"  > Creating video for: {display_name}")
+        subprocess.run(ffmpeg_command, capture_output=True, text=True, check=True)
+        print(f"  ✅ SUCCESS")
     except subprocess.CalledProcessError as e:
-        print(f"  ❌ ERROR: FFmpeg failed for folder {subfolder_name}.")
-        print(f"  Return Code: {e.returncode}")
-        print(f"  STDERR: {e.stderr}")
-    
-    print("-" * 60)
+        print(f"  ❌ ERROR: FFmpeg failed for {display_name}.\n{e.stderr}")
 
+def get_input_pattern(folder_path):
+    """Determines if we should use frame.png or %04d.png."""
+    if os.path.exists(os.path.join(folder_path, "frame.png")):
+        return os.path.join(folder_path, "frame.png")
+    return os.path.join(folder_path, "%04d.png")
 
 # --- Main Logic ---
 
 def run_video_conversion():
-    """
-    Iterates through the four main folders, then their subfolders, and runs 
-    the ffmpeg command on the frames in each subfolder.
-    """
-    
     print(f"--- Starting Video Conversion Script ---")
-    print(f"Source Directory Root: {BASE_SOURCE_DIR}")
-    print(f"Video Output Root: {VIDEOS_ROOT}")
-    print("-" * 60)
-    
     if not ensure_ffmpeg_installed():
-        sys.exit(1) # Exit if ffmpeg isn't ready
+        sys.exit(1)
         
-    try:
-        # 1. Loop through the main folders defined in FOLDER_CONFIG
-        for main_folder_name, (output_dir, frame_ext) in FOLDER_CONFIG.items():
-            
-            main_folder_path = os.path.join(BASE_SOURCE_DIR, main_folder_name)
-            
-            print(f"\n--- Processing Main Folder: {main_folder_name} ---")
-            print(f"Videos will be saved to: {output_dir}")
-            
-            # Ensure the output directory for this group exists
-            os.makedirs(output_dir, exist_ok=True)
-            
-            if not os.path.exists(main_folder_path):
-                 print(f"  WARNING: Main folder not found: {main_folder_path}. Skipping.")
-                 continue
+    os.makedirs(VIDEOS_ROOT, exist_ok=True)
 
-            # 2. Loop through the subfolders inside the main folder
-            for subfolder_name in os.listdir(main_folder_path):
-                subfolder_path = os.path.join(main_folder_path, subfolder_name)
-                
-                # Check if it's a valid directory
-                if os.path.isdir(subfolder_path) and not subfolder_name.startswith('.'):
-                    
-                    print(f"\n> Processing Subfolder: {subfolder_name}")
+    for folder_name in FOLDERS_TO_PROCESS:
+        path = os.path.join(BASE_SOURCE_DIR, folder_name)
+        
+        if not os.path.exists(path):
+            print(f"\nPath not found, skipping: {path}")
+            continue
 
-                    # A. Define the input pattern inside the current subfolder
-                    # Assumes files are zero-padded, e.g., 0001.png, 0002.png
-                    input_pattern = os.path.join(subfolder_path, f'%04d.{frame_ext}')
-                    
-                    # B. Define the output filename: subfolder_name.mp4
-                    output_filename = f"{subfolder_name}.mp4"
-                    output_path = os.path.join(output_dir, output_filename)
-                    
-                    # C. Run FFmpeg
-                    run_ffmpeg(input_pattern, output_path, subfolder_name)
-                
-    except Exception as e:
-        print(f"\nAn unexpected error occurred during processing: {e}")
-    finally:
-        print("\n--- Video Conversion Script Finished ---")
+        print(f"\n--- Checking: {folder_name} ---")
+
+        # LOGIC: Check if this folder contains frames directly (like 16SSAA)
+        # We look for either frame.png or 0000.png / 0001.png
+        direct_frame_exists = any(f.endswith('.png') for f in os.listdir(path))
+        
+        if direct_frame_exists:
+            # Case 1: Direct frames (16SSAA style)
+            # Output directly into the VIDEOS_ROOT
+            output_path = os.path.join(VIDEOS_ROOT, f"{folder_name}.mp4")
+            input_pattern = get_input_pattern(path)
+            run_ffmpeg(input_pattern, output_path, folder_name)
+        else:
+            # Case 2: Nested subfolders (vary_alpha_weight style)
+            # Create a specific output subfolder for this group
+            sub_output_dir = os.path.join(VIDEOS_ROOT, folder_name)
+            os.makedirs(sub_output_dir, exist_ok=True)
+
+            for subfolder in os.listdir(path):
+                subfolder_path = os.path.join(path, subfolder)
+                if os.path.isdir(subfolder_path) and not subfolder.startswith('.'):
+                    output_path = os.path.join(sub_output_dir, f"{subfolder}.mp4")
+                    input_pattern = get_input_pattern(subfolder_path)
+                    run_ffmpeg(input_pattern, output_path, f"{folder_name}/{subfolder}")
+
+    print("\n--- Video Conversion Script Finished ---")
 
 if __name__ == "__main__":
     run_video_conversion()
