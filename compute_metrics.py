@@ -453,10 +453,14 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         err_map_name = f"{test_name}_errmap.mp4"
         err_map_path = os.path.join(err_maps_dir, err_map_name)
         
-        dist_video_path = os.path.join(project_root, BASE_MP4, folder_path.split('/')[-1], f"{test_name}.mp4")
+        dist_video_path = os.path.join(project_root, BASE_MP4, test_name + ".mp4")
         if not os.path.exists(dist_video_path):
-            dist_video_path = None
-        
+            # If flat structure doesn't work, try with folder structure
+            dist_video_path = os.path.join(project_root, BASE_MP4, folder_name, test_name + ".mp4")
+            if not os.path.exists(dist_video_path):
+                dist_video_path = None
+                print(f"    Warning: Could not find video file for {test_name}, error map may use reference video as background")
+
         score, per_frame_errors = compute_metric_cgvqm(
             ref_frames_folder=ref_frames_folder,
             dist_frames_folder=dist_frames_folder,
