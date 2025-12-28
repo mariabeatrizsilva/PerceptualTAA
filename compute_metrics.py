@@ -307,19 +307,19 @@ def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config
     )
     
     score = q.item()
-    
-    # Get per-frame errors
     per_frame_errors = get_cgvqm_per_frame_errors(emap)
     per_frame_errors_array = per_frame_errors.cpu().numpy().tolist()
     
-    # Save the error map visualization
-    os.makedirs(os.path.dirname(err_map_path), exist_ok=True)
-    
-    # For visualize_emap, we can either pass the dist_video_path if available,
-    # or pass the dist_frames_folder - need to check what visualize_emap expects
-    viz_path = dist_video_path if dist_video_path else dist_frames_folder
-    visualize_emap(emap, viz_path, 100, err_map_path)
-    print(f"    Error map saved to: {err_map_path}")
+    # Save error map only if video exists
+    if dist_video_path and os.path.exists(dist_video_path):
+        os.makedirs(os.path.dirname(err_map_path), exist_ok=True)
+        try:
+            visualize_emap(emap, dist_video_path, 100, err_map_path)
+            print(f"    Error map saved to: {err_map_path}")
+        except Exception as e:
+            print(f"    Warning: Error map generation failed: {e}")
+    else:
+        print(f"    Skipping error map (no video available)")
     
     return score, per_frame_errors_array
 
@@ -427,24 +427,12 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
 Update your compute_score_single function to handle simplified CVVDP return
 """
 
-def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: str, 
+def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: str,
                         metric: Metric, err_maps_dir: str = None):
     """
     Compute metric for a single video/frame sequence.
-    
-    Args:
-        test_name: Name of the test (without extension)
-        folder_path: Base folder containing frames subfolders
-        ref_frames_folder: Path to reference frames folder (for CGVQM) or pattern (for CVVDP)
-        metric: Which metric to compute
-        err_maps_dir: Directory to save error maps
-    
-    Returns:
-        For CGVQM: tuple (score, per_frame_errors_array)
-        For CVVDP: just score (float)
     """
     if metric == Metric.CGVQM:
-        # CGVQM code stays the same
         dist_frames_folder = os.path.join(folder_path, test_name)
         
         if not os.path.exists(dist_frames_folder):
@@ -453,14 +441,22 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         err_map_name = f"{test_name}_errmap.mp4"
         err_map_path = os.path.join(err_maps_dir, err_map_name)
         
-        dist_video_path = os.path.join(project_root, BASE_MP4, test_name + ".mp4")
+        folder_name = os.path.basename(folder_path)  # Gets vary_{parameter_name}
+        dist_video_path = os.path.join(
+            project_root,
+            'outputs',
+            SCENE_NAME,
+            'videos',
+            folder_name,
+            f"{test_name}.mp4"
+        )
+        
         if not os.path.exists(dist_video_path):
-            # If flat structure doesn't work, try with folder structure
-            dist_video_path = os.path.join(project_root, BASE_MP4, folder_name, test_name + ".mp4")
-            if not os.path.exists(dist_video_path):
-                dist_video_path = None
-                print(f"    Warning: Could not find video file for {test_name}, error map may use reference video as background")
-
+            print(f"    Warning: Video not found at {dist_video_path}")
+            dist_video_path = None
+        else:
+            print(f"    Using video from: {dist_video_path}")
+        
         score, per_frame_errors = compute_metric_cgvqm(
             ref_frames_folder=ref_frames_folder,
             dist_frames_folder=dist_frames_folder,
@@ -471,21 +467,6 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         
         return score, per_frame_errors
         
-    else:  # CVVDP - simplified
-        dist_folder = os.path.join(folder_path, test_name)
-        dist_path = os.path.join(dist_folder, FRAMES_SUFFIX)
-        
-        if not os.path.exists(dist_folder):
-            raise FileNotFoundError(f"Frames folder not found: {dist_folder}")
-        
-        # Just get the score, heatmap will be saved to err_maps_dir if provided
-        score = compute_metric_cvvdp(
-            ref_path=ref_frames_folder,
-            dist_path=dist_path,
-            heatmap_output_dir=err_maps_dir  # Will save heatmap here
-        )
-        
-        return score, None  # Return None for per_frame_errors
 def compute_score_folder(folder_name: str, metric: Metric = Metric.CGVQM):
     """
     Compute metrics for all videos/frames in a folder.
