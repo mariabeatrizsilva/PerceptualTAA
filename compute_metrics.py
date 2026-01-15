@@ -624,7 +624,7 @@ def main():
         epilog="""
 Examples:
   # Compute CGVQM for a single folder
-  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight vary_hist_percent
+  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight
   
   # Compute CVVDP for multiple folders
   python compute_metrics.py --metric CVVDP --folders vary_filter_size vary_num_samples
