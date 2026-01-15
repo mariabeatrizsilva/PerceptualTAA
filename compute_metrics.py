@@ -25,7 +25,7 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-SCENE_NAME = 'plantshow'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.)
+SCENE_NAME = 'wildwest-behindcounter'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.) 
 
 REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
@@ -624,7 +624,7 @@ def main():
         epilog="""
 Examples:
   # Compute CGVQM for a single folder
-  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight
+  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight vary_hist_percent
   
   # Compute CVVDP for multiple folders
   python compute_metrics.py --metric CVVDP --folders vary_filter_size vary_num_samples
