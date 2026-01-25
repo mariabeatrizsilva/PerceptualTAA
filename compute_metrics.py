@@ -623,17 +623,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Compute CGVQM for a single folder
-  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight
+  # Single scene
+  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight --scenes wildwest-behindcounter
   
-  # Compute CVVDP for multiple folders
-  python compute_metrics.py --metric CVVDP --folders vary_filter_size vary_num_samples
+  # Multiple scenes
+  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight --scenes scene1 scene2 scene3
   
-  # Test on a single video (for debugging/testing)
-  python compute_metrics.py --metric CGVQM --folders vary_alpha_weight --single video_name
-  
-  # Use short flags
-  python compute_metrics.py -m CGVQM -f vary_alpha_weight -s video_name
+  # All folders in multiple scenes
+  python compute_metrics.py -m CGVQM --all --scenes scene1 scene2
         """
     )
     
@@ -652,11 +649,10 @@ Examples:
         help='Folder name(s) to process.'
     )
     
-    # Added the --all flag
     parser.add_argument(
         '--all', '-a',
         action='store_true',
-        help=f'Compute metrics over all subfolders in data/{SCENE_NAME}, excluding {REF_NAME}.'
+        help='Compute metrics over all subfolders, excluding reference.'
     )
 
     parser.add_argument(
@@ -666,112 +662,128 @@ Examples:
         help='Process only a single video (specify video name without extension). Useful for testing.'
     )
     
+    # NEW: Add scenes argument
+    parser.add_argument(
+        '--scenes',
+        type=str,
+        nargs='+',
+        default=['wildwest-behindcounter'],  # Default to current scene
+        help='Scene name(s) to process. Default: wildwest-behindcounter'
+    )
+    
     args = parser.parse_args()
     
-    target_folders = []
-    if args.all:
-        root_dir = os.path.join(project_root, 'data', SCENE_NAME)
-        if not os.path.exists(root_dir):
-            print(f"Error: Root directory {root_dir} does not exist.")
-            return
-
-        # Get all subdirectories and exclude the reference folder
-        subfolders = [
-            d for d in os.listdir(root_dir) 
-            if os.path.isdir(os.path.join(root_dir, d)) and d != REF_NAME
-        ]
-        target_folders = sorted(subfolders)
-        print(f"Found {len(target_folders)} subfolders in {root_dir} (excluding {REF_NAME})")
-    elif args.folders:
-        target_folders = args.folders
-    else:
-        print("Error: You must provide either --folders or use the --all flag.")
-        return
-
     # Convert string to Metric enum
-    metric = Metric.CGVQM if args.metric == 'CGVQM' else Metric.CVVDP    
-    print(f"\n{'='*60}")
-    print(f"Video Quality Metric Computation")
-    print(f"Scene: {SCENE_NAME}")
-    print(f"Metric: {metric.value}")
-    print(f"Folders to process: {', '.join(target_folders)}")
-    if args.single:
-        print(f"Single Video Mode: {args.single}")
-    print(f"{'='*60}\n")
+    metric = Metric.CGVQM if args.metric == 'CGVQM' else Metric.CVVDP
     
-    # Single video mode
-    if args.single:
-        if len(args.folders) > 1:
-            print("Warning: Single video mode only processes the first folder specified.")
+    # NEW: Loop over scenes
+    for scene_idx, scene_name in enumerate(args.scenes, 1):
+        global SCENE_NAME
+        SCENE_NAME = scene_name
         
-        folder_name = args.folders[0]
-        test_name = args.single
+        print(f"\n{'='*80}")
+        print(f"PROCESSING SCENE [{scene_idx}/{len(args.scenes)}]: {SCENE_NAME}")
+        print(f"{'='*80}\n")
         
-        try:
-            folder_path, output_scores_path, err_maps_dir = get_paths(
-                folder_name=folder_name, metric=metric
-            )
-            
-            # Get reference paths
-            ref_video_path, ref_frames_path = get_reference_paths()
-            
-            if metric == Metric.CGVQM:
-                ref_frames_folder = os.path.join(project_root, BASE_FRAMES, REF_NAME)
-                if not os.path.exists(ref_frames_folder):
-                    raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
-                ref_path = ref_frames_folder
-            else:  # CVVDP
-                ref_path = ref_frames_path
-            
-            print(f"Processing single video: {test_name}")
-            print(f"Folder: {folder_path}")
-            print(f"Reference: {ref_path}\n")
-            
-            result = compute_score_single(
-                test_name=test_name,
-                folder_path=folder_path,
-                ref_frames_folder=ref_path,
-                metric=metric,
-                err_maps_dir=err_maps_dir
-            )
-            
-            print(f"\n{'='*60}")
-            print(f"RESULT: {test_name}")
-            
-            if metric == Metric.CGVQM:
-                score, per_frame_errors = result
-                print(f"Overall Score: {score:.4f}")
-                print(f"Number of frames: {len(per_frame_errors)}")
-                print(f"Mean per-frame error: {np.mean(per_frame_errors):.4f}")
-                print(f"Std per-frame error: {np.std(per_frame_errors):.4f}")
-                print(f"Min per-frame error: {np.min(per_frame_errors):.4f}")
-                print(f"Max per-frame error: {np.max(per_frame_errors):.4f}")
-            else:
-                score = result
-                print(f"Score: {score:.4f}")
-            
-            print(f"{'='*60}\n")
-            
-        except Exception as e:
-            print(f"\nError processing single video '{test_name}': {e}\n")
-            import traceback
-            traceback.print_exc()
-        
-        return
-    
-    # Normal mode: Process all videos in folders
-    for folder_name in target_folders:
-        try:
-            compute_score_folder(folder_name=folder_name, metric=metric)
-        except Exception as e:
-            print(f"\n Failed to process folder '{folder_name}': {e}\n")
-            import traceback
-            traceback.print_exc()
+        # Determine target folders for this scene
+        target_folders = []
+        if args.all:
+            root_dir = os.path.join(project_root, 'data', SCENE_NAME)
+            if not os.path.exists(root_dir):
+                print(f"Warning: Root directory {root_dir} does not exist. Skipping scene.")
+                continue
+
+            subfolders = [
+                d for d in os.listdir(root_dir) 
+                if os.path.isdir(os.path.join(root_dir, d)) and d != REF_NAME
+            ]
+            target_folders = sorted(subfolders)
+            print(f"Found {len(target_folders)} subfolders in {root_dir} (excluding {REF_NAME})")
+        elif args.folders:
+            target_folders = args.folders
+        else:
+            print("Error: You must provide either --folders or use the --all flag.")
             continue
+        
+        print(f"Metric: {metric.value}")
+        print(f"Folders to process: {', '.join(target_folders)}")
+        if args.single:
+            print(f"Single Video Mode: {args.single}")
+        print()
+        
+        # [Rest of existing logic - single video mode and normal mode]
+        # Single video mode
+        if args.single:
+            if len(target_folders) > 1:
+                print("Warning: Single video mode only processes the first folder specified.")
+            
+            folder_name = target_folders[0]
+            test_name = args.single
+            
+            try:
+                folder_path, output_scores_path, err_maps_dir = get_paths(
+                    folder_name=folder_name, metric=metric
+                )
+                
+                ref_video_path, ref_frames_path = get_reference_paths()
+                
+                if metric == Metric.CGVQM:
+                    ref_frames_folder = os.path.join(project_root, BASE_FRAMES, REF_NAME)
+                    if not os.path.exists(ref_frames_folder):
+                        raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
+                    ref_path = ref_frames_folder
+                else:
+                    ref_path = ref_frames_path
+                
+                print(f"Processing single video: {test_name}")
+                print(f"Folder: {folder_path}")
+                print(f"Reference: {ref_path}\n")
+                
+                result = compute_score_single(
+                    test_name=test_name,
+                    folder_path=folder_path,
+                    ref_frames_folder=ref_path,
+                    metric=metric,
+                    err_maps_dir=err_maps_dir
+                )
+                
+                print(f"\n{'='*60}")
+                print(f"RESULT: {test_name}")
+                
+                if metric == Metric.CGVQM:
+                    score, per_frame_errors = result
+                    print(f"Overall Score: {score:.4f}")
+                    print(f"Number of frames: {len(per_frame_errors)}")
+                    print(f"Mean per-frame error: {np.mean(per_frame_errors):.4f}")
+                    print(f"Std per-frame error: {np.std(per_frame_errors):.4f}")
+                    print(f"Min per-frame error: {np.min(per_frame_errors):.4f}")
+                    print(f"Max per-frame error: {np.max(per_frame_errors):.4f}")
+                else:
+                    score = result
+                    print(f"Score: {score:.4f}")
+                
+                print(f"{'='*60}\n")
+                
+            except Exception as e:
+                print(f"\nError processing single video '{test_name}': {e}\n")
+                import traceback
+                traceback.print_exc()
+            
+            continue  # Skip to next scene
+        
+        # Normal mode: Process all videos in folders
+        for folder_name in target_folders:
+            try:
+                compute_score_folder(folder_name=folder_name, metric=metric)
+            except Exception as e:
+                print(f"\nFailed to process folder '{folder_name}': {e}\n")
+                import traceback
+                traceback.print_exc()
+                continue
     
-    print(f"\n{'='*60}")
-    print("ALL PROCESSING COMPLETE")
-    print(f"{'='*60}\n")
+    print(f"\n{'='*80}")
+    print("ALL SCENES AND PROCESSING COMPLETE")
+    print(f"{'='*80}\n")
 
 
 if __name__ == '__main__':
