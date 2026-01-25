@@ -25,7 +25,7 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-SCENE_NAME = 'wildwest-behindcounter'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.) 
+SCENE_NAME = 'lightfoliage-close'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.) 
 
 REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
