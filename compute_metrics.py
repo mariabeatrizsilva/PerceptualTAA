@@ -25,11 +25,10 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-# SCENE_NAME = 'lightfoliage-close'  # Change this for different scenes (e.g., 'parkenv', 'meerkat' etc.) 
 
+# python compute_metrics.py -m CGVQM --all --scenes fantasticvillage-open quarry-all quarry-rocksonly resto-close resto-pan subway-lookdown
 REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
-# BASE_FRAMES = f'data/{SCENE_NAME}/'
 FRAMES_SUFFIX = '%04d.png'
 
 MISC_FOLDER = 'misc_params'
