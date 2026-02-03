@@ -3,19 +3,19 @@ import os
 
 # --- Configuration Constants ---
 # !!! IMPORTANT: UPDATE THESE PATHS TO MATCH YOUR PROJECT !!!
-LEVEL_PATH = "/Game/AbandonedPowerPlant/Maps/PowerPlant" 
-SEQUENCE_PATH = "/Game/AbandonedPowerPlant/plantwalk2" 
+LEVEL_PATH = "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+SEQUENCE_PATH = "/Game/Scene_OldMine/Sequences/seq3"   
 # !!! IMPORTANT: Set the path to your desired Post-Process Material (e.g., MaterialInstanceConstant'/Game/Materials/MyPostProcessMat.MyPostProcessMat')
 POST_PROCESS_MATERIAL_PATH = "/MovieRenderPipeline/Materials/MovieRenderQueue_MotionVectors"
 # Base directory for output. The full path will be appended with the job name structure.
-OUTPUT_BASE_DIRECTORY = os.path.expanduser("~/Documents/PerceptualTAA/data/abandoned1")
+OUTPUT_BASE_DIRECTORY = os.path.expanduser("~/Documents/PerceptualTAA/data/oldmine-warm")
 
 # Define all variation groups, their console variables (CVars), and the values to test
 TAA_VARIATIONS = {
     # Group 1: Alpha Weight (r.TemporalAACurrentFrameWeight)
     "alpha_weight": {
         "cvar": "r.TemporalAACurrentFrameWeight",
-        "values": [0.01, 0.02, 0.04, 0.06, 0.1, 0.2, 0.5, 1.0],
+        "values": [0.01, 0.02, 0.04, 0.06, 0.1, 0.2, 0.5, 0.6,0.7,0.8,0.9, 1.0]
     },
     # Group 2: TAA Num Samples (r.TemporalAASamples)
     "num_samples": {
@@ -30,7 +30,8 @@ TAA_VARIATIONS = {
     # Group 4: History Screen Percentage (r.TemporalAA.HistoryScreenPercentage)
     "hist_percent": {
         "cvar": "r.TemporalAA.HistoryScreenPercentage",
-        "values": [50, 75, 100, 125, 150, 200],
+        # "values": [200],
+        "values": [1,5,10,15,30, 50, 75, 100, 125, 150, 200],
     }
 }
 
@@ -242,11 +243,12 @@ def main():
     print("--- Starting MRQ Job Creation for TAA Variations ---")
     
     # Clear any existing jobs in the queue for a fresh start (optional)
-    subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
-    subsystem.get_queue().delete_all_jobs()
+    # subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
+    # subsystem.get_queue().delete_all_jobs()
     
     total_jobs_created = 0
-
+    create_supersample_render_job()
+    total_jobs_created += 1
     for param_name, config_data in TAA_VARIATIONS.items():
         cvar = config_data["cvar"]
         values = config_data["values"]
@@ -257,13 +259,12 @@ def main():
             try:
                 create_movie_render_job(param_name, cvar, value)
                 total_jobs_created += 1
-                if cvar=="r.TemporalAASamples":
-                    create_movie_render_job_TAA(param_name, cvar, value)
+                # if cvar=="r.TemporalAASamples":
+                #     create_movie_render_job_TAA(param_name, cvar, value)
             except Exception as e:
                 unreal.log_error(f"Failed to create job for {param_name} with value {value}: {e}")
 
-    create_supersample_render_job()
-    total_jobs_created += 1
+
     print(f"\n--- Job Creation Complete: {total_jobs_created} Jobs Added to MRQ ---")
     print("Please check the Movie Render Queue window to confirm and start rendering.")
 
