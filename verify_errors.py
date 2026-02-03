@@ -26,7 +26,7 @@ def analyze_errors(json_file_path):
         return
     
     # Load the JSON file
-    print(f"Loading: {json_file_path}\n")
+    print(f"Loading: {json_filepath}\n")
     with open(json_file_path, 'r') as f:
         data = json.load(f)
     

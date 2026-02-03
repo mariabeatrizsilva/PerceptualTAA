@@ -4,7 +4,14 @@ from datetime import datetime
 import sys
 
 # --- Configuration ---
+# List of scene names (folders inside data/)
+SCENE_NAMES = [
+    "plantshow",
+    "abandoned",
+    "abandoned-demo"
+]
 
+<<<<<<< HEAD
 # **IMPORTANT**: Update these paths to match your system.
 BASE_SOURCE_DIR = "data/lightfoliage-close"
 
@@ -20,76 +27,125 @@ FOLDER_CONFIG = {
     "vary_hist_percent": (os.path.join(VIDEOS_ROOT, "vary_hist_percent"), 'png'),
     "vary_filter_size": (os.path.join(VIDEOS_ROOT, "vary_filter_size"), 'png')
 }
+=======
+# The dictionary now just lists the top-level folders we want to process.
+# We will detect automatically if they contain subfolders or direct frames.
+FOLDERS_TO_PROCESS = [
+    "vary_alpha_weight",
+    "vary_num_samples",
+    "vary_num_samples_TAA",
+    "vary_hist_percent",
+    "vary_filter_size",
+    "16SSAA"
+]
+>>>>>>> 3ac9b112b269e851538f714c4daa764a7a2da0bc
 
 # --- Utility Functions ---
-
 def ensure_ffmpeg_installed():
-    """Checks if the ffmpeg command is available in the system's PATH."""
     try:
-        # Run a simple, non-intrusive command
         subprocess.run(['ffmpeg', '-version'], check=True, capture_output=True)
         return True
-    except subprocess.CalledProcessError:
-        print("\nERROR: FFmpeg command failed to run. Check your installation.")
-        return False
-    except FileNotFoundError:
-        print("\nERROR: FFmpeg command not found.")
-        print("Please ensure ffmpeg is installed and available in your system's PATH.")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("\nERROR: FFmpeg not found. Please ensure it is in your PATH.")
         return False
 
-def run_ffmpeg(input_pattern, output_path, subfolder_name):
+def run_ffmpeg(input_pattern, output_path, display_name):
     """Executes the ffmpeg command."""
+    # Check if video already exists to avoid re-running
+    if os.path.exists(output_path):
+        print(f"  ⏩ SKIPPING: {display_name}.mp4 already exists.")
+        return
     
-    # The base ffmpeg command structure
     ffmpeg_command = [
-        'ffmpeg',
-        '-y', # Overwrite output files without asking
-        '-framerate', '30',
-        '-i', input_pattern, # Input file pattern (e.g., /path/to/frames/%04d.png)
-        '-c:v', 'libx264',
-        '-profile:v', 'high',
-        '-crf', '10', # Lower CRF means higher quality, 10 is very high quality
-        '-pix_fmt', 'yuv420p', # Recommended for compatibility (e.g., YouTube, players)
-        output_path # Output path
+        'ffmpeg', '-y', '-framerate', '30',
+        '-i', input_pattern,
+        '-c:v', 'libx264', '-profile:v', 'high', '-crf', '10',
+        '-pix_fmt', 'yuv420p',
+        output_path
     ]
     
-    print(f"  Input Pattern: {input_pattern}")
-    print(f"  Output File: {output_path}")
-
     try:
-        # Execute the command
-        result = subprocess.run(
-            ffmpeg_command,
-            capture_output=True,
-            text=True,
-            check=True # Raise an exception for non-zero return codes
-        )
-        print(f"  ✅ SUCCESS: Video created for {subfolder_name}.")
-        # Optional: Uncomment the line below to see verbose ffmpeg output
-        # print(f"FFmpeg Output:\n{result.stderr}") 
-
+        print(f"  > Creating video for: {display_name}")
+        subprocess.run(ffmpeg_command, capture_output=True, text=True, check=True)
+        print(f"  ✅ SUCCESS")
     except subprocess.CalledProcessError as e:
-        print(f"  ❌ ERROR: FFmpeg failed for folder {subfolder_name}.")
-        print(f"  Return Code: {e.returncode}")
-        print(f"  STDERR: {e.stderr}")
-    
-    print("-" * 60)
+        print(f"  ❌ ERROR: FFmpeg failed for {display_name}.\n{e.stderr}")
 
+def get_input_pattern(folder_path):
+    """Determines if we should use frame.png or %04d.png."""
+    if os.path.exists(os.path.join(folder_path, "frame.png")):
+        return os.path.join(folder_path, "frame.png")
+    return os.path.join(folder_path, "%04d.png")
 
 # --- Main Logic ---
+def process_scene(scene_name):
+    """Process a single scene directory."""
+    base_source_dir = os.path.join("data", scene_name)
+    videos_root = os.path.join("outputs", scene_name, "videos")
+    
+    print(f"\n{'='*60}")
+    print(f"Processing Scene: {scene_name}")
+    print(f"{'='*60}")
+    
+    if not os.path.exists(base_source_dir):
+        print(f"⚠️  WARNING: Scene directory not found: {base_source_dir}")
+        return
+    
+    os.makedirs(videos_root, exist_ok=True)
+    
+    for folder_name in FOLDERS_TO_PROCESS:
+        path = os.path.join(base_source_dir, folder_name)
+        
+        if not os.path.exists(path):
+            print(f"\nPath not found, skipping: {path}")
+            continue
+        
+        print(f"\n--- Checking: {folder_name} ---")
+        
+        # Special handling for 16SSAA: always treat as direct frames
+        if folder_name == "16SSAA":
+            # Output directly into the VIDEOS_ROOT (not in a subfolder)
+            output_path = os.path.join(videos_root, "16SSAA.mp4")
+            input_pattern = get_input_pattern(path)
+            run_ffmpeg(input_pattern, output_path, f"{scene_name}/16SSAA")
+        else:
+            # Check if this folder contains frames directly
+            try:
+                direct_frame_exists = any(f.endswith('.png') for f in os.listdir(path))
+            except PermissionError:
+                print(f"  ⚠️  Permission denied: {path}")
+                continue
+            
+            if direct_frame_exists:
+                # Case 1: Direct frames (uncommon for non-16SSAA)
+                output_path = os.path.join(videos_root, f"{folder_name}.mp4")
+                input_pattern = get_input_pattern(path)
+                run_ffmpeg(input_pattern, output_path, f"{scene_name}/{folder_name}")
+            else:
+                # Case 2: Nested subfolders (vary_alpha_weight style)
+                # Create a specific output subfolder for this group
+                sub_output_dir = os.path.join(videos_root, folder_name)
+                os.makedirs(sub_output_dir, exist_ok=True)
+                
+                try:
+                    subfolders = os.listdir(path)
+                except PermissionError:
+                    print(f"  ⚠️  Permission denied: {path}")
+                    continue
+                
+                for subfolder in subfolders:
+                    subfolder_path = os.path.join(path, subfolder)
+                    if os.path.isdir(subfolder_path) and not subfolder.startswith('.'):
+                        output_path = os.path.join(sub_output_dir, f"{subfolder}.mp4")
+                        input_pattern = get_input_pattern(subfolder_path)
+                        run_ffmpeg(input_pattern, output_path, f"{scene_name}/{folder_name}/{subfolder}")
 
 def run_video_conversion():
-    """
-    Iterates through the four main folders, then their subfolders, and runs 
-    the ffmpeg command on the frames in each subfolder.
-    """
-    
     print(f"--- Starting Video Conversion Script ---")
-    print(f"Source Directory Root: {BASE_SOURCE_DIR}")
-    print(f"Video Output Root: {VIDEOS_ROOT}")
-    print("-" * 60)
+    print(f"Scenes to process: {', '.join(SCENE_NAMES)}")
     
     if not ensure_ffmpeg_installed():
+<<<<<<< HEAD
         sys.exit(1) # Exit if ffmpeg isn't ready
         
     try:
@@ -142,6 +198,16 @@ def run_video_conversion():
         print(f"\nAn unexpected error occurred during processing: {e}")
     finally:
         print("\n--- Video Conversion Script Finished ---")
+=======
+        sys.exit(1)
+    
+    for scene_name in SCENE_NAMES:
+        process_scene(scene_name)
+    
+    print("\n" + "="*60)
+    print("--- Video Conversion Script Finished ---")
+    print("="*60)
+>>>>>>> 3ac9b112b269e851538f714c4daa764a7a2da0bc
 
 if __name__ == "__main__":
     run_video_conversion()
