@@ -208,6 +208,16 @@
                 <button onclick="showPlot('brightness')" id="btn-brightness">💡 Brightness</button>
                 <button onclick="showPlot('contrast')" id="btn-contrast">⚫⚪ Contrast</button>
             </div>
+            
+            <div class="nav-divider"></div>
+            
+            <div class="nav-section">
+                <button onclick="showPlot('manual_motion_speed')" id="btn-manual_motion_speed">🎬 Manual: Motion</button>
+                <button onclick="showPlot('manual_lighting')" id="btn-manual_lighting">🔦 Manual: Lighting</button>
+                <button onclick="showPlot('manual_vegetation')" id="btn-manual_vegetation">🌿 Manual: Vegetation</button>
+                <button onclick="showPlot('manual_complexity')" id="btn-manual_complexity">📐 Manual: Complexity</button>
+                <button onclick="showPlot('manual_texture')" id="btn-manual_texture">🧱 Manual: Texture</button>
+            </div>
         </nav>
 
         <div class="content">
@@ -398,7 +408,107 @@
                         <strong>⚡ Trade-off:</strong> TAA reduces aliasing but also blurs fine details. Scenes with high-frequency content may show this trade-off most clearly.
                     </div>
                 `,
-                plot: 'interactive_high_freq_energy.html'
+                plot: 'interactive_high_freq_energy_avg.html'
+            },
+            manual_motion_speed: {
+                title: 'Manual Label: Motion Speed',
+                description: `
+                    <p><strong>What this shows:</strong> Quality scores grouped by manually labeled motion speed categories.</p>
+                    
+                    <p><strong>Categories:</strong></p>
+                    <ul>
+                        <li><strong>None/Slow:</strong> Static or gentle camera movement</li>
+                        <li><strong>Medium:</strong> Moderate pans or movements</li>
+                        <li><strong>Fast:</strong> Quick camera movements, rapid pans</li>
+                    </ul>
+                    
+                    <p><strong>Why it matters:</strong> This validates whether your subjective assessment of motion speed correlates with computed optical flow and quality scores.</p>
+                    
+                    <div class="key-insight">
+                        <strong>🎯 Question:</strong> Do scenes you labeled as "Fast" consistently show lower quality scores than "Slow" scenes?
+                    </div>
+                `,
+                plot: 'interactive_manual_motion_speed.html'
+            },
+            manual_lighting: {
+                title: 'Manual Label: Lighting Level',
+                description: `
+                    <p><strong>What this shows:</strong> Quality scores grouped by manually labeled lighting levels.</p>
+                    
+                    <p><strong>Categories:</strong></p>
+                    <ul>
+                        <li><strong>Dark:</strong> Low-light scenes, dim interiors</li>
+                        <li><strong>Medium:</strong> Moderately lit environments</li>
+                        <li><strong>Light/High:</strong> Bright, well-lit scenes</li>
+                    </ul>
+                    
+                    <p><strong>Hypothesis to test:</strong> Do darker scenes maintain higher quality because TAA artifacts are less visible in low light?</p>
+                    
+                    <div class="key-insight">
+                        <strong>🌙 Insight:</strong> If dark scenes show higher scores, it may indicate artifacts are hidden rather than reduced.
+                    </div>
+                `,
+                plot: 'interactive_manual_lighting.html'
+            },
+            manual_vegetation: {
+                title: 'Manual Label: Vegetation Presence',
+                description: `
+                    <p><strong>What this shows:</strong> Quality scores grouped by vegetation/foliage presence.</p>
+                    
+                    <p><strong>Categories:</strong></p>
+                    <ul>
+                        <li><strong>No:</strong> No vegetation in scene</li>
+                        <li><strong>Little:</strong> Sparse vegetation</li>
+                        <li><strong>Lots:</strong> Dense foliage, many plants</li>
+                    </ul>
+                    
+                    <p><strong>Why foliage is challenging:</strong> Vegetation has complex, detailed textures with sub-pixel movement that can cause temporal instability in TAA.</p>
+                    
+                    <div class="key-insight">
+                        <strong>🌿 Expected:</strong> Scenes with "Lots" of vegetation (like lightfoliage) should show lower quality due to temporal aliasing on fine details.
+                    </div>
+                `,
+                plot: 'interactive_manual_vegetation.html'
+            },
+            manual_complexity: {
+                title: 'Manual Label: Visual Complexity',
+                description: `
+                    <p><strong>What this shows:</strong> Quality scores vs your manual complexity rating (1-7 scale).</p>
+                    
+                    <p><strong>What you rated:</strong></p>
+                    <ul>
+                        <li><strong>Low (1-3):</strong> Simple geometry, clean surfaces</li>
+                        <li><strong>Medium (4-5):</strong> Moderate detail and clutter</li>
+                        <li><strong>High (6-7):</strong> Very complex, detailed, busy scenes</li>
+                    </ul>
+                    
+                    <p><strong>Validation:</strong> This compares your subjective complexity assessment with measured features (edge density, texture variance).</p>
+                    
+                    <div class="key-insight">
+                        <strong>📊 Analysis:</strong> If the trend line slopes downward, higher complexity correlates with lower quality.
+                    </div>
+                `,
+                plot: 'interactive_manual_complexity.html'
+            },
+            manual_texture: {
+                title: 'Manual Label: Texture Detail',
+                description: `
+                    <p><strong>What this shows:</strong> Quality scores vs your manual texture rating (1-7 scale).</p>
+                    
+                    <p><strong>What you rated:</strong></p>
+                    <ul>
+                        <li><strong>Low (1-3):</strong> Smooth, simple surfaces</li>
+                        <li><strong>Medium (4-5):</strong> Moderate surface detail</li>
+                        <li><strong>High (6-7):</strong> Highly textured (wood grain, rough surfaces, foliage)</li>
+                    </ul>
+                    
+                    <p><strong>Comparison:</strong> This validates whether your manual assessment matches computed texture variance from the videos.</p>
+                    
+                    <div class="key-insight">
+                        <strong>🎨 Hypothesis:</strong> High texture detail should correlate with lower quality due to temporal instability in fine surface features.
+                    </div>
+                `,
+                plot: 'interactive_manual_texture.html'
             },
             brightness: {
                 title: 'Brightness',

@@ -5,7 +5,7 @@ abandoned-flipped,Factory,Turn,Medium/Fast,Inside,No,No,5,5,Medium,Medium,,,
 cubetest,Desert,ZigZag,Medium,Outside,No,No,2,1,Light,High,,,
 fantasticvillage-open,Village,Doors Open,Slow,Outside,Little,No,5,4,Light,High,,,
 lightfoliage,Shrubbery,Horizontal,Fast,Outside,Lots,No,6,7,Medium,Medium,,,
-lightfoliage-close,Shrubbery,Forward,Medium,Outside,Lots,Yes,7,7,High,High,,,
+lightfoliage-close,Shrubbery,Forward,Medium,Outside,Lots,Yes,7,7,Dark,High,,,
 oldmine,Dark Mine,Forward,Slow,Inside,No,No,7,7,Medium,High,,,
 oldmine-close,Dark Mine,None,None,Inside,No,No,5,6,Dark,Medium,,,
 oldmine-warm,Dark Mine,Backwards,Medium,Inside,No,No,6,7,Dark,High,,,
@@ -14,10 +14,10 @@ quarry-rocksonly,Arid,Turn,Fast,Outside,Little,No,6,6,Medium,Low,,,
 resto-close,Cafe,Horizontal,Fast,Inside,No,No,6,4,Dark,High,,,Has shades —> interesting light
 resto-fwd,Cafe,Mult,Medium/Fast,Inside,No,No,6,5,Dark,Medium,,,Forward with a quick nod
 resto-pan,Cafe,Turn,Fast,Inside,No,No,6,4,Dark,High,,,
-scifi,Many Parts,Turn,Medium,Sparse,No,No,3,2,High,Medium,,,View from above
-subway-lookdown,Subway,Turn,Medium/Fast,Inside,No,Yes,6,7,High,High,,,Multiple
-subway-turn,Subway,Mult,Medium,Inside,No,Yes,6,7,High,High,,,Forward & turn 
-wildwest-bar,Wildwest,Mult,Fast,Inside,No,No,5,7,High,Medium,,,
+scifi,Many Parts,Turn,Medium,Sparse,No,No,3,2,Light,Medium,,,View from above
+subway-lookdown,Subway,Turn,Medium/Fast,Inside,No,Yes,6,7,Light,High,,,Multiple
+subway-turn,Subway,Mult,Medium,Inside,No,Yes,6,7,Light,High,,,Forward & turn 
+wildwest-bar,Wildwest,Mult,Fast,Inside,No,No,5,7,Light,Medium,,,
 wildwest-barzoom,Wildwest,Mult,Medium/Fast,Inside,No,No,4,5,Medium,Medium,,,"Zoom, move over, zoom "
 wildwest-behindcounter,Wildwest,Turn,Fast,Inside,Little,No,6,5,Medium,Medium,,,
 wildwest-store,Wildwest,Mult,Fast,Outside,No,No,5,4,Medium,Medium,,,Fwd and Turn
