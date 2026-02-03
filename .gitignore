@@ -5,3 +5,4 @@ outputs/err_maps/
 outputs/parkenv/legacy
 outputs/factory/legacy
 legacy
+*.DS_Store
