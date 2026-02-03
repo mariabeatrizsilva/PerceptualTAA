@@ -4,9 +4,12 @@ from datetime import datetime
 import sys
 
 # --- Configuration ---
-
-BASE_SOURCE_DIR = "data/plantshow"
-VIDEOS_ROOT = "outputs/plantshow/videos"
+# List of scene names (folders inside data/)
+SCENE_NAMES = [
+    "plantshow",
+    "abandoned",
+    "abandoned-demo"
+]
 
 # The dictionary now just lists the top-level folders we want to process.
 # We will detect automatically if they contain subfolders or direct frames.
@@ -16,11 +19,10 @@ FOLDERS_TO_PROCESS = [
     "vary_num_samples_TAA",
     "vary_hist_percent",
     "vary_filter_size",
-    "16SSAA" 
+    "16SSAA"
 ]
 
 # --- Utility Functions ---
-
 def ensure_ffmpeg_installed():
     try:
         subprocess.run(['ffmpeg', '-version'], check=True, capture_output=True)
@@ -35,7 +37,7 @@ def run_ffmpeg(input_pattern, output_path, display_name):
     if os.path.exists(output_path):
         print(f"  ⏩ SKIPPING: {display_name}.mp4 already exists.")
         return
-
+    
     ffmpeg_command = [
         'ffmpeg', '-y', '-framerate', '30',
         '-i', input_pattern,
@@ -58,47 +60,81 @@ def get_input_pattern(folder_path):
     return os.path.join(folder_path, "%04d.png")
 
 # --- Main Logic ---
-
-def run_video_conversion():
-    print(f"--- Starting Video Conversion Script ---")
-    if not ensure_ffmpeg_installed():
-        sys.exit(1)
-        
-    os.makedirs(VIDEOS_ROOT, exist_ok=True)
-
+def process_scene(scene_name):
+    """Process a single scene directory."""
+    base_source_dir = os.path.join("data", scene_name)
+    videos_root = os.path.join("outputs", scene_name, "videos")
+    
+    print(f"\n{'='*60}")
+    print(f"Processing Scene: {scene_name}")
+    print(f"{'='*60}")
+    
+    if not os.path.exists(base_source_dir):
+        print(f"⚠️  WARNING: Scene directory not found: {base_source_dir}")
+        return
+    
+    os.makedirs(videos_root, exist_ok=True)
+    
     for folder_name in FOLDERS_TO_PROCESS:
-        path = os.path.join(BASE_SOURCE_DIR, folder_name)
+        path = os.path.join(base_source_dir, folder_name)
         
         if not os.path.exists(path):
             print(f"\nPath not found, skipping: {path}")
             continue
-
-        print(f"\n--- Checking: {folder_name} ---")
-
-        # LOGIC: Check if this folder contains frames directly (like 16SSAA)
-        # We look for either frame.png or 0000.png / 0001.png
-        direct_frame_exists = any(f.endswith('.png') for f in os.listdir(path))
         
-        if direct_frame_exists:
-            # Case 1: Direct frames (16SSAA style)
-            # Output directly into the VIDEOS_ROOT
-            output_path = os.path.join(VIDEOS_ROOT, f"{folder_name}.mp4")
+        print(f"\n--- Checking: {folder_name} ---")
+        
+        # Special handling for 16SSAA: always treat as direct frames
+        if folder_name == "16SSAA":
+            # Output directly into the VIDEOS_ROOT (not in a subfolder)
+            output_path = os.path.join(videos_root, "16SSAA.mp4")
             input_pattern = get_input_pattern(path)
-            run_ffmpeg(input_pattern, output_path, folder_name)
+            run_ffmpeg(input_pattern, output_path, f"{scene_name}/16SSAA")
         else:
-            # Case 2: Nested subfolders (vary_alpha_weight style)
-            # Create a specific output subfolder for this group
-            sub_output_dir = os.path.join(VIDEOS_ROOT, folder_name)
-            os.makedirs(sub_output_dir, exist_ok=True)
+            # Check if this folder contains frames directly
+            try:
+                direct_frame_exists = any(f.endswith('.png') for f in os.listdir(path))
+            except PermissionError:
+                print(f"  ⚠️  Permission denied: {path}")
+                continue
+            
+            if direct_frame_exists:
+                # Case 1: Direct frames (uncommon for non-16SSAA)
+                output_path = os.path.join(videos_root, f"{folder_name}.mp4")
+                input_pattern = get_input_pattern(path)
+                run_ffmpeg(input_pattern, output_path, f"{scene_name}/{folder_name}")
+            else:
+                # Case 2: Nested subfolders (vary_alpha_weight style)
+                # Create a specific output subfolder for this group
+                sub_output_dir = os.path.join(videos_root, folder_name)
+                os.makedirs(sub_output_dir, exist_ok=True)
+                
+                try:
+                    subfolders = os.listdir(path)
+                except PermissionError:
+                    print(f"  ⚠️  Permission denied: {path}")
+                    continue
+                
+                for subfolder in subfolders:
+                    subfolder_path = os.path.join(path, subfolder)
+                    if os.path.isdir(subfolder_path) and not subfolder.startswith('.'):
+                        output_path = os.path.join(sub_output_dir, f"{subfolder}.mp4")
+                        input_pattern = get_input_pattern(subfolder_path)
+                        run_ffmpeg(input_pattern, output_path, f"{scene_name}/{folder_name}/{subfolder}")
 
-            for subfolder in os.listdir(path):
-                subfolder_path = os.path.join(path, subfolder)
-                if os.path.isdir(subfolder_path) and not subfolder.startswith('.'):
-                    output_path = os.path.join(sub_output_dir, f"{subfolder}.mp4")
-                    input_pattern = get_input_pattern(subfolder_path)
-                    run_ffmpeg(input_pattern, output_path, f"{folder_name}/{subfolder}")
-
-    print("\n--- Video Conversion Script Finished ---")
+def run_video_conversion():
+    print(f"--- Starting Video Conversion Script ---")
+    print(f"Scenes to process: {', '.join(SCENE_NAMES)}")
+    
+    if not ensure_ffmpeg_installed():
+        sys.exit(1)
+    
+    for scene_name in SCENE_NAMES:
+        process_scene(scene_name)
+    
+    print("\n" + "="*60)
+    print("--- Video Conversion Script Finished ---")
+    print("="*60)
 
 if __name__ == "__main__":
     run_video_conversion()
