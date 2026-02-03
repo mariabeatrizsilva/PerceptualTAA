@@ -6,10 +6,10 @@ import sys
 # --- Configuration ---
 
 # **IMPORTANT**: Update these paths to match your system.
-BASE_SOURCE_DIR = "data/frames"
+BASE_SOURCE_DIR = "data/lightfoliage-close"
 
 # The root directory where the final MP4 videos will be saved.
-VIDEOS_ROOT = "outputs/factory/videos"
+VIDEOS_ROOT = "outputs/lightfoliage-close/videos"
 
 # Define the structure of the main folders and their corresponding output directories
 # This dictionary makes the logic clean and easy to scale.
@@ -127,6 +127,16 @@ def run_video_conversion():
                     
                     # C. Run FFmpeg
                     run_ffmpeg(input_pattern, output_path, subfolder_name)
+        main_folder_path = os.path.join(BASE_SOURCE_DIR, "16SSAA")
+        output_filename = "16SSAA.mp4"
+        input_pattern = os.path.join(main_folder_path, f'%04d.{frame_ext}')
+        output_path = os.path.join(VIDEOS_ROOT, output_filename)
+        run_ffmpeg(input_pattern, output_path, output_filename)
+        # main_folder_path = os.path.join(BASE_SOURCE_DIR, "16SSAA-1")
+        # output_filename = "16SSAA-1.mp4"
+        # input_pattern = os.path.join(main_folder_path, f'%04d.{frame_ext}')
+        # output_path = os.path.join(VIDEOS_ROOT, output_filename)
+        # run_ffmpeg(input_pattern, output_path, output_filename)
                 
     except Exception as e:
         print(f"\nAn unexpected error occurred during processing: {e}")
