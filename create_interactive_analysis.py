@@ -382,22 +382,44 @@ def create_multi_feature_plot(df, key_features):
     # Sort by absolute correlation
     top_features = sorted(correlations.items(), key=lambda x: x[1], reverse=True)[:4]
     
+    # Define consistent colors for motion speeds WITH FIXED ORDER
+    motion_speed_order = ['Slow', 'Medium', 'Fast', 'Medium/Fast']
+    color_map = {
+        'Slow': "#FF0000",      # Blue
+        'Medium': "#EF8C3B",    # Red/Orange
+        'Medium/Fast': "#93FA63", # Purple
+        'Fast': "#00FFF2",      # Green
+    }
+    
     # Create subplot
     fig = make_subplots(
         rows=2, cols=2,
-        subplot_titles=[dict(key_features)[feat[0]] for feat in top_features],
+        subplot_titles=[f"{dict(key_features)[feat[0]]}<br>Spearman r = {feat[1]:.3f}" 
+                       for feat in top_features],
         vertical_spacing=0.15,
         horizontal_spacing=0.12
     )
     
     positions = [(1, 1), (1, 2), (2, 1), (2, 2)]
     
+    # Track which motion speeds we've added to legend
+    legend_added = set()
+    
     for (feature_col, corr_val), (row, col) in zip(top_features, positions):
         feature_name = dict(key_features)[feature_col]
         
-        # Add scatter points
-        for motion_speed in df['motion_speed'].unique():
+        # Add scatter points grouped by motion speed IN FIXED ORDER
+        for motion_speed in motion_speed_order:
             subset = df[df['motion_speed'] == motion_speed]
+            
+            # Skip if no data for this motion speed
+            if len(subset) == 0:
+                continue
+            
+            show_legend = motion_speed not in legend_added
+            if show_legend:
+                legend_added.add(motion_speed)
+            
             fig.add_trace(
                 go.Scatter(
                     x=subset[feature_col],
@@ -405,11 +427,20 @@ def create_multi_feature_plot(df, key_features):
                     mode='markers',
                     name=str(motion_speed),
                     text=subset['scene'],
+                    customdata=subset[['environment', 'has_vegetation', 'lighting']],
                     hovertemplate='<b>%{text}</b><br>' +
                                 f'{feature_name}: %{{x:.2f}}<br>' +
-                                'CGVQM: %{y:.2f}<extra></extra>',
-                    marker=dict(size=10, line=dict(width=1, color='white')),
-                    showlegend=(row == 1 and col == 1)
+                                'CGVQM: %{y:.2f}<br>' +
+                                'Environment: %{customdata[0]}<br>' +
+                                'Vegetation: %{customdata[1]}<br>' +
+                                'Lighting: %{customdata[2]}<extra></extra>',
+                    marker=dict(
+                        size=12, 
+                        line=dict(width=1, color='white'),
+                        color=color_map.get(motion_speed, '#999999')
+                    ),
+                    showlegend=show_legend,
+                    legendgroup=motion_speed
                 ),
                 row=row, col=col
             )
@@ -426,7 +457,8 @@ def create_multi_feature_plot(df, key_features):
                     y=p(x_trend),
                     mode='lines',
                     line=dict(color='red', dash='dash', width=2),
-                    showlegend=False
+                    showlegend=False,
+                    hoverinfo='skip'
                 ),
                 row=row, col=col
             )
@@ -436,10 +468,16 @@ def create_multi_feature_plot(df, key_features):
         fig.update_yaxes(title_text='CGVQM Score' if col == 1 else '', row=row, col=col)
     
     fig.update_layout(
-        title_text='Top 4 Most Correlated Features with Quality<br><sub>Colored by Motion Speed</sub>',
-        height=800,
+        title_text='Top 4 Most Correlated Features with Quality<br><sub>Click points to see scene details · Colored by Motion Speed</sub>',
+        height=900,
         hovermode='closest',
-        legend=dict(title='Motion Speed')
+        legend=dict(
+            title='Motion Speed',
+            x=1.05,
+            y=0.5,
+            xanchor='left',
+            yanchor='middle'
+        )
     )
     
     filename = "interactive_top_features.html"
