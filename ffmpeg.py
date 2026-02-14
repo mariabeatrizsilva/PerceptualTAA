@@ -14,6 +14,23 @@ SCENE_NAMES = [
     "subway-turn", "wildwest-bar", "wildwest-barzoom", "wildwest-behindcounter", "wildwest-store", "wildwest-town"
 ]
 
+<<<<<<< HEAD
+# **IMPORTANT**: Update these paths to match your system.
+BASE_SOURCE_DIR = "data/lightfoliage-close"
+
+# The root directory where the final MP4 videos will be saved.
+VIDEOS_ROOT = "outputs/lightfoliage-close/videos"
+
+# Define the structure of the main folders and their corresponding output directories
+# This dictionary makes the logic clean and easy to scale.
+FOLDER_CONFIG = {
+    # Main Folder Name: (Output Directory Path, Input Frame Extension)
+    "vary_alpha_weight": (os.path.join(VIDEOS_ROOT, "vary_alpha_weight"), 'png'),
+    "vary_num_samples": (os.path.join(VIDEOS_ROOT, "vary_num_samples"), 'png'),
+    "vary_hist_percent": (os.path.join(VIDEOS_ROOT, "vary_hist_percent"), 'png'),
+    "vary_filter_size": (os.path.join(VIDEOS_ROOT, "vary_filter_size"), 'png')
+}
+=======
 # The dictionary now just lists the top-level folders we want to process.
 # We will detect automatically if they contain subfolders or direct frames.
 FOLDERS_TO_PROCESS = [
@@ -24,6 +41,7 @@ FOLDERS_TO_PROCESS = [
     "vary_filter_size",
     "16SSAA"
 ]
+>>>>>>> 3ac9b112b269e851538f714c4daa764a7a2da0bc
 
 # --- Utility Functions ---
 def ensure_ffmpeg_installed():
@@ -130,6 +148,60 @@ def run_video_conversion():
     print(f"Scenes to process: {', '.join(SCENE_NAMES)}")
     
     if not ensure_ffmpeg_installed():
+<<<<<<< HEAD
+        sys.exit(1) # Exit if ffmpeg isn't ready
+        
+    try:
+        # 1. Loop through the main folders defined in FOLDER_CONFIG
+        for main_folder_name, (output_dir, frame_ext) in FOLDER_CONFIG.items():
+            
+            main_folder_path = os.path.join(BASE_SOURCE_DIR, main_folder_name)
+            
+            print(f"\n--- Processing Main Folder: {main_folder_name} ---")
+            print(f"Videos will be saved to: {output_dir}")
+            
+            # Ensure the output directory for this group exists
+            os.makedirs(output_dir, exist_ok=True)
+            
+            if not os.path.exists(main_folder_path):
+                 print(f"  WARNING: Main folder not found: {main_folder_path}. Skipping.")
+                 continue
+
+            # 2. Loop through the subfolders inside the main folder
+            for subfolder_name in os.listdir(main_folder_path):
+                subfolder_path = os.path.join(main_folder_path, subfolder_name)
+                
+                # Check if it's a valid directory
+                if os.path.isdir(subfolder_path) and not subfolder_name.startswith('.'):
+                    
+                    print(f"\n> Processing Subfolder: {subfolder_name}")
+
+                    # A. Define the input pattern inside the current subfolder
+                    # Assumes files are zero-padded, e.g., 0001.png, 0002.png
+                    input_pattern = os.path.join(subfolder_path, f'%04d.{frame_ext}')
+                    
+                    # B. Define the output filename: subfolder_name.mp4
+                    output_filename = f"{subfolder_name}.mp4"
+                    output_path = os.path.join(output_dir, output_filename)
+                    
+                    # C. Run FFmpeg
+                    run_ffmpeg(input_pattern, output_path, subfolder_name)
+        main_folder_path = os.path.join(BASE_SOURCE_DIR, "16SSAA")
+        output_filename = "16SSAA.mp4"
+        input_pattern = os.path.join(main_folder_path, f'%04d.{frame_ext}')
+        output_path = os.path.join(VIDEOS_ROOT, output_filename)
+        run_ffmpeg(input_pattern, output_path, output_filename)
+        # main_folder_path = os.path.join(BASE_SOURCE_DIR, "16SSAA-1")
+        # output_filename = "16SSAA-1.mp4"
+        # input_pattern = os.path.join(main_folder_path, f'%04d.{frame_ext}')
+        # output_path = os.path.join(VIDEOS_ROOT, output_filename)
+        # run_ffmpeg(input_pattern, output_path, output_filename)
+                
+    except Exception as e:
+        print(f"\nAn unexpected error occurred during processing: {e}")
+    finally:
+        print("\n--- Video Conversion Script Finished ---")
+=======
         sys.exit(1)
     
     for scene_name in SCENE_NAMES:
@@ -138,6 +210,7 @@ def run_video_conversion():
     print("\n" + "="*60)
     print("--- Video Conversion Script Finished ---")
     print("="*60)
+>>>>>>> 3ac9b112b269e851538f714c4daa764a7a2da0bc
 
 if __name__ == "__main__":
     run_video_conversion()
