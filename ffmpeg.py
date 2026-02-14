@@ -6,9 +6,12 @@ import sys
 # --- Configuration ---
 # List of scene names (folders inside data/)
 SCENE_NAMES = [
-    "plantshow",
     "abandoned",
-    "abandoned-demo"
+    "abandoned-demo",
+    "abandoned-flipped",
+    "cubetest", "fantasticvillage-open", "lightfoliage", "lightfoliage-close", "oldmine", "oldmine-close", 
+    "oldmine-warm", "quarry-all", "quarry-rocksonly", "resto-close", "resto-fwd", "resto-pan", "scifi", "subway-lookdown", 
+    "subway-turn", "wildwest-bar", "wildwest-barzoom", "wildwest-behindcounter", "wildwest-store", "wildwest-town"
 ]
 
 # The dictionary now just lists the top-level folders we want to process.
