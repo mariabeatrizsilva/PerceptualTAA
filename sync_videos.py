@@ -5,12 +5,13 @@ import sys
 # --- Configuration ---
 SCENE_NAMES = [
     # "abandoned",
-    "abandoned-demo",
-    "abandoned-flipped",
-    "cubetest", "fantasticvillage-open", "lightfoliage", "lightfoliage-close", "oldmine", "oldmine-close", 
-    "oldmine-warm", "quarry-all", "quarry-rocksonly", "resto-close", "resto-fwd", "resto-pan", "scifi", "subway-lookdown", 
-    "subway-turn", "wildwest-bar", "wildwest-barzoom", "wildwest-behindcounter", "wildwest-store", "wildwest-town"
-]
+#    "abandoned-demo",
+#    "abandoned-flipped",
+#    "cubetest", "fantasticvillage-open", "lightfoliage", "lightfoliage-close", "oldmine", "oldmine-close", 
+#    "oldmine-warm", "quarry-all", "quarry-rocksonly", "resto-close", "resto-fwd", "resto-pan", "scifi", "subway-lookdown", 
+#    "subway-turn", "wildwest-bar", "wildwest-barzoom", "wildwest-behindcounter", "wildwest-store", "wildwest-town",
+    "oldmine-speed-9","oldmine-speed-18", "oldmine-speed-35", "oldmine-speed-75"
+    ]
 
 # Source machine (where videos are)
 SOURCE_USER = "bia"
