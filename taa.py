@@ -327,7 +327,7 @@ if __name__ == "__main__":
                         help='Generate video from output frames using ffmpeg')
     parser.add_argument('-fps', '--framerate', type=int, default=30,
                         help='Framerate for output video. Default: 30')
-    parser.add_argument('--input', type=str, default="data/fantasticvillage-test/no-taa/",
+    parser.add_argument('--input', type=str, default="fantasticvillage-test/no-taa/",
                         help='Input directory containing EXR frames')
     parser.add_argument('--output', type=str, default=None,
                         help='Output directory for processed frames (default: auto-generated based on blend factor)')
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     
     # Auto-generate output directory name based on blend factor if not specified
     if args.output is None:
-        output_dir = f"outputs/fantasticvillage-test/taa_alpha{args.blend_factor:.3f}"
+        output_dir = f"outputframes/taa_alpha{args.blend_factor:.3f}"
     else:
         output_dir = args.output
     
@@ -373,7 +373,7 @@ if __name__ == "__main__":
             
             # Get corresponding files
             motion_file = os.path.join(base_path, f"FinalImagemrq_motionvecs.{frame_num}.exr")
-            depth_file = os.path.join(base_path, f"WorldDepth.{frame_num}.exr")
+            depth_file = os.path.join(base_path, f"FinalImagemrq_worlddepth.{frame_num}.exr")
             
             print(f"Motion: {motion_file}")
             print(f"Depth: {depth_file}")
@@ -444,7 +444,8 @@ if __name__ == "__main__":
             print(f"All frames converted to PNG")
             
             # Generate video using ffmpeg
-            video_output = os.path.join(output_dir, f"taa_alpha{args.blend_factor:.3f}_video.mp4")
+            video_output = os.path.join("outputvideos", f"taa_alpha{args.blend_factor:.3f}_video.mp4")
+            os.makedirs("outputvideos", exist_ok=True)
             
             ffmpeg_cmd = [
                 'ffmpeg',
