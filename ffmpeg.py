@@ -16,24 +16,8 @@ SCENE_NAMES = [
     "oldmine-screen-per-25", "oldmine-screen-per-50", "oldmine-screen-per-75", "village-screen-per-25", "village-screen-per-50", "village-screen-per-75"
 ]
 
-# **IMPORTANT**: Update these paths to match your system.
-BASE_SOURCE_DIR = "data/lightfoliage-close"
-
-# The root directory where the final MP4 videos will be saved.
-VIDEOS_ROOT = "outputs/lightfoliage-close/videos"
-
-# Define the structure of the main folders and their corresponding output directories
-# This dictionary makes the logic clean and easy to scale.
-# FOLDER_CONFIG = {
-#     # Main Folder Name: (Output Directory Path, Input Frame Extension)
-#     "vary_alpha_weight": (os.path.join(VIDEOS_ROOT, "vary_alpha_weight"), 'png'),
-#     "vary_num_samples": (os.path.join(VIDEOS_ROOT, "vary_num_samples"), 'png'),
-#     "vary_hist_percent": (os.path.join(VIDEOS_ROOT, "vary_hist_percent"), 'png'),
-#     "vary_filter_size": (os.path.join(VIDEOS_ROOT, "vary_filter_size"), 'png')
-# }
-# =======
-# # The dictionary now just lists the top-level folders we want to process.
-# # We will detect automatically if they contain subfolders or direct frames.
+# The dictionary now just lists the top-level folders we want to process.
+# We will detect automatically if they contain subfolders or direct frames.
 FOLDERS_TO_PROCESS = [
     "vary_alpha_weight",
     "vary_num_samples",
@@ -42,7 +26,6 @@ FOLDERS_TO_PROCESS = [
     "vary_filter_size",
     "16SSAA"
 ]
-# >>>>>>> 3ac9b112b269e851538f714c4daa764a7a2da0bc
 
 # --- Utility Functions ---
 def ensure_ffmpeg_installed():

@@ -1,0 +1,5 @@
+Parameter,Optimal Value,Avg Effect at Optimal,Effect Range
+Alpha Weight,0.6,+1.95,3.41
+Filter Size,0.5,+0.03,0.93
+Hist Percent,200.0,+1.96,2.86
+Num Samples,8.0,+0.02,1.05
