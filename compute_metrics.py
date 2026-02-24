@@ -616,7 +616,7 @@ Examples:
   python compute_metrics.py -m CGVQM -f vary_alpha_weight --scenes scene1 scene2 scene3
   
   # Multiple scenes with --all flag
-  python compute_metrics.py -m CGVQM --all --scenes wildwest-behindcounter parkenv meerkat
+  python compute_metrics.py -m CGVQM --all --scenes oldmine-screen-per-25 oldmine-screen-per-50 oldmine-screen-per-75 village-screen-per-25 village-screen-per-50 village-screen-per-75
         """
     )
     
