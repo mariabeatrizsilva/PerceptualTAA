@@ -136,6 +136,8 @@ def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tup
 
         for json_file in json_files:
             json_path = os.path.join(scores_dir, json_file)
+            filename_ref = parse_ref_scene_from_filename(json_filename, None)  # None = not found
+# ref_scene = filename_ref or file_meta.get('reference_scene') or base_scene
             ref_scene = parse_ref_scene_from_filename(json_file, base_scene)
             ref_key = f"ref-{ref_scene}"
 
