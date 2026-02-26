@@ -283,8 +283,9 @@ class SimpleTAA:
         confidence = self.detect_disocclusion(current_depth, self.history_depth, motion_vectors)
         
         # Apply neighborhood clamping (key anti-ghosting technique)
-        print("Applying neighborhood clamping...")
-        clamped_history = self.neighborhood_clamp(reprojected_history, current_color)
+        # print("Applying neighborhood clamping...")
+        # clamped_history = self.neighborhood_clamp(reprojected_history, current_color)
+        clamped_history = reprojected_history
         
         # Adaptive blending based on confidence
         # Low confidence (disocclusion) -> use more current frame
@@ -327,7 +328,7 @@ if __name__ == "__main__":
                         help='Generate video from output frames using ffmpeg')
     parser.add_argument('-fps', '--framerate', type=int, default=30,
                         help='Framerate for output video. Default: 30')
-    parser.add_argument('--input', type=str, default="data/fantasticvillage-test/no-taa/",
+    parser.add_argument('--input', type=str, default="fantasticvillage-test/no-taa/",
                         help='Input directory containing EXR frames')
     parser.add_argument('--output', type=str, default=None,
                         help='Output directory for processed frames (default: auto-generated based on blend factor)')
@@ -339,7 +340,7 @@ if __name__ == "__main__":
     
     # Auto-generate output directory name based on blend factor if not specified
     if args.output is None:
-        output_dir = f"outputs/fantasticvillage-test/taa_alpha{args.blend_factor:.3f}"
+        output_dir = f"outputframes/taa_alpha{args.blend_factor:.3f}"
     else:
         output_dir = args.output
     
@@ -444,7 +445,8 @@ if __name__ == "__main__":
             print(f"All frames converted to PNG")
             
             # Generate video using ffmpeg
-            video_output = os.path.join(output_dir, f"taa_alpha{args.blend_factor:.3f}_video.mp4")
+            video_output = os.path.join("outputvideos", f"taa_alpha{args.blend_factor:.3f}_video.mp4")
+            os.makedirs("outputvideos", exist_ok=True)
             
             ffmpeg_cmd = [
                 'ffmpeg',

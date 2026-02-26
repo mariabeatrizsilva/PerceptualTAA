@@ -1,261 +1,200 @@
 # PerceptualTAA
 
-Code used for project investigating the perceptual foundations of Temporal Anti-Aliasing (TAA) through systematic parameter analysis and quality metric evaluation.
+Code for investigating the perceptual foundations of Temporal Anti-Aliasing (TAA) through systematic parameter analysis and quality metric evaluation.
 
-## Overview
-
-This project examines how varying TAA parameters affects perceptually-based quality metrics. Using Unreal Engine 5.6, scenes with diverse visual characteristics are rendered with different TAA configurations and evaluated using state-of-the-art perceptual metrics. The insights gained provide a foundation for optimizing not only TAA but also video generation methods where comparable temporal artifacts occur.
-
-**Key contributions:**
-1. Automated scene rendering with varying TAA parameters in Unreal Engine (`generate_mrq.py`)
-2. Perceptual metric computation tools for CVVDP and CGVQM (`compute_metrics.py`)
-3. Analysis and visualization of metric results across multiple scenes and parameters
-
-## Features
-
-- **Automated Rendering Pipeline**: Generate video sequences with systematic TAA parameter variations using Unreal Engine's Movie Render Queue (MRQ)
-- **Video Evaluation with Two Reference-Based Perceptual Quality Metrics**: [CGVQM: Computer Graphics Video Quality Metric](https://github.com/IntelLabs/cgvqm) and [ColorVideoVDP](https://github.com/gfxdisp/ColorVideoVDP/tree/main)
-- **Batch Processing**: Compute metrics across multiple parameter folders efficiently
-- **Visualization Tools**: Generate plots analyzing parameter impact on perceptual quality
-
-## Tested Scenes
-
-This toolkit has been validated with:
-- **City Park Environment** - Organic, nature-heavy scene ([City Park Collection](https://www.unrealengine.com/en-US/blog/free-city-park-environment-collection-now-available))
-- **Factory Environment** - Rigid, industrial setting ([Free Factory Collection](https://www.unrealengine.com/en-US/blog/free-factory-environment-collection-now-available))
-
-The framework can be extended to other Unreal Scenes.
+Scenes are rendered in Unreal Engine 5.6 at varying TAA configurations and screen resolutions, then evaluated using perceptual video quality metrics. Results are aggregated into an interactive visualization tool for cross-scene analysis.
 
 ## Repository Structure
 
 ```
 PerceptualTAA/
-├── data/                          # User-provided data directory (not in repo)
+├── data/                          # User-provided (not in repo)
 │   └── {scene_name}/
 │       ├── 16SSAA/                # Reference renders (16x supersampling)
-│       │   └── %04d.png
-│       └── {parameter_folder}/    # Renders for specific parameter variations
-│           └── {param_value}/
+│       └── {param_folder}/        # e.g. vary_alpha_weight/
+│           └── {param_value}/     # e.g. vary_alpha_weight_0.04/
 │               └── %04d.png
-├── src/
-│   └── cgvqm/                     # CGVQM metric implementation (cloned)
 ├── outputs/
 │   └── {scene_name}/
-│       ├── scores_cgvqm/          # CGVQM metric results (JSON)
-│       ├── scores_cvvdp/          # CVVDP metric results (JSON)
-│       └── error_plots/           # Visualization plots
-│           └── {parameter_name}/
-├── generate_mrq.py                # Unreal Engine MRQ automation
-├── compute_metrics.py             # Main metric computation script
-├── verify_errors.py               # Generates per-frame error plots
-├── ffmpeg.py                      # Converts generated frames to mp4 in batches using FFMPEG
+│       ├── scores_cgvqm/          # CGVQM results (JSON)
+│       ├── scores_cvvdp/          # CVVDP results (JSON)
+│       └── error_plots/
+├── src/
+│   └── cgvqm/                     # CGVQM implementation (cloned)
+├── generate_mrq.py                # Unreal Engine MRQ automation (populates queue with renders at parameter configs)
+├── compute_metrics.py             # Metric computation (CGVQM + CVVDP)
+├── build_dataset.py               # Aggregates JSON outputs into dataset.json
+├── d3_viewer.html                      # Interactive D3 quality explorer
+└── ffmpeg.py                      # Frame sequence → mp4 conversion
 ```
+
+---
 
 ## Installation
 
 ### Prerequisites
 
-- **Unreal Engine 5.6** with:
-  - Movie Render Queue (MRQ) plugin enabled
-  - Python scripting enabled
+- **Unreal Engine 5.6** with Movie Render Queue and Python scripting enabled
 - **Python 3.x**
 - **FFmpeg**
 
 ### Python Dependencies
 
 ```bash
-# Core dependencies
-pip install numpy opencv-python matplotlib
+pip install numpy opencv-python matplotlib torch torchvision pillow
 
-# CVVDP metric
+# CVVDP
 pip install pycvvdp
 
-# CGVQM metric - clone into src/
-cd src/
-git clone [CGVQM_REPO_URL] cgvqm
-cd ..
+# CGVQM — clone into src/
+cd src/ && git clone [CGVQM_REPO_URL] cgvqm && cd ..
 ```
 
-### FFmpeg Installation
-
-```bash
-# Ubuntu/Debian
-sudo apt-get install ffmpeg
-
-# macOS
-brew install ffmpeg
-
-# Windows
-# Download from https://ffmpeg.org/download.html
-```
+---
 
 ## Data Setup
 
-### Directory Structure
-
-Create a `data/` directory in the project root with the following structure:
+Renders for each scene live under `data/`. Screen resolution variants use the naming convention `{scene_name}-screen-per-{pct}`:
 
 ```
 data/
-└── {scene_name}/              # e.g., 'parkenv', 'factory'
-    ├── 16SSAA/                # Reference render (required)
-    │   └── %04d.png           # Frame sequence: 0001.png, 0002.png, ...
-    └── {param_folder}/        # e.g., 'vary_alpha_weight'
-        └── {param_value}/     # e.g., 'vary_alpha_weight_0.04'
-            └── %04d.png       # Frame sequence
+└── oldmine/                        # full resolution
+│   ├── 16SSAA/                     # reference frames
+│   └── vary_alpha_weight/
+│       ├── vary_alpha_weight_0.04/
+│       └── vary_alpha_weight_0.08/
+├── oldmine-screen-per-25/          # 25% screen resolution variant
+│   ├── 16SSAA/
+│   └── vary_alpha_weight/
+└── oldmine-screen-per-75/
+    └── ...
 ```
 
-### Example Structure
+Frame files should be PNG, named sequentially (`0001.png`, `0002.png`, ...).
 
-```
-data/
-└── parkenv/
-    ├── 16SSAA/
-    │   ├── 0001.png
-    │   ├── 0002.png
-    │   └── ...
-    ├── vary_alpha_weight/
-    │   ├── vary_alpha_weight_0.04/
-    │   │   ├── 0001.png
-    │   │   └── ...
-    │   └── vary_alpha_weight_0.08/
-    │       ├── 0001.png
-    │       └── ...
-    └── vary_filter_size/
-        ├── vary_filter_size_1.0/
-        │   └── ...
-        └── vary_filter_size_2.0/
-            └── ...
-```
+---
 
-### Frame Format Requirements
+## Workflow
 
-- **Format**: PNG (recommended for lossless quality) or JPG
-- **Naming**: Sequential frames with 4-digit padding (`%04d.png`)
-- **Reference**: Must have a `16SSAA` folder with reference renders
-  - 16xSSAA (16x supersampling anti-aliasing) provides ground truth quality to compare parameter variations using the metrics.
-
-## Usage
-
-### 1. Generate Renders in Unreal Engine
-
-Use `generate_mrq.py` to automate rendering with varying TAA parameters:
+### 1. Render in Unreal Engine
 
 ```bash
 python generate_mrq.py
 ```
 
-This script interfaces with Unreal Engine's Movie Render Queue to systematically render scenes with different TAA configurations.
+Populates the Movie Render Queue with parameter variations. Click Render in MRQ to produce the frame sequences.
 
-### 2. Configure Scene Settings
-
-Edit the configuration at the top of `compute_metrics.py`:
-
-```python
-SCENE_NAME = 'parkenv'      # Change for different scenes
-REF_NAME = '16SSAA'         # Reference folder name (keep as 16SSAA)
-BASE_MP4 = 'data/'
-BASE_FRAMES = f'data/{SCENE_NAME}/'
-FRAMES_SUFFIX = '%04d.png'  # Frame naming pattern
-```
-
-### 3. Compute Perceptual Metrics
-
-#### Compute CGVQM for single parameter folder:
-```bash
-python compute_metrics.py --metric CGVQM --folders vary_alpha_weight
-```
-
-#### Compute CVVDP for multiple parameter folders:
-```bash
-python compute_metrics.py --metric CVVDP --folders vary_filter_size vary_num_samples
-```
-
-#### Test single video (debugging):
-```bash
-python compute_metrics.py --metric CGVQM --folders vary_alpha_weight --single video_name
-```
-
-#### Using short flags:
-```bash
-python compute_metrics.py -m CGVQM -f vary_alpha_weight
-```
-
-**Command-line Arguments:**
-- `--metric` / `-m`: Metric type (`CGVQM` or `CVVDP`)
-- `--folders` / `-f`: Space-separated list of parameter folders to process
-- `--single` / `-s`: (Optional) Process only a specific video for testing
-
-### 4. Generate Visualization Plots
-
-After computing metrics, generate analysis plots:
+### 2. Compute Metrics
 
 ```bash
-python verify_errors.py
+# CGVQM for one or more parameter folders, one or more scenes
+python compute_metrics.py -m CGVQM -f vary_alpha_weight vary_filter_size --scenes oldmine quarry
+
+# All parameter folders in a scene
+python compute_metrics.py -m CGVQM --all --scenes oldmine
+
+# Use a different scene's 16SSAA as reference (e.g. compare degraded renders to full-quality ref)
+python compute_metrics.py -m CGVQM --all --scenes oldmine-screen-per-25 --ref-scene oldmine
+
+# Test a single video
+python compute_metrics.py -m CGVQM -f vary_alpha_weight --single vary_alpha_weight_0.04 --scenes oldmine
 ```
 
-This reads the JSON files from `outputs/{scene_name}/scores_{metric}/` and generates plots in `outputs/{scene_name}/error_plots/{parameter_name}/`.
+Results are saved to `outputs/{scene_name}/scores_cgvqm/{folder}_scores[_ref-{ref_scene}].json`.
 
-## Output Structure
+Each JSON entry follows this structure:
 
-### Metric Scores
-
-Computed metrics are saved as JSON files:
-
-```
-outputs/
-└── {scene_name}/           # e.g., 'parkenv'
-    ├── scores_cgvqm/
-    │   ├── vary_alpha_weight_scores.json
-    │   ├── vary_filter_size_scores.json
-    │   ├── vary_hist_percent_scores.json
-    │   └── vary_num_samples_scores.json
-    └── scores_cvvdp/
-        ├── vary_alpha_weight_scores.json
-        └── ...
+```json
+{
+  "_meta": {
+    "reference_scene": "oldmine",
+    "metric": "CGVQM",
+    "source_file": "vary_alpha_weight_scores.json"
+  },
+  "vary_alpha_weight_0.04": {
+    "score": 96.61,
+    "per_frame_errors": [4.87, 11.87, ...]
+  }
+}
 ```
 
-Each JSON contains metric values for all videos in that parameter folder.
+### 3. Build the Dataset
 
-### Visualization Plots
+After computing metrics, run `build_dataset.py` to merge all JSON outputs into a single `dataset.json` used by the plotter. This is incremental — only new entries are added on each run.
 
-Plots are organized by parameter:
-
-```
-outputs/
-└── {scene_name}/
-    └── error_plots/
-        ├── vary_alpha_weight/
-        │   └── [plots analyzing alpha weight impact]
-        ├── vary_filter_size/
-        │   └── [plots analyzing filter size impact]
-        └── vary_num_samples/
-            └── [plots analyzing sample count impact]
+```bash
+python build_dataset.py              # incremental update (safe to re-run)
+python build_dataset.py --dry-run    # preview what would be added
+python build_dataset.py --rebuild    # full rebuild from scratch
 ```
 
-## Workflow Summary
+See [Visualization](#visualization) below for the full `dataset.json` schema.
 
-1. **Scene Preparation**: Set up Unreal Engine scene with MRQ
-2. **Automated Rendering**: Run `generate_mrq.py` to populate queue with parameter variations, and click render in MRQ to obtain the render grames.
-3. **Data Organization**: Ensure renders are in correct `data/{scene_name}/` structure
-4. **Configuration**: Update `SCENE_NAME` in `compute_metrics.py`
-5. **Metric Computation**: Run `compute_metrics.py` for desired metrics and folders
-6. **Visualization**: Run `verify_errors.py` to generate analysis plots
-7. **Analysis**: Review JSON scores and plots to understand parameter impacts
+### 4. Visualize
 
-## Research Context
+```bash
+# Serve locally (required — D3 cannot load JSON from file://)
+python -m http.server 8000
+# Open http://localhost:8000/plot.html
+```
 
-Temporal Anti-Aliasing (TAA) is critical for reducing flickering and edge crawling in real-time rendering. However, TAA introduces tradeoffs between sharpness, ghosting, and temporal stability. This project provides:
+---
 
-- **Quantitative Analysis**: Perceptual metrics quantify how parameter changes affect visual quality
-- **Parameter Optimization**: Data-driven insights for TAA tuning
-- **Broader Applications**: Techniques applicable to video generation and temporal artifact reduction
+## Visualization
 
-By analyzing diverse scenes (organic vs. rigid, motion-heavy vs. static), this work reveals how TAA performance varies across visual contexts and provides guidelines for adaptive anti-aliasing strategies.
+`build_dataset.py` + `plot.html` form an interactive quality explorer.
+
+### Dataset Schema
+
+`dataset.json` is structured as `base_scene → screen_pct → ref_scene → param → [{value, score, per_frame_errors}]`:
+
+```json
+{
+  "oldmine": {
+    "100": {
+      "ref-oldmine": {
+        "_meta": {
+          "reference_scene": "oldmine",
+          "metric": "CGVQM"
+        },
+        "alpha_weight": [
+          {"value": 0.01, "score": 95.59, "per_frame_errors": [...]},
+          {"value": 0.02, "score": 95.76, "per_frame_errors": [...]}
+        ],
+        "filter_size": [...]
+      }
+    },
+    "25": {
+      "ref-oldmine": { ... },
+      "ref-oldmine-screen-per-25": { ... }
+    }
+  }
+}
+```
+
+The `ref_scene` level captures cases where a degraded resolution variant (e.g. `screen-per-25`) is evaluated against either its own `16SSAA` or the full-resolution scene's `16SSAA`, enabling direct comparison of both reference strategies.
+
+`_meta` is optional for older JSON files — `build_dataset.py` reconstructs it from the filename when absent.
+
+### plot.html
+
+`plot.html` loads `dataset.json` and provides an interactive line plot of parameter value vs. CGVQM score:
+
+- **Scene** and **parameter** dropdowns to navigate the data
+- **One line per `(screen_pct, ref_scene)` combination** — if a screen percentage was evaluated against two different references, both appear as separate lines
+- **Click legend items** to toggle individual lines on/off
+- **Hover dots** for exact score, parameter value, reference scene, and frame count
+
+---
+
+## Tested Scenes
+
+- **City Park Environment** — organic, nature-heavy ([City Park Collection](https://www.unrealengine.com/en-US/blog/free-city-park-environment-collection-now-available))
+- **Factory Environment** — rigid, industrial ([Free Factory Collection](https://www.unrealengine.com/en-US/blog/free-factory-environment-collection-now-available))
+
+---
 
 ## Acknowledgments
 
-- Unreal Engine for providing high-quality rendering capabilities
-- CVVDP and CGVQM authors for perceptual metric implementations
-- Epic Games for the City Park and Factory environment collections
-
+- Unreal Engine and Epic Games for rendering infrastructure and environment assets
+- [CVVDP](https://github.com/gfxdisp/ColorVideoVDP) and [CGVQM](https://github.com/IntelLabs/cgvqm) authors for perceptual metric implementations

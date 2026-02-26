@@ -1,9 +1,0 @@
-Parameter,Value,factory_Score,parking_Score,Score_Diff,factory_Worst_Frame,factory_Worst_Error,parking_Worst_Frame,parking_Worst_Error,factory_Mean_Error,parking_Mean_Error,factory_Std,parking_Std
-alpha_weight,0.01,87.53,61.99,25.53,121,15.93,267,60.99,12.49,37.2,2.05,11.23
-alpha_weight,0.02,88.25,63.33,24.92,91,15.01,267,57.59,11.77,35.84,1.96,10.57
-alpha_weight,0.04,89.33,65.74,23.6,91,13.61,267,52.25,10.68,33.43,1.8,9.48
-alpha_weight,0.06,90.07,67.79,22.28,91,12.7,267,48.1,9.94,31.37,1.67,8.6
-alpha_weight,0.1,91.05,71.01,20.03,91,11.33,267,42.11,8.96,28.17,1.48,7.29
-alpha_weight,0.2,92.23,75.79,16.43,117,9.74,267,34.17,7.78,23.42,1.23,5.42
-alpha_weight,0.5,93.37,80.54,12.83,117,8.2,267,27.47,6.64,18.69,1.0,3.56
-alpha_weight,1.0,93.67,80.36,13.31,327,7.89,267,27.68,6.34,18.74,0.94,3.38
