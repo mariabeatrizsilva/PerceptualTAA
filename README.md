@@ -176,14 +176,72 @@ The `ref_scene` level captures cases where a degraded resolution variant (e.g. `
 
 `_meta` is optional for older JSON files — `build_dataset.py` reconstructs it from the filename when absent.
 
-### plot.html (currently unavailable -- has been replaced by d3_viewer.html )
+### d3_viewer.html
 
-`plot.html` loads `dataset.json` and provides an interactive line plot of parameter value vs. CGVQM score:
+- **Scene** and **parameter** dropdowns
+- **Series legend** — one entry per `(screen_pct, ref_scene)` combination, grouped by resolution with dividers; click to toggle lines on/off
+- **Chart tab** — line plot of parameter value vs. CGVQM score; hover dots for exact score, value, reference scene, and frame count
+- **Summary tab** — statistics table for all visible series: min, max, range, mean, std dev, best parameter value, and Δ from first to best
 
-- **Scene** and **parameter** dropdowns to navigate the data
-- **One line per `(screen_pct, ref_scene)` combination** — if a screen percentage was evaluated against two different references, both appear as separate lines
-- **Click legend items** to toggle individual lines on/off
-- **Hover dots** for exact score, parameter value, reference scene, and frame count
+---
+
+## Extending the Visualization
+
+`plot.html` is a self-contained file (~400 lines). The key concepts for extending it are documented inline; this section gives a higher-level map.
+
+### State model
+
+Three globals drive the entire view:
+
+| Variable | Type | Description |
+|---|---|---|
+| `dataset` | object | The full parsed `dataset.json` |
+| `activeScene` | string | Currently selected base scene |
+| `activeParam` | string | Currently selected parameter name |
+| `seriesVisibility` | `{[id]: bool}` | Toggle state per series, persisted across redraws |
+
+After changing any of these, call `buildLegend()` then `draw()` to update the view.
+
+### getSeries() — the core accessor
+
+`getSeries()` is the single function that translates the nested `dataset` structure into a flat array of series objects for the current selection. Everything else (legend, chart, summary table) reads from its output. Its shape:
+
+```js
+{
+  id:       "25|ref-oldmine",   // seriesVisibility key
+  pct:      "25",               // screen percentage
+  ref:      "ref-oldmine",      // ref_key from dataset
+  refScene: "oldmine",          // human-readable from _meta
+  color:    "var(--c3)",        // CSS variable, resolved before SVG use
+  entries:  [{value, score, per_frame_errors}, ...],
+  label:    "25%",
+}
+```
+
+To filter series by an additional dimension (e.g. only show a specific ref scene), add a condition inside `getSeries()`'s inner loop.
+
+### Adding a new control
+
+1. Add a `.control-group` + `<select>` (or checkboxes) in the sidebar HTML
+2. Add a state variable (e.g. `let activeRef = null`)
+3. Wire a change event that updates the variable, then calls `buildLegend()` + `draw()`
+4. Filter inside `getSeries()` using the new variable
+
+### Adding a new visualisation tab
+
+1. Add a `<button class="tab-btn" data-tab="mytab">` to `.tabs` in the HTML
+2. Add `<div class="tab-panel" id="tab-mytab">` to `<main>`
+3. Write a `drawMyThing()` function that reads `getSeries()` and renders into `#tab-mytab`
+4. Add `if (btn.dataset.tab === 'mytab') drawMyThing()` to the tab click handler
+5. Call `drawMyThing()` at the end of `draw()` and `buildLegend()` so it stays in sync
+
+### Adding a new summary statistic
+
+In `drawSummary()`, add your computation to the `rows.map(...)` stats block, add a `<th>` to the header string, and a `<td>` to the row template string. Follow the existing `isBestX` pattern if you want the best value highlighted.
+
+### Colour assignment
+
+Colours cycle through `COLOR_VARS` (`--c0`…`--c5`) in the order `getSeries()` returns series (pct descending, then ref alphabetically). To add more colours, extend the CSS variables in `:root` and add them to `COLOR_VARS`.
 
 ---
 
