@@ -92,13 +92,13 @@ def get_reference_paths(scene_name: str):
     ref_frames_path = os.path.join(project_root, get_base_frames(scene_name=scene_name), REF_NAME, FRAMES_SUFFIX)
     return ref_video_path, ref_frames_path
 
-def get_paths(folder_name: str, metric: Metric, scene_name: str):
-    """Returns path for folder containing videos (or frames) and output scores path"""
+def get_paths(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None):
     frames_path = os.path.join(project_root, get_base_frames(scene_name=scene_name), folder_name)
     
     scores_dir, err_maps_dir = get_output_paths(folder_name, metric, scene_name)
     
-    score_file_name = f"{folder_name}_scores.json"
+    ref_suffix = f"_ref-{ref_scene}" if ref_scene and ref_scene != scene_name else ""
+    score_file_name = f"{folder_name}_scores{ref_suffix}.json"
     output_scores_path = os.path.join(scores_dir, score_file_name)
     
     return frames_path, output_scores_path, err_maps_dir
@@ -468,12 +468,11 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         
         return score, per_frame_errors
             
-def compute_score_folder(folder_name: str, metric: Metric, scene_name: str):
-    """
-    Compute metrics for all videos/frames in a folder.
-    """
+def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None):
+    ref_scene_name = ref_scene if ref_scene else scene_name  # <-- add this
+
     folder_path, output_scores_path, err_maps_dir = get_paths(
-        folder_name=folder_name, metric=metric, scene_name=scene_name
+        folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=ref_scene  # <-- add ref_scene
     )
     
     # Load existing results if they exist (for resuming)
@@ -481,16 +480,20 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str):
         print(f"Found existing results file: {output_scores_path}")
         with open(output_scores_path, 'r') as f:
             results = json.load(f)
-        print(f"Loaded {len(results)} existing results. Will skip already-processed videos.")
+        print(f"Loaded {len([k for k in results if not k.startswith('_')])} existing results. Will skip already-processed videos.")
     else:
-        results = {}
+        results = {
+            "_meta": {
+                "reference_scene": ref_scene_name,
+                "metric": metric.value,
+                "scene": scene_name,
+            }
+        }  # <-- replaces results = {}
     
-    # Get reference paths
-    ref_video_path, ref_frames_path = get_reference_paths(scene_name)
-    
-    # Set up reference path and get test names based on metric
+    ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)  # <-- was scene_name
+
     if metric == Metric.CGVQM:
-        ref_frames_folder = os.path.join(project_root, get_base_frames(scene_name=scene_name), REF_NAME)
+        ref_frames_folder = os.path.join(project_root, f'data/{ref_scene_name}/', REF_NAME)  # <-- was scene_name
         if not os.path.exists(ref_frames_folder):
             raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
 
@@ -512,7 +515,7 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str):
         ]
     
     # Filter out already-processed videos
-    remaining_test_names = [name for name in test_names if name not in results]
+    remaining_test_names = [name for name in test_names if name not in results and not name.startswith('_')]
     
     print(f"Total videos: {len(test_names)}")
     print(f"Already processed: {len(results)}")
@@ -654,6 +657,13 @@ Examples:
         nargs='+',
         help='Scene name(s) to process.'
     )
+
+    parser.add_argument(
+        '--ref-scene',
+        type=str,
+        default=None,
+        help='Override the scene used for the 16SSAA reference. E.g. --ref-scene oldmine'
+    )
     
     args = parser.parse_args()
     
@@ -704,11 +714,11 @@ Examples:
                 folder_path, output_scores_path, err_maps_dir = get_paths(
                     folder_name=folder_name, metric=metric, scene_name=scene_name
                 )
-                
-                ref_video_path, ref_frames_path = get_reference_paths(scene_name)
+                ref_scene_name = args.ref_scene if args.ref_scene else scene_name
+                ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)
                 
                 if metric == Metric.CGVQM:
-                    ref_frames_folder = os.path.join(project_root, f'data/{scene_name}/', REF_NAME)
+                    ref_frames_folder = os.path.join(project_root, f'data/{ref_scene_name}/', REF_NAME)  # <-- was scene_name
                     if not os.path.exists(ref_frames_folder):
                         raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
                     ref_path = ref_frames_folder
@@ -755,7 +765,7 @@ Examples:
         # Normal mode: Process all videos in folders
         for folder_name in target_folders:
             try:
-                compute_score_folder(folder_name=folder_name, metric=metric, scene_name=scene_name)
+                compute_score_folder(folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=args.ref_scene)  # <-- add ref_scene
             except Exception as e:
                 print(f"\nFailed to process folder '{folder_name}': {e}\n")
                 import traceback
