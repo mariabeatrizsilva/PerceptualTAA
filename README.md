@@ -24,7 +24,7 @@ PerceptualTAA/
 ├── generate_mrq.py                # Unreal Engine MRQ automation (populates queue with renders at parameter configs)
 ├── compute_metrics.py             # Metric computation (CGVQM + CVVDP)
 ├── build_dataset.py               # Aggregates JSON outputs into dataset.json
-├── d3_viewer.html                      # Interactive D3 quality explorer
+├── d3_viewer.html                 # Interactive D3 quality explorer
 └── ffmpeg.py                      # Frame sequence → mp4 conversion
 ```
 
@@ -135,14 +135,14 @@ See [Visualization](#visualization) below for the full `dataset.json` schema.
 ```bash
 # Serve locally (required — D3 cannot load JSON from file://)
 python -m http.server 8000
-# Open http://localhost:8000/plot.html
+# Open http://localhost:8000/d3_viewer.html
 ```
 
 ---
 
 ## Visualization
 
-`build_dataset.py` + `plot.html` form an interactive quality explorer.
+`build_dataset.py` + `d3_viewer.html` form an interactive quality explorer.
 
 ### Dataset Schema
 
