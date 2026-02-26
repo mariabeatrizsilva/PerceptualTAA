@@ -5,10 +5,32 @@ Crawls outputs/ directory, merges any new CGVQM scores into dataset.json.
 Run this every time you generate new metrics — it only adds new data,
 never recomputes what's already there.
 
+Output schema:
+    {
+        "oldmine": {
+            "metric": "CGVQM",
+            "100": {
+                "ref-oldmine": {
+                    "alpha_weight": [{"value": 0.01, "score": 95.59, "per_frame_errors": [...]}, ...]
+                }
+            },
+            "25": {
+                "ref-oldmine-screen-per-25": { ... },  # no _ref- suffix in filename
+                "ref-oldmine": { ... }                  # _ref-oldmine suffix in filename
+            }
+        }
+    }
+
+ref key is always:
+    - ref-{folder_name}       when filename has no _ref- suffix (self-reference)
+    - ref-{whatever}          when filename has _ref-{whatever} suffix (cross-scene)
+
+metric is stored once per base_scene, not repeated on every block.
+
 Usage:
     python build_dataset.py                  # incremental update
     python build_dataset.py --rebuild        # full rebuild from scratch
-    python build_dataset.py --dry-run        # print what would be added without writing
+    python build_dataset.py --dry-run        # preview without writing
 """
 
 import os
@@ -20,24 +42,29 @@ import argparse
 # CONFIGURATION
 # ============================================================================
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-OUTPUTS_DIR = os.path.join(PROJECT_ROOT, 'outputs')
+OUTPUTS_DIR  = os.path.join(PROJECT_ROOT, 'outputs')
 DATASET_PATH = os.path.join(PROJECT_ROOT, 'dataset.json')
 SCORES_SUBDIR = 'scores_cgvqm'
+METRIC_NAME   = 'CGVQM'
 
 # Parses folder names:
-#   oldmine                  -> base_scene=oldmine, screen_pct=100
-#   oldmine-screen-per-25    -> base_scene=oldmine, screen_pct=25
+#   oldmine                  -> base_scene=oldmine,   screen_pct=100
+#   oldmine-screen-per-25    -> base_scene=oldmine,   screen_pct=25
+#   quarry-all               -> base_scene=quarry-all, screen_pct=100
 SCENE_RE = re.compile(r'^(.+?)(?:-screen-per-(\d+))?$')
 
 # Parses JSON entry keys:
 #   vary_alpha_weight_0.01   -> param=alpha_weight, value=0.01
-#   vary_num_samples_16      -> param=num_samples,  value=16
+#   vary_num_samples_16      -> param=num_samples,  value=16.0
 KEY_RE = re.compile(r'^vary_(.+?)_([\d.]+)$')
 
 
 def parse_scene_folder(folder_name: str) -> tuple:
     """
     Parse a scene folder name into (base_scene, screen_pct).
+
+    The folder name is also used as the default ref when no _ref- suffix
+    is present in the JSON filename — i.e. self-reference.
 
     Examples:
         'oldmine'               -> ('oldmine', '100')
@@ -52,23 +79,23 @@ def parse_scene_folder(folder_name: str) -> tuple:
     return base_scene, screen_pct
 
 
-def parse_ref_scene_from_filename(json_filename: str, fallback_scene: str) -> str:
+def parse_ref_from_filename(json_filename: str) -> str | None:
     """
-    Parse the reference scene from a scores JSON filename.
+    Extract explicit cross-scene reference from a JSON filename.
+    Returns None if no _ref- suffix is present (meaning self-reference).
 
     Examples:
-        'vary_alpha_weight_scores.json'             -> fallback_scene
+        'vary_alpha_weight_scores.json'             -> None
         'vary_alpha_weight_scores_ref-oldmine.json' -> 'oldmine'
     """
     m = re.search(r'_ref-(.+)\.json$', json_filename)
-    if m:
-        return m.group(1)
-    return fallback_scene
+    return m.group(1) if m else None
 
 
-def parse_param_key(key: str):
+def parse_param_key(key: str) -> tuple | None:
     """
-    Parse a JSON entry key into (param_name, param_value), or None if not parseable.
+    Parse a JSON entry key into (param_name, param_value).
+    Returns None for keys that aren't param entries (e.g. '_meta').
 
     Examples:
         'vary_alpha_weight_0.01' -> ('alpha_weight', 0.01)
@@ -113,7 +140,7 @@ def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tup
     Returns:
         (updated_dataset, n_added, n_skipped)
     """
-    n_added = 0
+    n_added   = 0
     n_skipped = 0
 
     if not os.path.exists(outputs_dir):
@@ -136,10 +163,6 @@ def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tup
 
         for json_file in json_files:
             json_path = os.path.join(scores_dir, json_file)
-            filename_ref = parse_ref_scene_from_filename(json_filename, None)  # None = not found
-# ref_scene = filename_ref or file_meta.get('reference_scene') or base_scene
-            ref_scene = parse_ref_scene_from_filename(json_file, base_scene)
-            ref_key = f"ref-{ref_scene}"
 
             try:
                 with open(json_path, 'r') as f:
@@ -148,35 +171,25 @@ def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tup
                 print(f"  WARNING: Could not parse {json_path}: {e}")
                 continue
 
-            # Build metadata — prefer file's _meta if present, fill in gaps
-            file_meta = raw.get('_meta', {})
+            # ref is determined solely from the filename:
+            #   no _ref- suffix → self-reference → use the full folder name
+            #                     (e.g. oldmine-screen-per-25, not just oldmine)
+            #   _ref-X suffix   → explicit cross-scene reference → use X
+            # _meta is ignored entirely for ref resolution.
+            explicit_ref = parse_ref_from_filename(json_file)
+            ref_scene    = explicit_ref if explicit_ref else scene_folder
+            ref_key      = f"ref-{ref_scene}"
 
-            # If _meta has reference_scene, trust it over filename parsing
-            ref_scene = file_meta.get('reference_scene') or parse_ref_scene_from_filename(json_file, base_scene)
-            ref_key = f"ref-{ref_scene}"
+            # Ensure nested structure: scene → metric, screen_pct → ref_key
+            if not dry_run:
+                dataset.setdefault(base_scene, {"metric": METRIC_NAME})
+                dataset[base_scene].setdefault(screen_pct, {})
+                dataset[base_scene][screen_pct].setdefault(ref_key, {})
 
-            resolved_meta = {
-                "reference_scene": ref_scene,
-                "metric": file_meta.get('metric', 'CGVQM'),
-                "source_file": json_file,
-            }
-            # Merge any remaining extra fields from _meta
-            for k, v in file_meta.items():
-                if k not in resolved_meta:
-                    resolved_meta[k] = v
-
-            # Ensure nested structure exists in dataset
-            dataset.setdefault(base_scene, {})
-            dataset[base_scene].setdefault(screen_pct, {})
-            dataset[base_scene][screen_pct].setdefault(ref_key, {"_meta": resolved_meta})
-
-            # Always keep _meta fresh
-            dataset[base_scene][screen_pct][ref_key]["_meta"] = resolved_meta
-
-            # Process each score entry
+            # Process each score entry, skipping meta keys
             for key, entry in raw.items():
                 if key.startswith('_'):
-                    continue  # skip _meta and any future meta keys
+                    continue  # skip _meta and any other meta keys
 
                 parsed = parse_param_key(key)
                 if parsed is None:
@@ -189,19 +202,18 @@ def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tup
                     n_skipped += 1
                     continue
 
-                # Extract score and per_frame_errors — handle both old and new JSON formats
+                # Support both old format (raw float) and new format (dict with score + per_frame_errors)
                 if isinstance(entry, dict):
-                    score = entry.get('score')
+                    score            = entry.get('score')
                     per_frame_errors = entry.get('per_frame_errors', [])
                 else:
-                    # Old format: entry is just a raw score float
-                    score = entry
+                    score            = entry
                     per_frame_errors = []
 
                 new_point = {
-                    "value": value,
-                    "score": score,
-                    "per_frame_errors": per_frame_errors
+                    "value":            value,
+                    "score":            score,
+                    "per_frame_errors": per_frame_errors,
                 }
 
                 if dry_run:
@@ -212,15 +224,16 @@ def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tup
 
                 n_added += 1
 
-    # Sort all param arrays by value so plots are always ordered
+    # Sort all param arrays by value so plots are always in order
     if not dry_run:
-        for base_scene in dataset:
-            for screen_pct in dataset[base_scene]:
-                for ref_key in dataset[base_scene][screen_pct]:
-                    for param, entries in dataset[base_scene][screen_pct][ref_key].items():
-                        if param.startswith('_') or not isinstance(entries, list):
-                            continue
-                        entries.sort(key=lambda x: x['value'])
+        for base_scene, scene_data in dataset.items():
+            for screen_pct, pct_data in scene_data.items():
+                if screen_pct == 'metric':
+                    continue
+                for ref_key, ref_data in pct_data.items():
+                    for param, entries in ref_data.items():
+                        if isinstance(entries, list):
+                            entries.sort(key=lambda x: x['value'])
 
     return dataset, n_added, n_skipped
 
@@ -230,17 +243,17 @@ def print_summary(dataset: dict):
     print("\n── Dataset Summary ──────────────────────────────────────────────")
     total_points = 0
     for base_scene in sorted(dataset):
-        print(f"\n  {base_scene}")
-        for screen_pct in sorted(dataset[base_scene], key=lambda x: int(x)):
-            for ref_key in sorted(dataset[base_scene][screen_pct]):
-                block = dataset[base_scene][screen_pct][ref_key]
-                params = {k: len(v) for k, v in block.items()
-                          if not k.startswith('_') and isinstance(v, list)}
+        metric = dataset[base_scene].get('metric', '?')
+        print(f"\n  {base_scene}  [{metric}]")
+        for screen_pct, pct_data in sorted(dataset[base_scene].items(), key=lambda x: int(x[0]) if x[0].isdigit() else -1):
+            if screen_pct == 'metric':
+                continue
+            for ref_key, ref_data in sorted(pct_data.items()):
+                params = {k: len(v) for k, v in ref_data.items() if isinstance(v, list)}
                 n = sum(params.values())
                 total_points += n
-                ref_scene = block.get('_meta', {}).get('reference_scene', ref_key)
                 param_str = ', '.join(f"{k}({v})" for k, v in params.items())
-                print(f"    pct={screen_pct:>4} | ref={ref_scene:<40} | {param_str}")
+                print(f"    pct={screen_pct:>4} | {ref_key:<45} | {param_str}")
     print(f"\n  Total data points: {total_points}")
     print("─────────────────────────────────────────────────────────────────")
 
@@ -257,9 +270,9 @@ Examples:
   python build_dataset.py --outputs-dir /path    # custom outputs directory
         """
     )
-    parser.add_argument('--rebuild', action='store_true',
+    parser.add_argument('--rebuild',  action='store_true',
                         help='Ignore existing dataset.json and rebuild from scratch.')
-    parser.add_argument('--dry-run', action='store_true',
+    parser.add_argument('--dry-run',  action='store_true',
                         help='Print what would be added without writing anything.')
     parser.add_argument('--outputs-dir', type=str, default=OUTPUTS_DIR,
                         help=f'Path to outputs directory (default: {OUTPUTS_DIR})')
@@ -278,7 +291,7 @@ Examples:
     else:
         dataset = load_dataset()
         if dataset:
-            print(f"Loaded existing dataset. Checking for new entries...\n")
+            print("Loaded existing dataset. Checking for new entries...\n")
         else:
             print("No existing dataset found. Building from scratch...\n")
 
