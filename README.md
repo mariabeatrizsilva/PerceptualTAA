@@ -176,7 +176,7 @@ The `ref_scene` level captures cases where a degraded resolution variant (e.g. `
 
 `_meta` is optional for older JSON files — `build_dataset.py` reconstructs it from the filename when absent.
 
-### plot.html
+### plot.html (currently unavailable -- has been replaced by d3_viewer.html )
 
 `plot.html` loads `dataset.json` and provides an interactive line plot of parameter value vs. CGVQM score:
 
@@ -184,13 +184,6 @@ The `ref_scene` level captures cases where a degraded resolution variant (e.g. `
 - **One line per `(screen_pct, ref_scene)` combination** — if a screen percentage was evaluated against two different references, both appear as separate lines
 - **Click legend items** to toggle individual lines on/off
 - **Hover dots** for exact score, parameter value, reference scene, and frame count
-
----
-
-## Tested Scenes
-
-- **City Park Environment** — organic, nature-heavy ([City Park Collection](https://www.unrealengine.com/en-US/blog/free-city-park-environment-collection-now-available))
-- **Factory Environment** — rigid, industrial ([Free Factory Collection](https://www.unrealengine.com/en-US/blog/free-factory-environment-collection-now-available))
 
 ---
 
