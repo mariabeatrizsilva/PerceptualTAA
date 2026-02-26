@@ -1,7 +1,0 @@
-Parameter,Value,factory_Score,parking_Score,Score_Diff,factory_Worst_Frame,factory_Worst_Error,parking_Worst_Frame,parking_Worst_Error,factory_Mean_Error,parking_Mean_Error,factory_Std,parking_Std
-hist_percent,50.0,89.33,65.73,23.6,91,13.62,267,52.26,10.68,33.43,1.8,9.48
-hist_percent,75.0,89.33,65.73,23.59,91,13.64,267,52.26,10.68,33.43,1.8,9.48
-hist_percent,100.0,89.33,65.73,23.59,91,13.65,267,52.26,10.69,33.43,1.8,9.48
-hist_percent,125.0,89.58,67.03,22.55,121,13.15,267,50.23,10.43,32.12,1.65,8.84
-hist_percent,150.0,90.22,68.63,21.59,121,12.37,267,47.64,9.79,30.53,1.56,8.18
-hist_percent,200.0,90.54,70.24,20.3,121,11.93,267,45.14,9.47,28.93,1.45,7.49
