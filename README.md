@@ -106,14 +106,17 @@ Each JSON entry follows this structure:
 
 ```json
 {
-  "_meta": {
-    "reference_scene": "oldmine",
+  "oldmine": {
     "metric": "CGVQM",
-    "source_file": "vary_alpha_weight_scores.json"
-  },
-  "vary_alpha_weight_0.04": {
-    "score": 96.61,
-    "per_frame_errors": [4.87, 11.87, ...]
+    "100": {
+      "ref-oldmine": {
+        "alpha_weight": [...]
+      }
+    },
+    "25": {
+      "ref-oldmine-screen-per-25": { ... },
+      "ref-oldmine": { ... }
+    }
   }
 }
 ```
