@@ -446,8 +446,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         if not os.path.exists(dist_frames_folder):
             raise FileNotFoundError(f"Frames folder not found: {dist_frames_folder}")
         
-        err_map_name = f"{test_name}_errmap.mp4"
-        err_map_path = os.path.join(err_maps_dir, err_map_name)
+        err_map_path = os.path.join(err_maps_dir, f"{test_name}_errmap.mp4") if err_maps_dir else None
         
         folder_name = os.path.basename(folder_path)
         dist_video_path = os.path.join(
@@ -478,7 +477,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
 def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None, skip_err_maps: bool = False):
     ref_scene_name = ref_scene if ref_scene else derive_ref_scene(scene_name)  
     print(f"  Reference scene: {ref_scene_name}")
-    
+
     folder_path, output_scores_path, err_maps_dir = get_paths(
         folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=ref_scene  # <-- add ref_scene
     )
