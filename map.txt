@@ -1,0 +1,77 @@
+fantasticvillage-open: 
+    FILE: Newproj
+    LEVEL_PATH = "/Game/Fantastic_Village_Pack/maps/map_village_day"
+    SEQUENCE_PATH = "/Game/Fantastic_Village_Pack/animations/Cam_LevelSequence"   
+oldmine:
+    FILE: Newproj
+    LEVEL_PATH = "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+    SEQUENCE_PATH = "/Game/Scene_OldMine/Sequences/seq1-reg"   
+oldmine-warm:
+    FILE: Newproj
+    LEVEL_PATH = "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+    SEQUENCE_PATH = "/Game/Scene_OldMine/Sequences/seq2"   
+junkyard-mound1:
+    FILE: Newproj
+    LEVEL_PATH = "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
+    SEQUENCE_PATH = "/Game/Scene_Junkyard/Sequences/flythrough"   
+junkyard-mound2:
+    FILE: Newproj
+    LEVEL_PATH = "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+    SEQUENCE_PATH = "/Game/Scene_Junkyard/Sequences/flythrough-above"   
+
+subway-lookdown
+    LEVEL_PATH = "/Game/SubwayTrain/Maps/Demonstration"
+    SEQUENCE_PATH = "/Game/SubwayTrain/Flythrough-Close"   
+
+subway-turn
+    LEVEL_PATH = "/Game/SubwayTrain/Maps/Demonstration"
+    SEQUENCE_PATH = "/Game/SubwayTrain/Flythrough"   
+
+cubetest
+    FILE: Cube
+    LEVEL_PATH = "/Game/Base"
+    SEQUENCE_PATH = "/Game/walkthrough"   
+
+abandoned
+    FILE: Cube
+    LEVEL_PATH = "/Game/AbandonedPowerPlant/Maps/PowerPlant"
+    SEQUENCE_PATH = "/Game/AbandonedPowerPlant/Maps/plantwalk1"   
+
+abandoned-demo
+    FILE: Cube
+    LEVEL_PATH = "/Game/AbandonedPowerPlant/Maps/Showcase"
+    SEQUENCE_PATH = "/Game/AbandonedPowerPlant/Maps/plantwalk"   
+
+abandoned-flipped
+    LEVEL_PATH = "/Game/AbandonedPowerPlant/Maps/PowerPlant"
+    SEQUENCE_PATH = "/Game/AbandonedPowerPlant/plantwalk2"   
+
+scifi
+    FILE: Cube
+    LEVEL_PATH = "/Game/Low_Poly_Sci-Fi_Corridor/Maps/Overview_Map"
+    SEQUENCE_PATH = "/Game/Low_Poly_Sci-Fi_Corridor/flythrough"   
+
+quarry-all
+LEVEL_PATH = "/Game/Scene_QuarrySlate/Maps/Quarry_Slate"
+SEQUENCE_PATH = "/Game/Scene_QuarrySlate/Sequences/flythrough1"   
+
+quarry-rocksonly
+
+lightfoliage
+    FILE: NatureEnvs
+    LEVEL_PATH = "/Game/Light_Foliage/Maps/Showcase"
+    SEQUENCE_PATH = "/Game/Light_Foliage/Flythrough"   
+
+lightfoliage-close
+    FILE: NatureEnvs
+    LEVEL_PATH = "/Game/Light_Foliage/Maps/Showcase"
+    SEQUENCE_PATH = "/Game/Light_Foliage/Flythrough-Close"   
+
+resto-close
+
+resto-fwd
+
+resto-pan
+
+
+wildwest...
