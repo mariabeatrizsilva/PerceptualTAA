@@ -476,8 +476,9 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         return score, per_frame_errors
             
 def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None, skip_err_maps: bool = False):
-    ref_scene_name = ref_scene if ref_scene else derive_ref_scene(scene_name)  # <-- add this
-
+    ref_scene_name = ref_scene if ref_scene else derive_ref_scene(scene_name)  
+    print(f"  Reference scene: {ref_scene_name}")
+    
     folder_path, output_scores_path, err_maps_dir = get_paths(
         folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=ref_scene  # <-- add ref_scene
     )
@@ -490,13 +491,13 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
             results = json.load(f)
         print(f"Loaded {len([k for k in results if not k.startswith('_')])} existing results. Will skip already-processed videos.")
     else:
-        results = {
-            "_meta": {
-                "reference_scene": ref_scene_name,
-                "metric": metric.value,
-                "scene": scene_name,
-            }
-        }  # <-- replaces results = {}
+        results = {}
+
+    results["_meta"] = {
+        "reference_scene": ref_scene_name,
+        "metric": metric.value,
+        "scene": scene_name,
+    }
     
     ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)  # <-- was scene_name
 
