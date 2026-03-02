@@ -3,13 +3,19 @@ import os
 
 # --- Configuration Constants ---
 # !!! IMPORTANT: UPDATE THESE PATHS TO MATCH YOUR PROJECT !!!
-LEVEL_PATH = "/Game/Scene_OldMine/Maps/Industrial_OldMine"
-SEQUENCE_PATH = "/Game/Scene_OldMine/Sequences/seq3"   
+# LEVEL_PATH = "/Game/Fantastic_Village_Pack/maps/map_village_day"
+# SEQUENCE_PATH = "/Game/Fantastic_Village_Pack/animations/Cam_LevelSequence"   
+OUTPUT_NAME = 'quarry-rocksonly'
+LEVEL_PATH = "/Game/Scene_QuarrySlate/Maps/Quarry_Slate"
+SEQUENCE_PATH = "/Game/Scene_QuarrySlate/Sequences/flythrough"   
 # !!! IMPORTANT: Set the path to your desired Post-Process Material (e.g., MaterialInstanceConstant'/Game/Materials/MyPostProcessMat.MyPostProcessMat')
 POST_PROCESS_MATERIAL_PATH = "/MovieRenderPipeline/Materials/MovieRenderQueue_MotionVectors"
 # Base directory for output. The full path will be appended with the job name structure.
-OUTPUT_BASE_DIRECTORY = os.path.expanduser("~/Documents/PerceptualTAA/data/oldmine-warm")
-
+# 87,71,50
+GLOBAL_SCREEN_PERCENTAGE = 87
+OUTPUT_BASE_DIRECTORY = os.path.expanduser(
+    f"~/Documents/PerceptualTAA/data/{OUTPUT_NAME}-screen-per-{GLOBAL_SCREEN_PERCENTAGE}"
+)
 # Define all variation groups, their console variables (CVars), and the values to test
 TAA_VARIATIONS = {
     # Group 1: Alpha Weight (r.TemporalAACurrentFrameWeight)
@@ -30,8 +36,8 @@ TAA_VARIATIONS = {
     # Group 4: History Screen Percentage (r.TemporalAA.HistoryScreenPercentage)
     "hist_percent": {
         "cvar": "r.TemporalAA.HistoryScreenPercentage",
-        # "values": [200],
-        "values": [1,5,10,15,30, 50, 75, 100, 125, 150, 200],
+        # "values": [200],1,5,10,15,30, 50, 75, 
+        "values": [100, 125, 150, 200],
     }
 }
 
@@ -98,6 +104,7 @@ def create_movie_render_job(parameter_name, cvar_name, value):
     # --- 3. CVar Variation ---
     console_var_setting = config.find_or_add_setting_by_class(unreal.MoviePipelineConsoleVariableSetting)
     console_var_setting.add_or_update_console_variable(cvar_name, value)
+    console_var_setting.add_or_update_console_variable("r.ScreenPercentage", GLOBAL_SCREEN_PERCENTAGE)
 
     # --- 4. Output Configuration (PNG, 30 FPS, File Structure) ---
     output_setting = config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
@@ -175,7 +182,7 @@ def create_movie_render_job_TAA(parameter_name, cvar_name, value):
     
     output_setting.output_resolution = unreal.IntPoint(1920, 1080) # Default resolution
     output_setting.output_frame_rate = unreal.FrameRate(30, 1) # 30 FPS
-    output_setting.zero_pad_frame_numbers = 4
+    output_setting.zero_pad_frame_numbers = 4 
     
     # --- 5. PNG Output Setting ---
     # Add the required PNG output setting
@@ -218,7 +225,9 @@ def create_supersample_render_job():
     aa_setting.spatial_sample_count = 16  # 1 spatial sample for TAA
     aa_setting.override_anti_aliasing = True
     aa_setting.anti_aliasing_method = unreal.AntiAliasingMethod.AAM_NONE
-    
+    console_var_setting = config.find_or_add_setting_by_class(unreal.MoviePipelineConsoleVariableSetting)
+    console_var_setting.add_or_update_console_variable("r.ScreenPercentage", GLOBAL_SCREEN_PERCENTAGE)
+
     # --- 4. Output Configuration (PNG, 30 FPS, File Structure) ---
     output_setting = config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
     output_setting.output_directory = unreal.DirectoryPath(OUTPUT_BASE_DIRECTORY)
