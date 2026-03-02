@@ -475,13 +475,14 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         
         return score, per_frame_errors
             
-def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None):
-    ref_scene_name = ref_scene if ref_scene else scene_name  # <-- add this
+def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None, skip_err_maps: bool = False):
+    ref_scene_name = ref_scene if ref_scene else derive_ref_scene(scene_name)  # <-- add this
 
     folder_path, output_scores_path, err_maps_dir = get_paths(
         folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=ref_scene  # <-- add ref_scene
     )
-    
+    if skip_err_maps:
+        err_maps_dir = None
     # Load existing results if they exist (for resuming)
     if os.path.exists(output_scores_path):
         print(f"Found existing results file: {output_scores_path}")
@@ -666,6 +667,12 @@ Examples:
     )
 
     parser.add_argument(
+        '--no-err-maps',
+        action='store_true',
+        help='Skip error map generation.'
+    )
+    
+    parser.add_argument(
         '--ref-scene',
         type=str,
         default=None,
@@ -772,7 +779,8 @@ Examples:
         # Normal mode: Process all videos in folders
         for folder_name in target_folders:
             try:
-                compute_score_folder(folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=args.ref_scene)  # <-- add ref_scene
+                ref_scene_name = args.ref_scene if args.ref_scene else derive_ref_scene(scene_name)
+                compute_score_folder(folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=ref_scene_name, skip_err_maps=args.no_err_maps)
             except Exception as e:
                 print(f"\nFailed to process folder '{folder_name}': {e}\n")
                 import traceback
