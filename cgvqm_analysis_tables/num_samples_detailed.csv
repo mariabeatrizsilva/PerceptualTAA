@@ -1,9 +1,0 @@
-Scene,Parameter,Param Value,Overall Score,Best Frame,Best Frame Error,Worst Frame,Worst Frame Error,Mean Error,Std Dev,Median Error,Total Frames
-factory,num_samples,4.0,90.01,390,4.03,91,12.59,10.0,1.61,10.48,419
-factory,num_samples,8.0,89.33,390,4.4,91,13.61,10.68,1.8,11.12,419
-factory,num_samples,16.0,89.49,390,4.3,91,13.31,10.52,1.74,10.99,419
-factory,num_samples,32.0,89.37,390,4.36,91,13.56,10.65,1.78,11.09,419
-factory,num_samples,64.0,89.4,390,4.33,121,13.54,10.62,1.78,11.07,419
-parking,num_samples,16.0,65.26,29,11.74,267,52.89,33.89,9.54,37.46,309
-parking,num_samples,32.0,65.44,29,11.67,267,52.49,33.71,9.44,37.37,309
-parking,num_samples,64.0,65.51,29,11.71,267,52.07,33.64,9.41,37.22,309
