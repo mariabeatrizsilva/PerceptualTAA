@@ -5,8 +5,6 @@ from enum import Enum
 import argparse
 import glob
 
-
-
 ## Config for CGVQM
 import sys
 import time
@@ -15,7 +13,6 @@ import glob # Used for finding files easily
 import torch
 from PIL import Image
 from torch.nn.functional import interpolate
-
 
 ## Config for ColorVideoVDP (CVVDP)
 import subprocess
@@ -59,6 +56,16 @@ CVVDP_EXECUTABLE = 'cvvdp'
 DISPLAY_MODE = 'standard_4k'
 FPS_VALUE = 30
 
+def derive_ref_scene(scene_name: str) -> str:
+    """Derive reference scene by stripping '-screen-per-{number}' suffix.
+    E.g. 'quarry-all-screen-per-30' -> 'quarry-all'
+         'subway-turn-screen-per-50' -> 'subway-turn'
+    Falls back to scene_name unchanged if no suffix matched.
+    """
+    match = re.match(r'^(.+)-screen-per-\d+$', scene_name)
+    if match:
+        return match.group(1)
+    return scene_name
 
 def get_base_frames(scene_name):
     return f'data/{scene_name}/'
@@ -714,7 +721,7 @@ Examples:
                 folder_path, output_scores_path, err_maps_dir = get_paths(
                     folder_name=folder_name, metric=metric, scene_name=scene_name
                 )
-                ref_scene_name = args.ref_scene if args.ref_scene else scene_name
+                ref_scene_name = args.ref_scene if args.ref_scene else derive_ref_scene(scene_name)
                 ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)
                 
                 if metric == Metric.CGVQM:
