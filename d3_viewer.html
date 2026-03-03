@@ -555,7 +555,7 @@ function draw() {
   const cardsEl       = document.getElementById('best-cards');
   const visibleSeries = getSeries().filter(s => seriesVisibility[s.id] !== false);
 
-  wrap.innerHTML   = '';
+  wrap.innerHTML    = '';
   cardsEl.innerHTML = '';
 
   if (!visibleSeries.length) {
@@ -578,14 +578,24 @@ function draw() {
     .range([iH,0]);
 
   const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
-  const g   = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
 
-  g.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
-  g.append('g').attr('class','grid').attr('transform',`translate(0,${iH})`)
+  // clip path so lines/dots don't overflow axes
+  svg.append('defs').append('clipPath').attr('id','chart-clip')
+    .append('rect').attr('width',iW).attr('height',iH);
+
+  const g        = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
+  const chartArea = g.append('g').attr('clip-path','url(#chart-clip)');
+
+  // ── Grid (chartArea — gets clipped) ───────────────────────────
+  chartArea.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+  chartArea.append('g').attr('class','grid x-grid').attr('transform',`translate(0,${iH})`)
     .call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
-  g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(8));
-  g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(6));
 
+  // ── Axes (g — not clipped) ────────────────────────────────────
+  g.append('g').attr('class','axis x-axis').attr('transform',`translate(0,${iH})`)
+    .call(d3.axisBottom(xScale).ticks(8));
+  g.append('g').attr('class','axis y-axis').call(d3.axisLeft(yScale).ticks(6));
+  // ── Axis labels ───────────────────────────────────────────────
   g.append('text').attr('class','axis-label')
     .attr('x',iW/2).attr('y',iH+40).attr('text-anchor','middle')
     .text(activeParam?.replace(/_/g,' ') ?? '');
@@ -599,9 +609,9 @@ function draw() {
   for (const s of visibleSeries) {
     const cv = getComputedColor(s.color);
 
-    g.append('path').datum(s.entries).attr('class','series-line').attr('stroke',cv).attr('d',line);
+    chartArea.append('path').datum(s.entries).attr('class','series-line').attr('stroke',cv).attr('d',line);
 
-    g.selectAll(null).data(s.entries).join('circle')
+    chartArea.selectAll(null).data(s.entries).join('circle')
       .attr('class','series-dot')
       .attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
       .attr('r',5).attr('fill',cv)
@@ -633,6 +643,40 @@ function draw() {
       <div class="best-card-sub">best ${activeParam?.replace(/_/g,' ')} → score ${best.score.toFixed(3)}</div>`;
     cardsEl.appendChild(card);
   }
+
+// ── Brush to zoom ─────────────────────────────────────────────
+  const brush = d3.brush()
+    .extent([[0,0],[iW,iH]])
+    .on('end', (event) => {
+      if (!event.selection) return;
+      const [[x0,y0],[x1,y1]] = event.selection;
+      xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
+      yScale.domain([yScale.invert(y1), yScale.invert(y0)]); // y is flipped
+
+      g.select('.x-axis').call(d3.axisBottom(xScale).ticks(8));
+      g.select('.x-grid').call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+      g.select('.y-axis').call(d3.axisLeft(yScale).ticks(6));
+      chartArea.selectAll('.series-line').attr('d', line);
+      chartArea.selectAll('.series-dot')
+        .attr('cx', d=>xScale(d.value))
+        .attr('cy', d=>yScale(d.score));
+      chartArea.select('.brush').call(brush.move, null);
+    });
+
+  chartArea.append('g').attr('class','brush').call(brush);
+
+  // double-click to reset zoom
+  svg.on('dblclick', () => {
+    xScale.domain(d3.extent(pts, d=>d.value));
+    yScale.domain([d3.min(pts,d=>d.score)-yPad, d3.max(pts,d=>d.score)+yPad]);
+    g.select('.x-axis').call(d3.axisBottom(xScale).ticks(8));
+    g.select('.x-grid').call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+    g.select('.y-axis').call(d3.axisLeft(yScale).ticks(6));
+    chartArea.selectAll('.series-line').attr('d', line);
+    chartArea.selectAll('.series-dot')
+      .attr('cx', d=>xScale(d.value))
+      .attr('cy', d=>yScale(d.score));
+  });
 
   document.addEventListener('mousemove', positionTooltip);
 }
