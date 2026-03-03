@@ -354,12 +354,12 @@
     <div class="overall-tab-panel active" id="otab-curves">
       <div class="section-sub">
         <div style="font-size:11px;color:var(--muted);line-height:1.8;">
-        <span style="color:var(--accent);font-weight:600;">Percentage change from baseline </span> — For each parameter, we test a range of values (e.g. alpha_weight = 0.01, 0.02, 0.04 …). The <span style="color:var(--accent);">baseline</span> is the average score across all those tested values. 
+        <span style="color:var(--accent);font-weight:600;">Percentage change from baseline </span> — For each parameter, we test a range of values (e.g. alpha_weight = 0.01, 0.02, …). The <span style="color:var(--accent);">baseline</span> is the average score across all those tested values. Each point on the graphs below shows how much better or worse each parameter value performs vs. the baseline, as a <span style="color:var(--accent);font-weight:600;">% difference</span>. 
+
         <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
-          Each point on the graph shows how much better or worse that specific value performs vs. the baseline, as a <span style="color:var(--text);font-weight:600;">% difference</span>. 
           A value of <span style="color:var(--good);">+2%</span> means that setting outperforms the average; <span style="color:var(--bad);">−2%</span> means it underperforms.
-          <div style="margin-top:6px;">For each resolution, the % change values are computed per scene first, then averaged across all selected scenes — so each scene contributes equally regardless of its absolute score level.</div>
-          <div style="margin-top:6px;color:var(--muted);font-size:10px;"> Toggle scenes that contribute to the average in the sidebar</div>
+          <!-- <div style="margin-top:6px;">For each resolution, the % change values are computed per scene first, then averaged across all selected scenes — so each scene contributes equally regardless of its absolute score level.</div> -->
+          <div style="margin-top:6px;color:var(--muted);font-size:10px;"> These values are averaged over all the scenes to obtain general trends. Toggle scenes that contribute to the average in the sidebar</div>
           </div>
         </div>
       </div>
