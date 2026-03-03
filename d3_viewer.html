@@ -231,6 +231,21 @@
   .chart-card-sub { font-size: 10px; color: var(--muted); }
   .chart-card-wrap { position: relative; height: 240px; }
 
+  /* expanded card spans full grid width */
+  .chart-card.expanded {
+    grid-column: 1 / -1;
+    border-color: var(--accent);
+  }
+  .chart-card.expanded .chart-card-wrap { height: 420px; }
+  .chart-card { cursor: pointer; transition: border-color 0.15s; }
+  .chart-card:hover { border-color: var(--border2); }
+  .chart-card.expanded:hover { border-color: var(--accent); }
+  .expand-hint {
+    font-size: 9px; color: var(--muted); letter-spacing: 0.06em;
+    text-transform: uppercase; margin-left: auto;
+  }
+  .chart-card-header { display: flex; align-items: baseline; gap: 8px; }
+
   /* heatmap grid */
   .heatmap-grid {
     display: grid;
@@ -315,9 +330,14 @@
 <!-- ═══════════════════════════════════════════════════════════
      OVERALL PANEL
 ═══════════════════════════════════════════════════════════ -->
-<div class="top-panel active" id="top-overall" style="flex-direction:column;">
-  <div class="overall-main">
-    <div>
+<div class="top-panel active" id="top-overall">
+  <aside id="overall-sidebar">
+    <div class="control-group">
+      <label>Scenes</label>
+      <div class="legend" id="scene-toggles"></div>
+    </div>
+  </aside>
+  <div class="overall-main">    <div>
       <div class="section-heading">Overall Analysis</div>
       <div class="section-sub">Aggregated across all scenes · averaged scores</div>
     </div>
@@ -329,7 +349,7 @@
 
     <!-- Score curves tab -->
     <div class="overall-tab-panel active" id="otab-curves">
-      <div class="section-sub">Score vs parameter value averaged across all scenes. One line per resolution.</div>
+      <div class="section-sub">How each parameter changes the score from the mean score for that parameter (for each resolution).</div>
       <div class="chart-grid" id="curves-grid"></div>
     </div>
 
@@ -383,6 +403,11 @@
 
     <!-- Sensitivity bar chart tab -->
     <div class="tab-panel" id="tab-sensitivity">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+        <span style="color:var(--accent);font-weight:600;">Effect size</span> = max score − min score across all tested values of a parameter, at a given resolution.
+        A taller bar means that parameter has a stronger influence on quality at that resolution.
+        Bars are grouped by parameter; colours indicate resolution.
+      </div>
       <div id="sensitivity-wrap" style="position:relative;min-height:360px;height:400px;"></div>
     </div>
 
@@ -430,7 +455,7 @@ let dataset          = {};
 let activeScene      = null;
 let activeParam      = null;
 let seriesVisibility = {};
-
+let activeScenes = new Set(); // populated after load
 // ═══════════════════════════════════════════════════════════════════
 // LOAD
 // ═══════════════════════════════════════════════════════════════════
@@ -873,91 +898,160 @@ function effectSize(entries) {
 }
 
 function drawOverall() {
+  const allScores = extractAllScores();
+  const scenes    = Object.keys(allScores).sort();
+
+  // populate toggles once (or re-populate if scenes changed)
+  const togglesEl = document.getElementById('scene-toggles');
+  if (togglesEl.children.length === 0) {
+    activeScenes = new Set(scenes); // all on by default
+    togglesEl.innerHTML = '';
+    for (const scene of scenes) {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `
+        <div class="legend-swatch" style="background:var(--accent)"></div>
+        <div class="legend-text">
+          <span class="legend-label">${scene}</span>
+        </div>`;
+      item.addEventListener('click', () => {
+        if (activeScenes.has(scene)) {
+          activeScenes.delete(scene);
+          item.classList.add('inactive');
+        } else {
+          activeScenes.add(scene);
+          item.classList.remove('inactive');
+        }
+        drawScoreCurves(); // only rerender curves
+      });
+      togglesEl.appendChild(item);
+    }
+  }
+
   drawScoreCurves();
   drawHeatmaps();
 }
 
 // ── Score curves ─────────────────────────────────────────────────
+function renderCurveInto(wrap, param, allScores, expanded) {
+  wrap.innerHTML = '';
+  const scenes = Object.keys(allScores).filter(s => activeScenes.has(s));  // <-- add this filter
+  const W = wrap.clientWidth || 400;
+  const H = expanded ? 420 : 240;
+  const margin = { top:12, right:16, bottom:44, left:48 };
+  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+
+  const avgByRes = {};
+  for (const res of RESOLUTIONS) {
+    const allVals = [...new Set(scenes.flatMap(s => (allScores[s][res][param] ?? []).map(e => e.value)))].sort((a,b) => a-b);
+    avgByRes[res] = allVals.map(val => {
+      const pctChanges = scenes.flatMap(s => {
+        const entries = allScores[s][res][param] ?? [];
+        if (!entries.length) return [];
+        const baseline = entries.reduce((a,b) => a + b.score, 0) / entries.length;
+        if (baseline === 0) return [];
+        const match = entries.find(e => Math.abs(e.value - val) < 1e-9);
+        return match ? [(match.score - baseline) / baseline * 100] : [];
+      });
+      return pctChanges.length ? { value: val, score: pctChanges.reduce((a,b) => a+b,0)/pctChanges.length } : null;
+    }).filter(Boolean);
+  }
+
+  const allPts = Object.values(avgByRes).flat();
+  if (!allPts.length) return;
+
+  const xScale = d3.scaleLinear().domain(d3.extent(allPts, d=>d.value)).nice().range([0,iW]);
+  const yPad   = (d3.max(allPts,d=>d.score) - d3.min(allPts,d=>d.score)) * 0.15 || 1;
+  const yScale = d3.scaleLinear().domain([d3.min(allPts,d=>d.score)-yPad, d3.max(allPts,d=>d.score)+yPad]).nice().range([iH,0]);
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+  svg.append('defs').append('clipPath').attr('id',`clip-${param}`).append('rect').attr('width',iW).attr('height',iH);
+  const g  = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
+  const ca = g.append('g').attr('clip-path',`url(#clip-${param})`);
+
+  ca.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+  g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(expanded ? 8 : 5));
+  g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(expanded ? 6 : 4));
+  g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+36).attr('text-anchor','middle').attr('font-size', expanded ? 11 : 9).text(param.replace(/_/g,' '));
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-38).attr('text-anchor','middle').attr('font-size', expanded ? 11 : 9).text('% change from scene mean');
+
+  const line    = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
+  const tooltip = document.getElementById('tooltip');
+  const dotR    = expanded ? 5 : 3;
+  const sw      = expanded ? 2 : 1.5;
+
+  for (const res of RESOLUTIONS) {
+    const pts = avgByRes[res];
+    if (!pts.length) continue;
+    const color = RES_COLORS[res];
+    ca.append('path').datum(pts).attr('class','series-line').attr('stroke',color).attr('stroke-width',sw).attr('d',line);
+    ca.selectAll(null).data(pts).join('circle')
+      .attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
+      .attr('r',dotR).attr('fill',color).attr('stroke','var(--bg)').attr('stroke-width',1.5)
+      .on('mousemove', (event,d) => {
+        tooltip.innerHTML = `
+          <div class="tt-label">${param.replace(/_/g,' ')}</div>
+          <div class="tt-score">${d.score.toFixed(3)}</div>
+          <div class="tt-label">value: <b>${d.value}</b></div>
+          <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>`;
+        tooltip.classList.add('visible'); positionTooltip(event);
+      })
+      .on('mouseleave', () => tooltip.classList.remove('visible'));
+  }
+
+  // legend — larger when expanded
+  const legG = svg.append('g').attr('transform',`translate(${margin.left + 8},${margin.top + 8})`);
+  const ls = expanded ? 14 : 8, lg = expanded ? 20 : 14, lf = expanded ? 10 : 8;
+  RESOLUTIONS.forEach((res,i) => {
+    legG.append('rect').attr('x',0).attr('y',i*lg).attr('width',ls).attr('height',ls).attr('fill',RES_COLORS[res]);
+    legG.append('text').attr('x',ls+4).attr('y',i*lg+ls-1).attr('fill','var(--muted)').attr('font-size',lf).attr('font-family','JetBrains Mono').text(`${res}%`);
+  });
+}
+
 function drawScoreCurves() {
-  const grid   = document.getElementById('curves-grid');
+  const grid = document.getElementById('curves-grid');
   grid.innerHTML = '';
   const allScores = extractAllScores();
   const scenes    = Object.keys(allScores);
   if (!scenes.length) return;
 
   for (const param of PARAMS) {
-    // card
-    const card = document.createElement('div'); card.className = 'chart-card';
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.dataset.param = param;
     card.innerHTML = `
-      <div class="chart-card-title">${param.replace(/_/g,' ')}</div>
+      <div class="chart-card-header">
+        <div class="chart-card-title">${param.replace(/_/g,' ')}</div>
+        <span class="expand-hint">click to expand</span>
+      </div>
       <div class="chart-card-sub">averaged across ${scenes.length} scenes</div>
       <div class="chart-card-wrap" id="curve-${param}"></div>`;
     grid.appendChild(card);
 
-    // after DOM is in place, draw
+    // click to expand/collapse
+    card.addEventListener('click', () => {
+      const isExpanded = card.classList.contains('expanded');
+      // collapse all others first
+      grid.querySelectorAll('.chart-card.expanded').forEach(c => {
+        c.classList.remove('expanded');
+        c.querySelector('.expand-hint').textContent = 'click to expand';
+        const w = c.querySelector('.chart-card-wrap');
+        requestAnimationFrame(() => renderCurveInto(w, c.dataset.param, allScores, false));
+      });
+      if (!isExpanded) {
+        card.classList.add('expanded');
+        card.querySelector('.expand-hint').textContent = 'click to collapse';
+        // scroll card into view
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const wrap = card.querySelector('.chart-card-wrap');
+        requestAnimationFrame(() => renderCurveInto(wrap, param, allScores, true));
+      }
+    });
+
+    // initial render
     requestAnimationFrame(() => {
       const wrap = document.getElementById(`curve-${param}`);
-      if (!wrap) return;
-      const W = wrap.clientWidth || 400, H = 240;
-      const margin = { top:12, right:16, bottom:44, left:48 };
-      const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
-
-      // collect all unique x values and compute per-resolution averages
-      const avgByRes = {};
-      for (const res of RESOLUTIONS) {
-        const allVals = [...new Set(scenes.flatMap(s => (allScores[s][res][param] ?? []).map(e => e.value)))].sort((a,b) => a-b);
-        avgByRes[res] = allVals.map(val => {
-          const pts = scenes.flatMap(s => (allScores[s][res][param] ?? []).filter(e => Math.abs(e.value - val) < 1e-9).map(e => e.score));
-          return pts.length ? { value: val, score: pts.reduce((a,b) => a+b,0)/pts.length } : null;
-        }).filter(Boolean);
-      }
-
-      const allPts = Object.values(avgByRes).flat();
-      if (!allPts.length) return;
-
-      const xScale = d3.scaleLinear().domain(d3.extent(allPts, d=>d.value)).nice().range([0,iW]);
-      const yPad   = (d3.max(allPts,d=>d.score) - d3.min(allPts,d=>d.score)) * 0.15 || 1;
-      const yScale = d3.scaleLinear().domain([d3.min(allPts,d=>d.score)-yPad, d3.max(allPts,d=>d.score)+yPad]).nice().range([iH,0]);
-
-      const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
-      svg.append('defs').append('clipPath').attr('id',`clip-${param}`).append('rect').attr('width',iW).attr('height',iH);
-      const g = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
-      const ca = g.append('g').attr('clip-path',`url(#clip-${param})`);
-
-      ca.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
-      g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(5));
-      g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(4));
-      g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+36).attr('text-anchor','middle').attr('font-size',9).text(param.replace(/_/g,' '));
-      g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-38).attr('text-anchor','middle').attr('font-size',9).text('CGVQM score');
-
-      const line = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
-      const tooltip = document.getElementById('tooltip');
-
-      for (const res of RESOLUTIONS) {
-        const pts = avgByRes[res];
-        if (!pts.length) continue;
-        const color = RES_COLORS[res];
-        ca.append('path').datum(pts).attr('class','series-line').attr('stroke',color).attr('stroke-width',1.5).attr('d',line);
-        ca.selectAll(null).data(pts).join('circle')
-          .attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
-          .attr('r',3).attr('fill',color).attr('stroke','var(--bg)').attr('stroke-width',1.5)
-          .on('mousemove', (event,d) => {
-            tooltip.innerHTML = `
-              <div class="tt-label">${param.replace(/_/g,' ')}</div>
-              <div class="tt-score">${d.score.toFixed(3)}</div>
-              <div class="tt-label">value: <b>${d.value}</b></div>
-              <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>`;
-            tooltip.classList.add('visible'); positionTooltip(event);
-          })
-          .on('mouseleave', () => tooltip.classList.remove('visible'));
-      }
-
-      // small legend inside chart
-      const legG = svg.append('g').attr('transform',`translate(${margin.left + 8},${margin.top + 8})`);
-      RESOLUTIONS.forEach((res,i) => {
-        legG.append('rect').attr('x',0).attr('y',i*14).attr('width',8).attr('height',8).attr('fill',RES_COLORS[res]);
-        legG.append('text').attr('x',12).attr('y',i*14+8).attr('fill','var(--muted)').attr('font-size',8).attr('font-family','JetBrains Mono').text(`${res}%`);
-      });
+      if (wrap) renderCurveInto(wrap, param, allScores, false);
     });
   }
 }
