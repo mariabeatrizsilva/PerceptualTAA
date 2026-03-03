@@ -368,7 +368,9 @@ async function loadData() {
 
 // ── Init: populate scene dropdown ────────────────────────────────
 function init() {
-  const scenes   = Object.keys(dataset).sort();
+  const scenes   = Object.keys(dataset)
+    .filter(s => Object.keys(dataset[s]).length > 2)  // only show scenes with more than one series
+    .sort();
   const selScene = document.getElementById('sel-scene');
   selScene.innerHTML = scenes.map(s => `<option value="${s}">${s}</option>`).join('');
   selScene.addEventListener('change', () => {
