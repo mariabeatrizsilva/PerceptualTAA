@@ -339,7 +339,7 @@
   </aside>
   <div class="overall-main">    <div>
       <div class="section-heading">Overall Analysis</div>
-      <div class="section-sub">Aggregated across all scenes · averaged scores</div>
+      <div class="section-sub">On this page, find overall trends that have been aggregated over all scenes (i.e. scores per each parameter have been averaged over all scenes). </div>
     </div>
 
     <div class="overall-tabs">
@@ -349,14 +349,26 @@
 
     <!-- Score curves tab -->
     <div class="overall-tab-panel active" id="otab-curves">
-      <div class="section-sub">How each parameter changes the score from the mean score for that parameter (for each resolution).</div>
-      <div class="chart-grid" id="curves-grid"></div>
+      <div class="section-sub">
+        <span style="color:var(--accent);font-weight:600;">% change from baseline</span> — 
+        for each parameter value, how much the score deviates from that parameter's mean across all tested values. 
+        <br> Each line represents that average change from baseline averaged across selected scenes, separately per resolution. 
+        <br> Positive value = outperforms average; negative value = underperforms.
+        <br> Toggle scenes in the sidebar to include or exclude them.
+      </div>
+    <div class="chart-grid" id="curves-grid"></div>
     </div>
 
     <!-- Heatmaps tab -->
     <div class="overall-tab-panel" id="otab-heatmaps">
-      <div class="section-sub">Effect size (max − min score) per scene per resolution. One table per parameter.</div>
-      <div class="heatmap-grid" id="heatmaps-grid"></div>
+    <div class="section-sub">
+    <span style="color:var(--accent);font-weight:600;">Effect size</span> — 
+    max score − min score across all tested values of a parameter, per scene per resolution. 
+    <br> For example, an effect size of 36.43 for <em>alpha weight</em> at 50% resolution means 
+    the score varied by 36.43 points depending on which alpha weight value was used.
+    <br>Larger values mean that parameter has more influence on quality at that resolution.
+  </div>   
+    <div class="heatmap-grid" id="heatmaps-grid"></div>
     </div>
 
     <div class="status" id="status-overall"></div>
@@ -1006,6 +1018,35 @@ function renderCurveInto(wrap, param, allScores, expanded) {
     legG.append('rect').attr('x',0).attr('y',i*lg).attr('width',ls).attr('height',ls).attr('fill',RES_COLORS[res]);
     legG.append('text').attr('x',ls+4).attr('y',i*lg+ls-1).attr('fill','var(--muted)').attr('font-size',lf).attr('font-family','JetBrains Mono').text(`${res}%`);
   });
+
+  // ── Brush to zoom ────────────────────────────────────────────
+  const brush = d3.brush()
+    .extent([[0,0],[iW,iH]])
+    .on('end', (event) => {
+      if (!event.selection) return;
+      const [[x0,y0],[x1,y1]] = event.selection;
+      xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
+      yScale.domain([yScale.invert(y1), yScale.invert(y0)]);
+      g.select('.axis').call(d3.axisBottom(xScale).ticks(expanded ? 8 : 5));
+      ca.selectAll('.series-line').attr('d', line);
+      ca.selectAll('circle').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
+      requestAnimationFrame(() => ca.select('.brush').call(brush.move, null));
+    });
+
+  ca.append('g').attr('class','brush').call(brush);
+
+  // double-click to reset
+  svg.on('dblclick', () => {
+    xScale.domain(d3.extent(allPts, d=>d.value));
+    yScale.domain([d3.min(allPts,d=>d.score)-yPad, d3.max(allPts,d=>d.score)+yPad]);
+    g.select('.axis').call(d3.axisBottom(xScale).ticks(expanded ? 8 : 5));
+    ca.selectAll('.series-line').attr('d', line);
+    ca.selectAll('circle').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
+  });
+
+  ca.append('g').attr('class','brush').call(brush)
+    .on('mousedown', e => e.stopPropagation())
+    .on('click', e => e.stopPropagation());
 }
 
 function drawScoreCurves() {
@@ -1024,7 +1065,6 @@ function drawScoreCurves() {
         <div class="chart-card-title">${param.replace(/_/g,' ')}</div>
         <span class="expand-hint">click to expand</span>
       </div>
-      <div class="chart-card-sub">averaged across ${scenes.length} scenes</div>
       <div class="chart-card-wrap" id="curve-${param}"></div>`;
     grid.appendChild(card);
 
