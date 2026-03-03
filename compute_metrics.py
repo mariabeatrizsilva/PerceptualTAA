@@ -22,8 +22,8 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-
-# python compute_metrics.py -m CGVQM --all --scenes fantasticvillage-open quarry-all quarry-rocksonly resto-close resto-pan subway-lookdown
+# python compute_metrics.py -m CGVQM --all --scenes oldmine-screen-per-87 subway-lookdown-screen-per-71 subway-lookdown-screen-per-87 subway-turn-screen-per-50 subway-turn-screen-per-71 subway-turn-screen-per-87 oldmine-warm-screen-per-50 oldmine-warm-screen-per-71 oldmine-warm-screen-per-87 abandoned-screen-per-50 abandoned-screen-per-71 abandoned-screen-per-87 junkyard-mound2-screen-per-50 junkyard-mound2-screen-per-71 junkyard-mound2-screen-per-87 --no-err-maps
+# python compute_metrics.py -m CGVQM --all --scenes lightfoliage-screen-per-50 lightfoliage-screen-per-71 lightfoliage-screen-per-87 cubetest-screen-per-50 cubetest-screen-per-71 cubetest-screen-per-87 scifi-screen-per-50 scifi-screen-per-71 scifi-screen-per-87 subway-lookdown-screen-per-50   --no-err-maps
 REF_NAME = '16SSAA'
 BASE_MP4 = 'data/'
 FRAMES_SUFFIX = '%04d.png'
