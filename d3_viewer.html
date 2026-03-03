@@ -499,6 +499,7 @@ let activeScene      = null;
 let activeParam      = null;
 let seriesVisibility = {};
 let activeScenes = new Set(); // populated after load
+let expandedParam = null;
 // ═══════════════════════════════════════════════════════════════════
 // LOAD
 // ═══════════════════════════════════════════════════════════════════
@@ -1082,6 +1083,9 @@ function renderCurveInto(wrap, param, allScores, expanded) {
 
 function drawScoreCurves() {
   const grid = document.getElementById('curves-grid');
+  // save which card is currently expanded before wiping
+  const currentlyExpanded = grid.querySelector('.chart-card.expanded');
+  if (currentlyExpanded) expandedParam = currentlyExpanded.dataset.param;
   grid.innerHTML = '';
   const allScores = extractAllScores();
   const scenes    = Object.keys(allScores);
@@ -1100,9 +1104,8 @@ function drawScoreCurves() {
     grid.appendChild(card);
 
     // click to expand/collapse
-    card.addEventListener('click', () => {
+card.addEventListener('click', () => {
       const isExpanded = card.classList.contains('expanded');
-      // collapse all others first
       grid.querySelectorAll('.chart-card.expanded').forEach(c => {
         c.classList.remove('expanded');
         c.querySelector('.expand-hint').textContent = 'click to expand';
@@ -1110,19 +1113,30 @@ function drawScoreCurves() {
         requestAnimationFrame(() => renderCurveInto(w, c.dataset.param, allScores, false));
       });
       if (!isExpanded) {
+        expandedParam = param;   // <-- add this
         card.classList.add('expanded');
         card.querySelector('.expand-hint').textContent = 'click to collapse';
-        // scroll card into view
         card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         const wrap = card.querySelector('.chart-card-wrap');
         requestAnimationFrame(() => renderCurveInto(wrap, param, allScores, true));
+      } else {
+        expandedParam = null;    // <-- add this
       }
     });
-
-    // initial render
+    
+    // restore expanded state if this param was expanded before
     requestAnimationFrame(() => {
       const wrap = document.getElementById(`curve-${param}`);
-      if (wrap) renderCurveInto(wrap, param, allScores, false);
+      if (wrap) {
+        const isExpanded = expandedParam === param;
+        if (isExpanded) {
+          card.classList.add('expanded');
+          card.querySelector('.expand-hint').textContent = 'click to collapse';
+          renderCurveInto(wrap, param, allScores, true);
+        } else {
+          renderCurveInto(wrap, param, allScores, false);
+        }
+      }
     });
   }
 }
