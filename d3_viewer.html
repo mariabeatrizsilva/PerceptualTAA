@@ -339,7 +339,10 @@
   </aside>
   <div class="overall-main">    <div>
       <div class="section-heading">Overall Analysis</div>
-      <div class="section-sub">On this page, find overall trends that have been aggregated over all scenes (i.e. scores per each parameter have been averaged over all scenes). </div>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+        This page shows overall trends that have been  <span style="color:var(--accent);font-weight:600;"> aggregated over all scenes</span> (i.e. scores per each parameter have been averaged over all scenes). 
+        <br> The bar to the left lets you <span style="color:var(--accent);font-weight:600;">select which scenes you'd like to have considered </span> in the plots below.
+        <br> Use the  <span style="color:var(--accent);font-weight:600;">Scene Explorer tab</span> to look at statistics for individual scenes.</div>
     </div>
 
     <div class="overall-tabs">
@@ -395,11 +398,15 @@
   </aside>
 
   <main>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+      Select a <span style="color:var(--text);">scene</span> and <span style="color:var(--text);">parameter</span> from the sidebar, then explore the tabs below.
+      Use the <span style="color:var(--text);">Series</span> toggles to show or hide individual resolutions.<br>
+    </div>
+
     <div>
       <div class="chart-title" id="chart-title">—</div>
       <div class="chart-subtitle" id="chart-subtitle">Select a scene and parameter</div>
     </div>
-
     <div class="tabs">
       <button class="tab-btn active" data-tab="chart">Chart</button>
       <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
@@ -409,14 +416,21 @@
 
     <!-- Chart tab -->
     <div class="tab-panel active" id="tab-chart">
+       <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+        Each line is a resolution — e.g. <span style="color:var(--text);">50%</span> means half pixel dimensions in each axis.
+        <br> X-axis = parameter value tested; y-axis = CGVQM score (<span style="color:var(--good);">higher = better</span>).
+        <br> <span style="color:var(--text);">Drag</span> to zoom, <span style="color:var(--text);">double-click</span> to reset.
+        <br> Cards below show the best-performing value per resolution.
+        </div>
       <div id="chart-wrap"></div>
+      
       <div class="best-cards" id="best-cards"></div>
     </div>
 
     <!-- Sensitivity bar chart tab -->
     <div class="tab-panel" id="tab-sensitivity">
       <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
-        <span style="color:var(--accent);font-weight:600;">Effect size</span> = max score − min score across all tested values of a parameter, at a given resolution.
+        <span style="color:var(--accent);font-weight:600;">Effect size</span> = max score − min score across all tested values of a parameter, at a given resolution at a given resolution, for the <span style="color:var(--text);">currently selected scene</span>.
         A taller bar means that parameter has a stronger influence on quality at that resolution.
         Bars are grouped by parameter; colours indicate resolution.
       </div>
@@ -426,6 +440,12 @@
     <!-- Deep-dive tab -->
     <div class="tab-panel" id="tab-deepdive">
       <div class="table-section">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+          Rows = tested parameter values. Columns = resolutions.
+          <span style="color:var(--good);font-weight:600;">Green</span> = best score in that resolution,
+          <span style="color:var(--bad);font-weight:600;">red</span> = worst.
+          Footer shows the best and worst value and the total score range per resolution.
+        </div>
         <div class="table-controls">
           <label>Reference:</label>
           <select id="sel-ref-deepdive"></select>
@@ -437,6 +457,10 @@
     <!-- Cross-param tab -->
     <div class="tab-panel" id="tab-crossparam">
       <div class="table-section">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+          Each row is a parameter. Columns show min, max, and range of scores across all tested values, per resolution.
+          The <span style="color:var(--warn);font-weight:600;">highlighted cell</span> is the largest range in the whole table — the most influential parameter at that resolution.
+        </div>
         <div class="table-controls">
           <label>Reference:</label>
           <select id="sel-ref-crossparam"></select>
