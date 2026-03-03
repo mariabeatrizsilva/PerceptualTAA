@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PerceptualTAA — Quality Explorer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════════════════════════
+     DESIGN TOKENS — change here to retheme the whole app
+  ═══════════════════════════════════════════════════════════════ */
+  :root {
+    --bg:      #0d0f14;
+    --surface: #13161e;
+    --border:  #1f2433;
+    --border2: #2a3045;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --accent:  #38bdf8;
+    --good:    #34d399;
+    --warn:    #fbbf24;
+    --bad:     #f87171;
+
+    /* Series colours — assigned in getSeries() order (pct desc, ref alpha).
+       Add --c6, --c7 here if you have more than 6 (pct × ref) combos. */
+    --c0: #38bdf8;
+    --c1: #818cf8;
+    --c2: #f472b6;
+    --c3: #fb923c;
+    --c4: #34d399;
+    --c5: #fbbf24;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  header {
+    padding: 18px 32px 14px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 18px; letter-spacing: -0.02em;
+  }
+  header span { color: var(--muted); font-size: 11px; }
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  .layout { display: flex; flex: 1; overflow: hidden; }
+
+  aside {
+    width: 270px; min-width: 270px;
+    border-right: 1px solid var(--border);
+    padding: 20px 16px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 22px;
+  }
+  .control-group label {
+    display: block; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  select {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border2); color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    padding: 7px 10px; border-radius: 4px;
+    outline: none; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px;
+  }
+  select:focus { border-color: var(--accent); }
+
+  /* ── Legend ─────────────────────────────────────────────────── */
+  .legend { display: flex; flex-direction: column; gap: 5px; }
+  .legend-item {
+    display: flex; align-items: flex-start; gap: 8px; cursor: pointer;
+    padding: 6px 8px; border-radius: 4px; border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s; user-select: none;
+  }
+  .legend-item:hover   { background: var(--surface); border-color: var(--border2); }
+  .legend-item.inactive { opacity: 0.3; }
+  .legend-swatch { width: 20px; height: 3px; border-radius: 2px; flex-shrink: 0; margin-top: 6px; }
+  .legend-text   { display: flex; flex-direction: column; gap: 1px; }
+  .legend-label    { font-size: 11px; color: var(--text); }
+  .legend-sublabel { font-size: 9px;  color: var(--muted); }
+  .legend-divider  { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── Main ────────────────────────────────────────────────────── */
+  main {
+    flex: 1; padding: 24px 32px;
+    display: flex; flex-direction: column; gap: 20px; overflow: auto;
+  }
+  .chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+  .chart-subtitle { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* ── Tabs ────────────────────────────────────────────────────── */
+  .tabs {
+    display: flex; gap: 2px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 6px 14px 8px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover  { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel         { display: none; }
+  .tab-panel.active  { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Chart ───────────────────────────────────────────────────── */
+  #chart-wrap { position: relative; min-height: 360px; height: 400px; }
+  svg { overflow: visible; }
+  .axis path, .axis line { stroke: var(--border2); }
+  .axis text { fill: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .axis-label { fill: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .grid line { stroke: var(--border); stroke-dasharray: 3,4; }
+  .grid path { display: none; }
+  .series-line { fill: none; stroke-width: 2; }
+  .series-dot  { stroke: var(--bg); stroke-width: 2; cursor: crosshair; }
+
+  /* ── Best-value annotation cards (below chart) ───────────────── */
+  .best-cards {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding-top: 4px;
+  }
+  .best-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 8px 12px;
+    display: flex; flex-direction: column; gap: 3px;
+    min-width: 140px;
+  }
+  .best-card-header {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: var(--muted);
+  }
+  .best-card-swatch {
+    width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0;
+  }
+  .best-card-value {
+    font-family: 'Syne', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--accent);
+  }
+  .best-card-sub { font-size: 9px; color: var(--muted); }
+
+  /* ── Tables (shared styles) ──────────────────────────────────── */
+  .table-section { display: flex; flex-direction: column; gap: 10px; }
+  .table-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .table-controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .table-controls label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .table-controls select { width: auto; font-size: 11px; }
+  .table-scroll { overflow-x: auto; }
+
+  table { border-collapse: collapse; font-size: 11px; }
+  thead th {
+    text-align: right; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted); padding: 7px 11px;
+    border-bottom: 1px solid var(--border2);
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: 7px 11px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tbody td:first-child { text-align: left; }
+
+  /* Footer rows in deep-dive table (best / worst / range) */
+  tr.footer-row td {
+    border-top: 1px solid var(--border2);
+    color: var(--muted); font-size: 10px;
+  }
+  tr.footer-row td:first-child { color: var(--muted); }
+
+  /* Highlight best score in a column */
+  td.hi  { color: var(--good);  font-weight: 600; }
+  /* Highlight worst score in a column */
+  td.lo  { color: var(--bad); }
+  /* Range cell — colour intensity based on relative magnitude */
+  td.range-hi { color: var(--warn); font-weight: 600; }
+
+  /* Group header row in cross-param table */
+  tr.pct-header th {
+    background: var(--surface); color: var(--accent);
+    font-size: 10px; letter-spacing: 0.06em; text-align: center;
+    padding: 5px 11px; border-bottom: 1px solid var(--border2);
+  }
+  tr.pct-header th:first-child { text-align: left; }
+
+  /* ── Tooltip ─────────────────────────────────────────────────── */
+  #tooltip {
+    position: fixed; background: var(--surface);
+    border: 1px solid var(--border2); border-radius: 6px;
+    padding: 10px 13px; pointer-events: none;
+    font-size: 11px; line-height: 1.8; z-index: 100;
+    opacity: 0; transition: opacity 0.1s; max-width: 230px;
+  }
+  #tooltip.visible { opacity: 1; }
+  .tt-score { font-size: 15px; font-weight: 600; color: var(--accent); font-family: 'Syne', sans-serif; }
+  .tt-label { color: var(--muted); font-size: 10px; }
+
+  /* ── Empty / status ──────────────────────────────────────────── */
+  .empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 200px; color: var(--muted); font-size: 12px;
+    border: 1px dashed var(--border2); border-radius: 6px;
+  }
+  .status { font-size: 10px; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--border); }
+  .status .ok   { color: var(--good); }
+  .status .warn { color: var(--warn); }
+  * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PerceptualTAA</h1>
+  <span>quality explorer · cgvqm</span>
+</header>
+
+<div class="layout">
+
+  <!-- ═══════════════════════════════════════════════
+       SIDEBAR
+       To add a new global filter: add a .control-group
+       here, add a state variable, wire a change event
+       that calls buildLegend() + draw().
+  ═══════════════════════════════════════════════════ -->
+  <aside>
+    <div class="control-group">
+      <label>Scene</label>
+      <select id="sel-scene"></select>
+    </div>
+    <div class="control-group">
+      <label>Parameter</label>
+      <select id="sel-param"></select>
+    </div>
+    <!-- Legend: one item per (pct, ref) combo, grouped by pct -->
+    <div class="control-group">
+      <label>Series</label>
+      <div class="legend" id="legend"></div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════════════════════ -->
+  <main>
+    <div>
+      <div class="chart-title" id="chart-title">—</div>
+      <div class="chart-subtitle" id="chart-subtitle">Select a scene and parameter</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="chart">Chart</button>
+      <button class="tab-btn" data-tab="deepdive">Parameter deep-dive</button>
+      <button class="tab-btn" data-tab="crossparam">Cross-parameter summary</button>
+    </div>
+
+    <!-- ── TAB: Chart ──────────────────────────────── -->
+    <div class="tab-panel active" id="tab-chart">
+      <div id="chart-wrap"></div>
+      <!-- Best-value cards: one per visible series -->
+      <div class="best-cards" id="best-cards"></div>
+    </div>
+
+    <!-- ── TAB: Parameter deep-dive ───────────────── -->
+    <!-- Rows = param values, cols = screen pcts
+         Ref selector at top (one ref at a time)
+         Footer rows: best value, worst value, range  -->
+    <div class="tab-panel" id="tab-deepdive">
+      <div class="table-section">
+        <div class="table-controls">
+          <label>Reference:</label>
+          <select id="sel-ref-deepdive"></select>
+        </div>
+        <div class="table-scroll" id="deepdive-wrap"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Cross-parameter summary ───────────── -->
+    <!-- Rows = parameters, cols = screen pcts (each split min/max/range)
+         Ref selector at top                          -->
+    <div class="tab-panel" id="tab-crossparam">
+      <div class="table-section">
+        <div class="table-controls">
+          <label>Reference:</label>
+          <select id="sel-ref-crossparam"></select>
+        </div>
+        <div class="table-scroll" id="crossparam-wrap"></div>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+  </main>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ARCHITECTURE OVERVIEW
+//
+// Data flow:
+//   dataset.json → loadData() → init() → updateParams()
+//     → buildLegend() → draw() / drawDeepDive() / drawCrossParam()
+//
+// State globals (change these, then call render functions):
+//   dataset          — full parsed dataset.json
+//   activeScene      — selected base scene name
+//   activeParam      — selected parameter name (for chart + deep-dive)
+//   seriesVisibility — { "pct|ref_key": bool } toggle state
+//
+// Key function: getSeries()
+//   Translates dataset[scene][pct][ref] into a flat array of series
+//   objects for the current (scene, param). Everything reads from it.
+//   Series shape: { id, pct, ref, refScene, color, entries, label }
+//   where entries = [{value, score, per_frame_errors}] sorted by value.
+//
+// To add a new tab visualisation:
+//   1. Add tab-btn + tab-panel in HTML
+//   2. Write drawMyThing() reading getSeries() or dataset directly
+//   3. Call it from the tab click handler and from buildLegend()
+//
+// To add a new sidebar filter:
+//   1. Add control-group + select in HTML
+//   2. Add state variable, wire change → buildLegend() + draw()
+//   3. Filter inside getSeries() using the new variable
+// ═══════════════════════════════════════════════════════════════════
+
+const DATASET_URL = 'dataset.json';
+const COLOR_VARS  = ['--c0','--c1','--c2','--c3','--c4','--c5'];
+
+// ── State ────────────────────────────────────────────────────────
+let dataset          = {};
+let activeScene      = null;
+let activeParam      = null;
+// seriesVisibility: "pct|ref_key" → bool. Reset when scene changes.
+let seriesVisibility = {};
+
+// ── Load ─────────────────────────────────────────────────────────
+async function loadData() {
+  setStatus('loading dataset.json…', false);
+  try {
+    const res = await fetch(DATASET_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    dataset = await res.json();
+    setStatus(`dataset loaded · ${Object.keys(dataset).length} scenes`, true);
+    init();
+  } catch(e) {
+    setStatus(`ERROR: ${e.message} — serve via python -m http.server`, false);
+  }
+}
+
+// ── Init: populate scene dropdown ────────────────────────────────
+function init() {
+  const scenes   = Object.keys(dataset).sort();
+  const selScene = document.getElementById('sel-scene');
+  selScene.innerHTML = scenes.map(s => `<option value="${s}">${s}</option>`).join('');
+  selScene.addEventListener('change', () => {
+    activeScene      = selScene.value;
+    seriesVisibility = {};
+    updateParams();
+  });
+  activeScene = scenes[0];
+  updateParams();
+}
+
+// ── Populate param dropdown ───────────────────────────────────────
+// Collects all params across every pct/ref block for the active scene.
+function updateParams() {
+  const sceneData = dataset[activeScene] ?? {};
+  const paramSet  = new Set();
+  for (const [key, pctBlock] of Object.entries(sceneData)) {
+    if (key === 'metric') continue;
+    for (const refBlock of Object.values(pctBlock))
+      for (const k of Object.keys(refBlock))
+        if (Array.isArray(refBlock[k])) paramSet.add(k);
+  }
+
+  const params = [...paramSet].sort();
+
+  // Replace node to avoid duplicate event listeners
+  const old    = document.getElementById('sel-param');
+  const newSel = old.cloneNode(false);
+  old.replaceWith(newSel);
+  newSel.innerHTML = params.map(p =>
+    `<option value="${p}">${p.replace(/_/g,' ')}</option>`
+  ).join('');
+  newSel.addEventListener('change', () => {
+    activeParam = newSel.value;
+    buildLegend();
+    renderAll();
+  });
+
+  activeParam = params[0] ?? null;
+  buildLegend();
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// getSeries — core data accessor
+//
+// Returns flat array of series objects for (activeScene, activeParam).
+// One series per (pct, ref) combo that has data for the active param.
+// Sorted pct desc, then ref alpha — consistent with colour assignment.
+//
+// To filter by an extra dimension, add a condition in the inner loop.
+// ═══════════════════════════════════════════════════════════════════
+function getSeries() {
+  if (!activeScene || !activeParam) return [];
+  const sceneData = dataset[activeScene] ?? {};
+  const series    = [];
+  const pcts      = Object.keys(sceneData).filter(k => k !== 'metric').sort((a,b) => +b - +a);
+  let ci = 0;
+  for (const pct of pcts) {
+    for (const ref of Object.keys(sceneData[pct]).sort()) {
+      const block   = sceneData[pct][ref];
+      const entries = block[activeParam];
+      if (!entries?.length) continue;
+      series.push({
+        id:       `${pct}|${ref}`,
+        pct, ref,
+        refScene: ref.replace(/^ref-/, ''),
+        color:    `var(${COLOR_VARS[ci % COLOR_VARS.length]})`,
+        entries,
+        label:    `${pct}%`,
+      });
+      ci++;
+    }
+  }
+  return series;
+}
+
+// ── Collect all unique ref keys available for this scene ──────────
+// Used to populate ref selectors in the summary tabs.
+function getAllRefs() {
+  const sceneData = dataset[activeScene] ?? {};
+  const refSet    = new Set();
+  for (const [key, pctBlock] of Object.entries(sceneData)) {
+    if (key === 'metric') continue;
+    for (const ref of Object.keys(pctBlock)) refSet.add(ref);
+  }
+  return [...refSet].sort();
+}
+
+// ── Collect all unique params available for this scene ────────────
+function getAllParams() {
+  const sceneData = dataset[activeScene] ?? {};
+  const paramSet  = new Set();
+  for (const [key, pctBlock] of Object.entries(sceneData)) {
+    if (key === 'metric') continue;
+    for (const refBlock of Object.values(pctBlock))
+      for (const k of Object.keys(refBlock))
+        if (Array.isArray(refBlock[k])) paramSet.add(k);
+  }
+  return [...paramSet].sort();
+}
+
+// ── Collect all pcts that have data for a given (ref, param) ──────
+function getPctsForRef(ref, param) {
+  const sceneData = dataset[activeScene] ?? {};
+  return Object.keys(sceneData)
+    .filter(pct => pct !== 'metric' && sceneData[pct][ref]?.[param]?.length)
+    .sort((a,b) => +b - +a);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// buildLegend — sidebar series toggles, grouped by pct
+// ═══════════════════════════════════════════════════════════════════
+function buildLegend() {
+  const allSeries = getSeries();
+  const legend    = document.getElementById('legend');
+
+  for (const s of allSeries)
+    if (seriesVisibility[s.id] === undefined) seriesVisibility[s.id] = true;
+
+  legend.innerHTML = '';
+  const byPct = {};
+  for (const s of allSeries) (byPct[s.pct] = byPct[s.pct] ?? []).push(s);
+
+  Object.keys(byPct).sort((a,b) => +b-+a).forEach((pct, i) => {
+    if (i > 0) {
+      const d = document.createElement('div');
+      d.className = 'legend-divider';
+      legend.appendChild(d);
+    }
+    for (const s of byPct[pct]) {
+      const cv   = getComputedColor(s.color);
+      const item = document.createElement('div');
+      item.className = 'legend-item' + (seriesVisibility[s.id] ? '' : ' inactive');
+      item.innerHTML = `
+        <div class="legend-swatch" style="background:${cv}"></div>
+        <div class="legend-text">
+          <span class="legend-label">${s.label}</span>
+          <span class="legend-sublabel">ref: ${s.refScene}</span>
+        </div>`;
+      item.addEventListener('click', () => {
+        seriesVisibility[s.id] = !seriesVisibility[s.id];
+        item.classList.toggle('inactive');
+        renderAll();
+      });
+      legend.appendChild(item);
+    }
+  });
+
+  document.getElementById('chart-title').textContent =
+    activeParam ? activeParam.replace(/_/g,' ') : '—';
+  document.getElementById('chart-subtitle').textContent =
+    activeScene ? `scene: ${activeScene}` : '';
+
+  // Sync ref selectors in summary tabs
+  syncRefSelectors();
+}
+
+// ── Sync ref dropdowns in both summary tabs ───────────────────────
+function syncRefSelectors() {
+  const refs = getAllRefs();
+  ['sel-ref-deepdive','sel-ref-crossparam'].forEach(id => {
+    const el  = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = refs.map(r => `<option value="${r}">${r}</option>`).join('');
+    if (refs.includes(cur)) el.value = cur;
+  });
+}
+
+// ── Render all active panels ──────────────────────────────────────
+function renderAll() {
+  draw();
+  drawDeepDive();
+  drawCrossParam();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// draw — line chart + best-value annotation cards
+// ═══════════════════════════════════════════════════════════════════
+function draw() {
+  const wrap          = document.getElementById('chart-wrap');
+  const cardsEl       = document.getElementById('best-cards');
+  const visibleSeries = getSeries().filter(s => seriesVisibility[s.id] !== false);
+
+  wrap.innerHTML   = '';
+  cardsEl.innerHTML = '';
+
+  if (!visibleSeries.length) {
+    wrap.innerHTML = '<div class="empty">No data for this selection</div>';
+    return;
+  }
+
+  // ── Scales ────────────────────────────────────────────────────
+  const W      = wrap.clientWidth  || 800;
+  const H      = Math.max(wrap.clientHeight || 400, 360);
+  const margin = { top:18, right:28, bottom:50, left:56 };
+  const iW     = W - margin.left - margin.right;
+  const iH     = H - margin.top  - margin.bottom;
+
+  const pts    = visibleSeries.flatMap(s => s.entries);
+  const xScale = d3.scaleLinear().domain(d3.extent(pts, d=>d.value)).nice().range([0,iW]);
+  const yPad   = (d3.max(pts,d=>d.score) - d3.min(pts,d=>d.score)) * 0.12 || 1;
+  const yScale = d3.scaleLinear()
+    .domain([d3.min(pts,d=>d.score)-yPad, d3.max(pts,d=>d.score)+yPad]).nice()
+    .range([iH,0]);
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+  const g   = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
+
+  g.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+  g.append('g').attr('class','grid').attr('transform',`translate(0,${iH})`)
+    .call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+  g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(8));
+  g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(6));
+
+  g.append('text').attr('class','axis-label')
+    .attr('x',iW/2).attr('y',iH+40).attr('text-anchor','middle')
+    .text(activeParam?.replace(/_/g,' ') ?? '');
+  g.append('text').attr('class','axis-label')
+    .attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44)
+    .attr('text-anchor','middle').text('CGVQM score');
+
+  const line    = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
+  const tooltip = document.getElementById('tooltip');
+
+  for (const s of visibleSeries) {
+    const cv = getComputedColor(s.color);
+
+    g.append('path').datum(s.entries).attr('class','series-line').attr('stroke',cv).attr('d',line);
+
+    g.selectAll(null).data(s.entries).join('circle')
+      .attr('class','series-dot')
+      .attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
+      .attr('r',5).attr('fill',cv)
+      .on('mousemove', (event,d) => {
+        tooltip.innerHTML = `
+          <div class="tt-label">${activeParam?.replace(/_/g,' ')}</div>
+          <div class="tt-score">${d.score.toFixed(4)}</div>
+          <div class="tt-label">value: <b style="color:var(--text)">${d.value}</b></div>
+          <div class="tt-label">pct: <b style="color:${cv}">${s.pct}%</b></div>
+          <div class="tt-label">ref: ${s.refScene}</div>
+          ${d.per_frame_errors?.length ? `<div class="tt-label">${d.per_frame_errors.length} frames</div>` : ''}`;
+        tooltip.classList.add('visible');
+        positionTooltip(event);
+      })
+      .on('mouseleave', () => tooltip.classList.remove('visible'));
+
+    // ── Best-value annotation card ─────────────────────────────
+    const scores   = s.entries.map(e => e.score);
+    const bestIdx  = scores.indexOf(Math.max(...scores));
+    const best     = s.entries[bestIdx];
+    const card     = document.createElement('div');
+    card.className = 'best-card';
+    card.innerHTML = `
+      <div class="best-card-header">
+        <div class="best-card-swatch" style="background:${cv}"></div>
+        ${s.pct}% · ref: ${s.refScene}
+      </div>
+      <div class="best-card-value">${best.value}</div>
+      <div class="best-card-sub">best ${activeParam?.replace(/_/g,' ')} → score ${best.score.toFixed(3)}</div>`;
+    cardsEl.appendChild(card);
+  }
+
+  document.addEventListener('mousemove', positionTooltip);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// drawDeepDive — Table 1: param values × screen percentages
+//
+// Rows    = individual parameter values (0.01, 0.02, …)
+// Columns = screen percentages (100, 75, 50, 25)
+// Cells   = CGVQM score at that (value, pct) for the selected ref
+// Footer  = best value row | worst value row | range row
+//
+// Best score in each column highlighted green (.hi)
+// Worst score highlighted red (.lo)
+// Range row coloured amber if it's the widest column (.range-hi)
+//
+// To add a new footer stat: add a row in the footer block below.
+// ═══════════════════════════════════════════════════════════════════
+function drawDeepDive() {
+  const wrap = document.getElementById('deepdive-wrap');
+  const ref  = document.getElementById('sel-ref-deepdive').value;
+  if (!ref || !activeScene || !activeParam) {
+    wrap.innerHTML = '<div class="empty">No data</div>'; return;
+  }
+
+  const sceneData = dataset[activeScene] ?? {};
+  const pcts      = getPctsForRef(ref, activeParam); // desc order
+
+  if (!pcts.length) {
+    wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return;
+  }
+
+  // Build lookup: pct → entries array
+  const entriesByPct = {};
+  for (const pct of pcts)
+    entriesByPct[pct] = sceneData[pct]?.[ref]?.[activeParam] ?? [];
+
+  // All unique param values across all pcts (sorted numerically)
+  const allValues = [...new Set(
+    pcts.flatMap(pct => entriesByPct[pct].map(e => e.value))
+  )].sort((a,b) => a-b);
+
+  // score lookup: pct → value → score
+  const scoreLookup = {};
+  for (const pct of pcts) {
+    scoreLookup[pct] = {};
+    for (const e of entriesByPct[pct]) scoreLookup[pct][e.value] = e.score;
+  }
+
+  // Per-column stats for footer + highlighting
+  const colStats = {};
+  for (const pct of pcts) {
+    const scores = allValues.map(v => scoreLookup[pct][v]).filter(s => s != null);
+    colStats[pct] = {
+      max:      Math.max(...scores),
+      min:      Math.min(...scores),
+      range:    Math.max(...scores) - Math.min(...scores),
+      bestVal:  allValues[scores.indexOf(Math.max(...scores))],
+      worstVal: allValues[scores.indexOf(Math.min(...scores))],
+    };
+  }
+  const maxRange = Math.max(...pcts.map(p => colStats[p].range));
+
+  // ── Header ─────────────────────────────────────────────────────
+  let html = `<table><thead><tr>
+    <th>${activeParam?.replace(/_/g,' ')}</th>
+    ${pcts.map(p => `<th>pct ${p}%</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  // ── Data rows ──────────────────────────────────────────────────
+  for (const v of allValues) {
+    html += `<tr><td>${v}</td>`;
+    for (const pct of pcts) {
+      const score = scoreLookup[pct][v];
+      if (score == null) { html += `<td style="color:var(--muted)">—</td>`; continue; }
+      const isHi  = Math.abs(score - colStats[pct].max) < 1e-9;
+      const isLo  = Math.abs(score - colStats[pct].min) < 1e-9;
+      html += `<td class="${isHi ? 'hi' : isLo ? 'lo' : ''}">${score.toFixed(3)}</td>`;
+    }
+    html += '</tr>';
+  }
+
+  // ── Footer rows ────────────────────────────────────────────────
+  html += `<tr class="footer-row"><td>↑ best value</td>
+    ${pcts.map(p => `<td class="hi">${colStats[p].bestVal}</td>`).join('')}</tr>`;
+  html += `<tr class="footer-row"><td>↓ worst value</td>
+    ${pcts.map(p => `<td class="lo">${colStats[p].worstVal}</td>`).join('')}</tr>`;
+  html += `<tr class="footer-row"><td>range</td>
+    ${pcts.map(p => {
+      const isMax = Math.abs(colStats[p].range - maxRange) < 1e-9;
+      return `<td class="${isMax ? 'range-hi' : ''}">${colStats[p].range.toFixed(3)}</td>`;
+    }).join('')}</tr>`;
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// drawCrossParam — Table 2: all parameters × screen percentages
+//
+// Rows    = each parameter (alpha_weight, hist_percent, …)
+// Columns = screen percentages, each split into min / max / range
+//           (sub-header row labels each group)
+// Cells   = that stat for the given (param, pct) under selected ref
+//
+// Highest range value across the whole table highlighted amber —
+// this directly answers "which param matters most at which quality?"
+//
+// To add a new statistic: add to colStats below + add sub-header +
+// add a cell in the row render.
+// ═══════════════════════════════════════════════════════════════════
+function drawCrossParam() {
+  const wrap = document.getElementById('crossparam-wrap');
+  const ref  = document.getElementById('sel-ref-crossparam').value;
+  if (!ref || !activeScene) { wrap.innerHTML = '<div class="empty">No data</div>'; return; }
+
+  const sceneData = dataset[activeScene] ?? {};
+  const params    = getAllParams();
+
+  // Pcts that have at least one param with data for this ref
+  const pcts = Object.keys(sceneData)
+    .filter(pct => pct !== 'metric' && Object.keys(sceneData[pct][ref] ?? {}).some(k => Array.isArray(sceneData[pct][ref][k])))
+    .sort((a,b) => +b - +a);
+
+  if (!pcts.length) {
+    wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return;
+  }
+
+  // Compute (min, max, range) per (param, pct)
+  const stats = {}; // stats[param][pct] = {min, max, range}
+  for (const param of params) {
+    stats[param] = {};
+    for (const pct of pcts) {
+      const entries = sceneData[pct]?.[ref]?.[param] ?? [];
+      if (!entries.length) { stats[param][pct] = null; continue; }
+      const scores = entries.map(e => e.score);
+      const mn = Math.min(...scores), mx = Math.max(...scores);
+      stats[param][pct] = { min: mn, max: mx, range: mx - mn };
+    }
+  }
+
+  // Global max range — the most sensitive (param, pct) combo
+  let globalMaxRange = 0;
+  for (const param of params)
+    for (const pct of pcts)
+      if (stats[param][pct]) globalMaxRange = Math.max(globalMaxRange, stats[param][pct].range);
+
+  // ── Header: pct group labels ───────────────────────────────────
+  let html = `<table><thead>
+    <tr class="pct-header">
+      <th>Parameter</th>
+      ${pcts.map(p => `<th colspan="3">pct ${p}%</th>`).join('')}
+    </tr>
+    <tr>
+      <th></th>
+      ${pcts.map(() => `<th>min</th><th>max</th><th>range</th>`).join('')}
+    </tr>
+  </thead><tbody>`;
+
+  // ── Data rows ──────────────────────────────────────────────────
+  for (const param of params) {
+    html += `<tr><td>${param.replace(/_/g,' ')}</td>`;
+    for (const pct of pcts) {
+      const s = stats[param][pct];
+      if (!s) { html += `<td>—</td><td>—</td><td>—</td>`; continue; }
+      const isMaxRange = Math.abs(s.range - globalMaxRange) < 1e-9;
+      html += `
+        <td>${s.min.toFixed(3)}</td>
+        <td>${s.max.toFixed(3)}</td>
+        <td class="${isMaxRange ? 'range-hi' : ''}">${s.range.toFixed(3)}</td>`;
+    }
+    html += '</tr>';
+  }
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// To add a tab: add btn + panel in HTML, add case here.
+// ═══════════════════════════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    if (btn.dataset.tab === 'chart')      draw();
+    if (btn.dataset.tab === 'deepdive')   drawDeepDive();
+    if (btn.dataset.tab === 'crossparam') drawCrossParam();
+  });
+});
+
+// Ref selector changes trigger their respective tables
+document.getElementById('sel-ref-deepdive')
+  .addEventListener('change', drawDeepDive);
+document.getElementById('sel-ref-crossparam')
+  .addEventListener('change', drawCrossParam);
+
+// ═══════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════
+function positionTooltip(event) {
+  const tt = document.getElementById('tooltip'), pad = 14;
+  let x = event.clientX + pad, y = event.clientY + pad;
+  if (x + 240 > window.innerWidth)  x = event.clientX - 240 - pad;
+  if (y + 170 > window.innerHeight) y = event.clientY - 170 - pad;
+  tt.style.left = x + 'px'; tt.style.top = y + 'px';
+}
+
+// CSS variables can't be used in SVG attributes — resolve to hex first.
+function getComputedColor(val) {
+  if (!val.startsWith('var(')) return val;
+  const name = val.match(/var\((.+)\)/)?.[1];
+  return name ? getComputedStyle(document.documentElement).getPropertyValue(name).trim() : val;
+}
+
+function setStatus(msg, ok) {
+  document.getElementById('status').innerHTML =
+    `<span class="${ok?'ok':'warn'}">${msg}</span>`;
+}
+
+const ro = new ResizeObserver(() => draw());
+ro.observe(document.getElementById('chart-wrap'));
+
+loadData();
+</script>
+</body>
+</html>
