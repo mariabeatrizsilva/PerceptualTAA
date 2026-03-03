@@ -353,11 +353,15 @@
     <!-- Score curves tab -->
     <div class="overall-tab-panel active" id="otab-curves">
       <div class="section-sub">
-        <span style="color:var(--accent);font-weight:600;">% change from baseline</span> — 
-        for each parameter value, how much the score deviates from that parameter's mean across all tested values. 
-        <br> Each line represents that average change from baseline averaged across selected scenes, separately per resolution. 
-        <br> Positive value = outperforms average; negative value = underperforms.
-        <br> Toggle scenes in the sidebar to include or exclude them.
+        <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+        <span style="color:var(--accent);font-weight:600;">Percentage change from baseline </span> — For each parameter, we test a range of values (e.g. alpha_weight = 0.01, 0.02, 0.04 …). The <span style="color:var(--accent);">baseline</span> is the average score across all those tested values. 
+        <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
+          Each point on the graph shows how much better or worse that specific value performs vs. the baseline, as a <span style="color:var(--text);font-weight:600;">% difference</span>. 
+          A value of <span style="color:var(--good);">+2%</span> means that setting outperforms the average; <span style="color:var(--bad);">−2%</span> means it underperforms.
+          <div style="margin-top:6px;">For each resolution, the % change values are computed per scene first, then averaged across all selected scenes — so each scene contributes equally regardless of its absolute score level.</div>
+          <div style="margin-top:6px;color:var(--muted);font-size:10px;"> Toggle scenes that contribute to the average in the sidebar</div>
+          </div>
+        </div>
       </div>
     <div class="chart-grid" id="curves-grid"></div>
     </div>
@@ -365,11 +369,13 @@
     <!-- Heatmaps tab -->
     <div class="overall-tab-panel" id="otab-heatmaps">
     <div class="section-sub">
-    <span style="color:var(--accent);font-weight:600;">Effect size</span> — 
-    max score − min score across all tested values of a parameter, per scene per resolution. 
-    <br> For example, an effect size of 36.43 for <em>alpha weight</em> at 50% resolution means 
-    the score varied by 36.43 points depending on which alpha weight value was used.
-    <br>Larger values mean that parameter has more influence on quality at that resolution.
+    <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+      <span style="color:var(--accent);font-weight:600;">Effect size</span> — max score − min score across all tested values of a parameter, per scene per resolution.
+      <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
+        For example, an effect size of <span style="color:var(--text);font-weight:600;">36.43</span> for <em>alpha weight</em> at 50% resolution means the score varied by 36.43 points depending on which value was used.
+        <div style="margin-top:6px;color:var(--muted);font-size:10px;">Larger values mean that parameter has more influence on quality at that resolution.</div>
+      </div>
+    </div>
   </div>   
     <div class="heatmap-grid" id="heatmaps-grid"></div>
     </div>
@@ -400,7 +406,7 @@
   <main>
     <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
       Select a <span style="color:var(--text);">scene</span> and <span style="color:var(--text);">parameter</span> from the sidebar, then explore the tabs below.
-      Use the <span style="color:var(--text);">Series</span> toggles to show or hide individual resolutions.<br>
+      Use the <span style="color:var(--text);">Series</span> toggles to show or hide individual re% solutions.<br>
     </div>
 
     <div>
@@ -416,12 +422,13 @@
 
     <!-- Chart tab -->
     <div class="tab-panel active" id="tab-chart">
-       <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
-        Each line is a resolution — e.g. <span style="color:var(--text);">50%</span> means half pixel dimensions in each axis.
-        <br> X-axis = parameter value tested; y-axis = CGVQM score (<span style="color:var(--good);">higher = better</span>).
-        <br> <span style="color:var(--text);">Drag</span> to zoom, <span style="color:var(--text);">double-click</span> to reset.
-        <br> Cards below show the best-performing value per resolution.
+       <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how CGVQM score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
+        <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
+           The cards below summarise the best value per resolution.
+          <div style="margin-top:6px;color:var(--muted);font-size:10px;">Drag to zoom into a region · Double-click to reset · Toggle resolutions in the sidebar</div>
         </div>
+      </div>
       <div id="chart-wrap"></div>
       
       <div class="best-cards" id="best-cards"></div>
