@@ -7,9 +7,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  /* ═══════════════════════════════════════════════════════════════
-     DESIGN TOKENS — change here to retheme the whole app
-  ═══════════════════════════════════════════════════════════════ */
   :root {
     --bg:      #0d0f14;
     --surface: #13161e;
@@ -21,15 +18,17 @@
     --good:    #34d399;
     --warn:    #fbbf24;
     --bad:     #f87171;
-
-    /* Series colours — assigned in getSeries() order (pct desc, ref alpha).
-       Add --c6, --c7 here if you have more than 6 (pct × ref) combos. */
     --c0: #38bdf8;
     --c1: #818cf8;
     --c2: #f472b6;
     --c3: #fb923c;
     --c4: #34d399;
     --c5: #fbbf24;
+    /* resolution colours */
+    --r50:  #e74c3c;
+    --r71:  #e67e22;
+    --r87:  #3498db;
+    --r100: #2ecc71;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,7 +38,7 @@
     min-height: 100vh; display: flex; flex-direction: column;
   }
 
-  /* ── Header ─────────────────────────────────────────────────── */
+  /* ── Header ─────────────────────────────────────────────── */
   header {
     padding: 18px 32px 14px; border-bottom: 1px solid var(--border);
     display: flex; align-items: baseline; gap: 16px;
@@ -50,8 +49,28 @@
   }
   header span { color: var(--muted); font-size: 11px; }
 
-  /* ── Layout ─────────────────────────────────────────────────── */
-  .layout { display: flex; flex: 1; overflow: hidden; }
+  /* ── Top-level tabs ─────────────────────────────────────── */
+  .top-tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    background: var(--surface);
+  }
+  .top-tab-btn {
+    background: none; border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--muted); font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; padding: 12px 20px 10px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .top-tab-btn:hover  { color: var(--text); }
+  .top-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .top-panel          { display: none; flex: 1; overflow: hidden; }
+  .top-panel.active   { display: flex; }
+
+  /* ── Layout (shared) ────────────────────────────────────── */
+  .layout { display: flex; flex: 1; overflow: hidden; width: 100%; }
 
   aside {
     width: 270px; min-width: 270px;
@@ -75,7 +94,7 @@
   }
   select:focus { border-color: var(--accent); }
 
-  /* ── Legend ─────────────────────────────────────────────────── */
+  /* ── Legend ─────────────────────────────────────────────── */
   .legend { display: flex; flex-direction: column; gap: 5px; }
   .legend-item {
     display: flex; align-items: flex-start; gap: 8px; cursor: pointer;
@@ -90,7 +109,7 @@
   .legend-sublabel { font-size: 9px;  color: var(--muted); }
   .legend-divider  { height: 1px; background: var(--border); margin: 4px 0; }
 
-  /* ── Main ────────────────────────────────────────────────────── */
+  /* ── Main content area ──────────────────────────────────── */
   main {
     flex: 1; padding: 24px 32px;
     display: flex; flex-direction: column; gap: 20px; overflow: auto;
@@ -98,7 +117,7 @@
   .chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
   .chart-subtitle { font-size: 11px; color: var(--muted); margin-top: 3px; }
 
-  /* ── Tabs ────────────────────────────────────────────────────── */
+  /* ── Inner tabs (scene-by-scene) ────────────────────────── */
   .tabs {
     display: flex; gap: 2px;
     border-bottom: 1px solid var(--border);
@@ -116,7 +135,7 @@
   .tab-panel         { display: none; }
   .tab-panel.active  { display: flex; flex-direction: column; gap: 20px; }
 
-  /* ── Chart ───────────────────────────────────────────────────── */
+  /* ── Chart ───────────────────────────────────────────────── */
   #chart-wrap { position: relative; min-height: 360px; height: 400px; }
   svg { overflow: visible; }
   .axis path, .axis line { stroke: var(--border2); }
@@ -127,50 +146,34 @@
   .series-line { fill: none; stroke-width: 2; }
   .series-dot  { stroke: var(--bg); stroke-width: 2; cursor: crosshair; }
 
-  /* ── Best-value annotation cards (below chart) ───────────────── */
-  .best-cards {
-    display: flex; flex-wrap: wrap; gap: 8px;
-    padding-top: 4px;
-  }
+  /* ── Best-value cards ────────────────────────────────────── */
+  .best-cards { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
   .best-card {
     background: var(--surface); border: 1px solid var(--border2);
     border-radius: 6px; padding: 8px 12px;
-    display: flex; flex-direction: column; gap: 3px;
-    min-width: 140px;
+    display: flex; flex-direction: column; gap: 3px; min-width: 140px;
   }
   .best-card-header {
     display: flex; align-items: center; gap: 6px;
     font-size: 10px; color: var(--muted);
   }
-  .best-card-swatch {
-    width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0;
-  }
-  .best-card-value {
-    font-family: 'Syne', sans-serif; font-size: 14px;
-    font-weight: 700; color: var(--accent);
-  }
+  .best-card-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .best-card-value { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); }
   .best-card-sub { font-size: 9px; color: var(--muted); }
 
-  /* ── Tables (shared styles) ──────────────────────────────────── */
+  /* ── Tables ──────────────────────────────────────────────── */
   .table-section { display: flex; flex-direction: column; gap: 10px; }
-  .table-label {
-    font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--muted);
-  }
-  .table-controls {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  }
+  .table-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .table-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .table-controls label { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .table-controls select { width: auto; font-size: 11px; }
   .table-scroll { overflow-x: auto; }
-
   table { border-collapse: collapse; font-size: 11px; }
   thead th {
     text-align: right; font-size: 10px; font-weight: 600;
     letter-spacing: 0.07em; text-transform: uppercase;
     color: var(--muted); padding: 7px 11px;
-    border-bottom: 1px solid var(--border2);
-    white-space: nowrap;
+    border-bottom: 1px solid var(--border2); white-space: nowrap;
   }
   thead th:first-child { text-align: left; }
   tbody tr { border-bottom: 1px solid var(--border); }
@@ -178,22 +181,10 @@
   tbody tr:hover { background: var(--surface); }
   tbody td { padding: 7px 11px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   tbody td:first-child { text-align: left; }
-
-  /* Footer rows in deep-dive table (best / worst / range) */
-  tr.footer-row td {
-    border-top: 1px solid var(--border2);
-    color: var(--muted); font-size: 10px;
-  }
-  tr.footer-row td:first-child { color: var(--muted); }
-
-  /* Highlight best score in a column */
+  tr.footer-row td { border-top: 1px solid var(--border2); color: var(--muted); font-size: 10px; }
   td.hi  { color: var(--good);  font-weight: 600; }
-  /* Highlight worst score in a column */
   td.lo  { color: var(--bad); }
-  /* Range cell — colour intensity based on relative magnitude */
   td.range-hi { color: var(--warn); font-weight: 600; }
-
-  /* Group header row in cross-param table */
   tr.pct-header th {
     background: var(--surface); color: var(--accent);
     font-size: 10px; letter-spacing: 0.06em; text-align: center;
@@ -201,7 +192,88 @@
   }
   tr.pct-header th:first-child { text-align: left; }
 
-  /* ── Tooltip ─────────────────────────────────────────────────── */
+  /* ── Overall page styles ─────────────────────────────────── */
+  .overall-main {
+    flex: 1; padding: 24px 32px;
+    display: flex; flex-direction: column; gap: 24px; overflow: auto;
+  }
+  .overall-tabs {
+    display: flex; gap: 2px; border-bottom: 1px solid var(--border);
+  }
+  .overall-tab-btn {
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 6px 14px 8px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .overall-tab-btn:hover  { color: var(--text); }
+  .overall-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .overall-tab-panel         { display: none; }
+  .overall-tab-panel.active  { display: flex; flex-direction: column; gap: 24px; }
+
+  /* grid of small charts */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 24px;
+  }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .chart-card-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+    color: var(--text);
+  }
+  .chart-card-sub { font-size: 10px; color: var(--muted); }
+  .chart-card-wrap { position: relative; height: 240px; }
+
+  /* heatmap grid */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 24px;
+  }
+  .heatmap-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .heatmap-card-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+  }
+  .heatmap-wrap { overflow-x: auto; }
+
+  /* heatmap table */
+  .hm-table { border-collapse: collapse; font-size: 10px; width: 100%; }
+  .hm-table th {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+    padding: 5px 8px; text-align: center;
+    border-bottom: 1px solid var(--border2);
+  }
+  .hm-table th:first-child { text-align: left; }
+  .hm-table td {
+    padding: 6px 10px; text-align: center;
+    font-variant-numeric: tabular-nums; font-size: 10px;
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.1s;
+  }
+  .hm-table td:first-child { text-align: left; color: var(--muted); font-size: 10px; }
+  .hm-table tr:last-child td { border-bottom: none; }
+  .hm-table tr:hover td { opacity: 0.85; }
+
+  /* section headings */
+  .section-heading {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .section-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Tooltip ─────────────────────────────────────────────── */
   #tooltip {
     position: fixed; background: var(--surface);
     border: 1px solid var(--border2); border-radius: 6px;
@@ -213,7 +285,7 @@
   .tt-score { font-size: 15px; font-weight: 600; color: var(--accent); font-family: 'Syne', sans-serif; }
   .tt-label { color: var(--muted); font-size: 10px; }
 
-  /* ── Empty / status ──────────────────────────────────────────── */
+  /* ── Empty / status ──────────────────────────────────────── */
   .empty {
     display: flex; align-items: center; justify-content: center;
     height: 200px; color: var(--muted); font-size: 12px;
@@ -232,14 +304,49 @@
   <span>quality explorer · cgvqm</span>
 </header>
 
-<div class="layout">
+<!-- ═══════════════════════════════════════════════════════════
+     TOP-LEVEL TABS
+═══════════════════════════════════════════════════════════ -->
+<div class="top-tabs">
+  <button class="top-tab-btn active" data-top="overall">Overall</button>
+  <button class="top-tab-btn" data-top="scene">Scene Explorer</button>
+</div>
 
-  <!-- ═══════════════════════════════════════════════
-       SIDEBAR
-       To add a new global filter: add a .control-group
-       here, add a state variable, wire a change event
-       that calls buildLegend() + draw().
-  ═══════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════
+     OVERALL PANEL
+═══════════════════════════════════════════════════════════ -->
+<div class="top-panel active" id="top-overall" style="flex-direction:column;">
+  <div class="overall-main">
+    <div>
+      <div class="section-heading">Overall Analysis</div>
+      <div class="section-sub">Aggregated across all scenes · averaged scores</div>
+    </div>
+
+    <div class="overall-tabs">
+      <button class="overall-tab-btn active" data-otab="curves">Score Curves</button>
+      <button class="overall-tab-btn" data-otab="heatmaps">Sensitivity Heatmaps</button>
+    </div>
+
+    <!-- Score curves tab -->
+    <div class="overall-tab-panel active" id="otab-curves">
+      <div class="section-sub">Score vs parameter value averaged across all scenes. One line per resolution.</div>
+      <div class="chart-grid" id="curves-grid"></div>
+    </div>
+
+    <!-- Heatmaps tab -->
+    <div class="overall-tab-panel" id="otab-heatmaps">
+      <div class="section-sub">Effect size (max − min score) per scene per resolution. One table per parameter.</div>
+      <div class="heatmap-grid" id="heatmaps-grid"></div>
+    </div>
+
+    <div class="status" id="status-overall"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCENE EXPLORER PANEL
+═══════════════════════════════════════════════════════════ -->
+<div class="top-panel" id="top-scene">
   <aside>
     <div class="control-group">
       <label>Scene</label>
@@ -249,16 +356,12 @@
       <label>Parameter</label>
       <select id="sel-param"></select>
     </div>
-    <!-- Legend: one item per (pct, ref) combo, grouped by pct -->
     <div class="control-group">
       <label>Series</label>
       <div class="legend" id="legend"></div>
     </div>
   </aside>
 
-  <!-- ═══════════════════════════════════════════════
-       MAIN CONTENT
-  ═══════════════════════════════════════════════════ -->
   <main>
     <div>
       <div class="chart-title" id="chart-title">—</div>
@@ -267,21 +370,23 @@
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="chart">Chart</button>
+      <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
       <button class="tab-btn" data-tab="deepdive">Parameter deep-dive</button>
       <button class="tab-btn" data-tab="crossparam">Cross-parameter summary</button>
     </div>
 
-    <!-- ── TAB: Chart ──────────────────────────────── -->
+    <!-- Chart tab -->
     <div class="tab-panel active" id="tab-chart">
       <div id="chart-wrap"></div>
-      <!-- Best-value cards: one per visible series -->
       <div class="best-cards" id="best-cards"></div>
     </div>
 
-    <!-- ── TAB: Parameter deep-dive ───────────────── -->
-    <!-- Rows = param values, cols = screen pcts
-         Ref selector at top (one ref at a time)
-         Footer rows: best value, worst value, range  -->
+    <!-- Sensitivity bar chart tab -->
+    <div class="tab-panel" id="tab-sensitivity">
+      <div id="sensitivity-wrap" style="position:relative;min-height:360px;height:400px;"></div>
+    </div>
+
+    <!-- Deep-dive tab -->
     <div class="tab-panel" id="tab-deepdive">
       <div class="table-section">
         <div class="table-controls">
@@ -292,9 +397,7 @@
       </div>
     </div>
 
-    <!-- ── TAB: Cross-parameter summary ───────────── -->
-    <!-- Rows = parameters, cols = screen pcts (each split min/max/range)
-         Ref selector at top                          -->
+    <!-- Cross-param tab -->
     <div class="tab-panel" id="tab-crossparam">
       <div class="table-section">
         <div class="table-controls">
@@ -313,68 +416,51 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
-// ARCHITECTURE OVERVIEW
-//
-// Data flow:
-//   dataset.json → loadData() → init() → updateParams()
-//     → buildLegend() → draw() / drawDeepDive() / drawCrossParam()
-//
-// State globals (change these, then call render functions):
-//   dataset          — full parsed dataset.json
-//   activeScene      — selected base scene name
-//   activeParam      — selected parameter name (for chart + deep-dive)
-//   seriesVisibility — { "pct|ref_key": bool } toggle state
-//
-// Key function: getSeries()
-//   Translates dataset[scene][pct][ref] into a flat array of series
-//   objects for the current (scene, param). Everything reads from it.
-//   Series shape: { id, pct, ref, refScene, color, entries, label }
-//   where entries = [{value, score, per_frame_errors}] sorted by value.
-//
-// To add a new tab visualisation:
-//   1. Add tab-btn + tab-panel in HTML
-//   2. Write drawMyThing() reading getSeries() or dataset directly
-//   3. Call it from the tab click handler and from buildLegend()
-//
-// To add a new sidebar filter:
-//   1. Add control-group + select in HTML
-//   2. Add state variable, wire change → buildLegend() + draw()
-//   3. Filter inside getSeries() using the new variable
+// CONFIG
 // ═══════════════════════════════════════════════════════════════════
+const DATASET_URL  = 'dataset.json';
+const COLOR_VARS   = ['--c0','--c1','--c2','--c3','--c4','--c5'];
+const PARAMS       = ['alpha_weight', 'filter_size', 'hist_percent', 'num_samples'];
+const RESOLUTIONS  = [50, 71, 87, 100];
+const HIST_MIN_VAL = 100;
+const RES_COLORS   = { 50: '#e74c3c', 71: '#e67e22', 87: '#3498db', 100: '#2ecc71' };
 
-const DATASET_URL = 'dataset.json';
-const COLOR_VARS  = ['--c0','--c1','--c2','--c3','--c4','--c5'];
-
-// ── State ────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────
 let dataset          = {};
 let activeScene      = null;
 let activeParam      = null;
-// seriesVisibility: "pct|ref_key" → bool. Reset when scene changes.
 let seriesVisibility = {};
 
-// ── Load ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// LOAD
+// ═══════════════════════════════════════════════════════════════════
 async function loadData() {
-  setStatus('loading dataset.json…', false);
+  setStatus('loading dataset.json…', false, 'status');
+  setStatus('loading dataset.json…', false, 'status-overall');
   try {
     const res = await fetch(DATASET_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     dataset = await res.json();
-    setStatus(`dataset loaded · ${Object.keys(dataset).length} scenes`, true);
+    const n = Object.keys(dataset).length;
+    setStatus(`dataset loaded · ${n} scenes`, true, 'status');
+    setStatus(`dataset loaded · ${n} scenes`, true, 'status-overall');
     init();
+    drawOverall();
   } catch(e) {
-    setStatus(`ERROR: ${e.message} — serve via python -m http.server`, false);
+    setStatus(`ERROR: ${e.message} — serve via python -m http.server`, false, 'status');
+    setStatus(`ERROR: ${e.message}`, false, 'status-overall');
   }
 }
 
-// ── Init: populate scene dropdown ────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// SCENE EXPLORER — init + state
+// ═══════════════════════════════════════════════════════════════════
 function init() {
-  const scenes   = Object.keys(dataset)
-    .filter(s => Object.keys(dataset[s]).length > 2)  // only show scenes with more than one series
-    .sort();
+  const scenes   = Object.keys(dataset).filter(s => Object.keys(dataset[s]).length > 2).sort();
   const selScene = document.getElementById('sel-scene');
   selScene.innerHTML = scenes.map(s => `<option value="${s}">${s}</option>`).join('');
   selScene.addEventListener('change', () => {
-    activeScene      = selScene.value;
+    activeScene = selScene.value;
     seriesVisibility = {};
     updateParams();
   });
@@ -382,8 +468,6 @@ function init() {
   updateParams();
 }
 
-// ── Populate param dropdown ───────────────────────────────────────
-// Collects all params across every pct/ref block for the active scene.
 function updateParams() {
   const sceneData = dataset[activeScene] ?? {};
   const paramSet  = new Set();
@@ -393,36 +477,21 @@ function updateParams() {
       for (const k of Object.keys(refBlock))
         if (Array.isArray(refBlock[k])) paramSet.add(k);
   }
-
   const params = [...paramSet].sort();
-
-  // Replace node to avoid duplicate event listeners
   const old    = document.getElementById('sel-param');
   const newSel = old.cloneNode(false);
   old.replaceWith(newSel);
-  newSel.innerHTML = params.map(p =>
-    `<option value="${p}">${p.replace(/_/g,' ')}</option>`
-  ).join('');
+  newSel.innerHTML = params.map(p => `<option value="${p}">${p.replace(/_/g,' ')}</option>`).join('');
   newSel.addEventListener('change', () => {
     activeParam = newSel.value;
     buildLegend();
     renderAll();
   });
-
   activeParam = params[0] ?? null;
   buildLegend();
   renderAll();
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// getSeries — core data accessor
-//
-// Returns flat array of series objects for (activeScene, activeParam).
-// One series per (pct, ref) combo that has data for the active param.
-// Sorted pct desc, then ref alpha — consistent with colour assignment.
-//
-// To filter by an extra dimension, add a condition in the inner loop.
-// ═══════════════════════════════════════════════════════════════════
 function getSeries() {
   if (!activeScene || !activeParam) return [];
   const sceneData = dataset[activeScene] ?? {};
@@ -435,12 +504,10 @@ function getSeries() {
       const entries = block[activeParam];
       if (!entries?.length) continue;
       series.push({
-        id:       `${pct}|${ref}`,
-        pct, ref,
+        id: `${pct}|${ref}`, pct, ref,
         refScene: ref.replace(/^ref-/, ''),
-        color:    `var(${COLOR_VARS[ci % COLOR_VARS.length]})`,
-        entries,
-        label:    `${pct}%`,
+        color: `var(${COLOR_VARS[ci % COLOR_VARS.length]})`,
+        entries, label: `${pct}%`,
       });
       ci++;
     }
@@ -448,11 +515,9 @@ function getSeries() {
   return series;
 }
 
-// ── Collect all unique ref keys available for this scene ──────────
-// Used to populate ref selectors in the summary tabs.
 function getAllRefs() {
   const sceneData = dataset[activeScene] ?? {};
-  const refSet    = new Set();
+  const refSet = new Set();
   for (const [key, pctBlock] of Object.entries(sceneData)) {
     if (key === 'metric') continue;
     for (const ref of Object.keys(pctBlock)) refSet.add(ref);
@@ -460,7 +525,6 @@ function getAllRefs() {
   return [...refSet].sort();
 }
 
-// ── Collect all unique params available for this scene ────────────
 function getAllParams() {
   const sceneData = dataset[activeScene] ?? {};
   const paramSet  = new Set();
@@ -473,7 +537,6 @@ function getAllParams() {
   return [...paramSet].sort();
 }
 
-// ── Collect all pcts that have data for a given (ref, param) ──────
 function getPctsForRef(ref, param) {
   const sceneData = dataset[activeScene] ?? {};
   return Object.keys(sceneData)
@@ -481,26 +544,16 @@ function getPctsForRef(ref, param) {
     .sort((a,b) => +b - +a);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// buildLegend — sidebar series toggles, grouped by pct
-// ═══════════════════════════════════════════════════════════════════
 function buildLegend() {
   const allSeries = getSeries();
   const legend    = document.getElementById('legend');
-
   for (const s of allSeries)
     if (seriesVisibility[s.id] === undefined) seriesVisibility[s.id] = true;
-
   legend.innerHTML = '';
   const byPct = {};
   for (const s of allSeries) (byPct[s.pct] = byPct[s.pct] ?? []).push(s);
-
   Object.keys(byPct).sort((a,b) => +b-+a).forEach((pct, i) => {
-    if (i > 0) {
-      const d = document.createElement('div');
-      d.className = 'legend-divider';
-      legend.appendChild(d);
-    }
+    if (i > 0) { const d = document.createElement('div'); d.className = 'legend-divider'; legend.appendChild(d); }
     for (const s of byPct[pct]) {
       const cv   = getComputedColor(s.color);
       const item = document.createElement('div');
@@ -519,101 +572,66 @@ function buildLegend() {
       legend.appendChild(item);
     }
   });
-
-  document.getElementById('chart-title').textContent =
-    activeParam ? activeParam.replace(/_/g,' ') : '—';
-  document.getElementById('chart-subtitle').textContent =
-    activeScene ? `scene: ${activeScene}` : '';
-
-  // Sync ref selectors in summary tabs
+  document.getElementById('chart-title').textContent = activeParam ? activeParam.replace(/_/g,' ') : '—';
+  document.getElementById('chart-subtitle').textContent = activeScene ? `scene: ${activeScene}` : '';
   syncRefSelectors();
 }
 
-// ── Sync ref dropdowns in both summary tabs ───────────────────────
 function syncRefSelectors() {
   const refs = getAllRefs();
   ['sel-ref-deepdive','sel-ref-crossparam'].forEach(id => {
-    const el  = document.getElementById(id);
+    const el = document.getElementById(id);
     const cur = el.value;
     el.innerHTML = refs.map(r => `<option value="${r}">${r}</option>`).join('');
     if (refs.includes(cur)) el.value = cur;
   });
 }
 
-// ── Render all active panels ──────────────────────────────────────
 function renderAll() {
   draw();
+  drawSensitivity();
   drawDeepDive();
   drawCrossParam();
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// draw — line chart + best-value annotation cards
+// DRAW: line chart
 // ═══════════════════════════════════════════════════════════════════
 function draw() {
   const wrap          = document.getElementById('chart-wrap');
   const cardsEl       = document.getElementById('best-cards');
   const visibleSeries = getSeries().filter(s => seriesVisibility[s.id] !== false);
+  wrap.innerHTML = ''; cardsEl.innerHTML = '';
+  if (!visibleSeries.length) { wrap.innerHTML = '<div class="empty">No data for this selection</div>'; return; }
 
-  wrap.innerHTML    = '';
-  cardsEl.innerHTML = '';
-
-  if (!visibleSeries.length) {
-    wrap.innerHTML = '<div class="empty">No data for this selection</div>';
-    return;
-  }
-
-  // ── Scales ────────────────────────────────────────────────────
-  const W      = wrap.clientWidth  || 800;
-  const H      = Math.max(wrap.clientHeight || 400, 360);
+  const W = wrap.clientWidth || 800, H = Math.max(wrap.clientHeight || 400, 360);
   const margin = { top:18, right:28, bottom:50, left:56 };
-  const iW     = W - margin.left - margin.right;
-  const iH     = H - margin.top  - margin.bottom;
-
-  const pts    = visibleSeries.flatMap(s => s.entries);
+  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+  const pts = visibleSeries.flatMap(s => s.entries);
   const xScale = d3.scaleLinear().domain(d3.extent(pts, d=>d.value)).nice().range([0,iW]);
   const yPad   = (d3.max(pts,d=>d.score) - d3.min(pts,d=>d.score)) * 0.12 || 1;
-  const yScale = d3.scaleLinear()
-    .domain([d3.min(pts,d=>d.score)-yPad, d3.max(pts,d=>d.score)+yPad]).nice()
-    .range([iH,0]);
+  const yScale = d3.scaleLinear().domain([d3.min(pts,d=>d.score)-yPad, d3.max(pts,d=>d.score)+yPad]).nice().range([iH,0]);
 
   const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
-
-  // clip path so lines/dots don't overflow axes
-  svg.append('defs').append('clipPath').attr('id','chart-clip')
-    .append('rect').attr('width',iW).attr('height',iH);
-
-  const g        = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
+  svg.append('defs').append('clipPath').attr('id','chart-clip').append('rect').attr('width',iW).attr('height',iH);
+  const g = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
   const chartArea = g.append('g').attr('clip-path','url(#chart-clip)');
 
-  // ── Grid (chartArea — gets clipped) ───────────────────────────
   chartArea.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
-  chartArea.append('g').attr('class','grid x-grid').attr('transform',`translate(0,${iH})`)
-    .call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
-
-  // ── Axes (g — not clipped) ────────────────────────────────────
-  g.append('g').attr('class','axis x-axis').attr('transform',`translate(0,${iH})`)
-    .call(d3.axisBottom(xScale).ticks(8));
+  chartArea.append('g').attr('class','grid x-grid').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+  g.append('g').attr('class','axis x-axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(8));
   g.append('g').attr('class','axis y-axis').call(d3.axisLeft(yScale).ticks(6));
-  // ── Axis labels ───────────────────────────────────────────────
-  g.append('text').attr('class','axis-label')
-    .attr('x',iW/2).attr('y',iH+40).attr('text-anchor','middle')
-    .text(activeParam?.replace(/_/g,' ') ?? '');
-  g.append('text').attr('class','axis-label')
-    .attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44)
-    .attr('text-anchor','middle').text('CGVQM score');
+  g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+40).attr('text-anchor','middle').text(activeParam?.replace(/_/g,' ') ?? '');
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text('CGVQM score');
 
   const line    = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
   const tooltip = document.getElementById('tooltip');
 
   for (const s of visibleSeries) {
     const cv = getComputedColor(s.color);
-
     chartArea.append('path').datum(s.entries).attr('class','series-line').attr('stroke',cv).attr('d',line);
-
     chartArea.selectAll(null).data(s.entries).join('circle')
-      .attr('class','series-dot')
-      .attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
+      .attr('class','series-dot').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
       .attr('r',5).attr('fill',cv)
       .on('mousemove', (event,d) => {
         tooltip.innerHTML = `
@@ -621,51 +639,35 @@ function draw() {
           <div class="tt-score">${d.score.toFixed(4)}</div>
           <div class="tt-label">value: <b style="color:var(--text)">${d.value}</b></div>
           <div class="tt-label">pct: <b style="color:${cv}">${s.pct}%</b></div>
-          <div class="tt-label">ref: ${s.refScene}</div>
-          ${d.per_frame_errors?.length ? `<div class="tt-label">${d.per_frame_errors.length} frames</div>` : ''}`;
-        tooltip.classList.add('visible');
-        positionTooltip(event);
+          <div class="tt-label">ref: ${s.refScene}</div>`;
+        tooltip.classList.add('visible'); positionTooltip(event);
       })
       .on('mouseleave', () => tooltip.classList.remove('visible'));
 
-    // ── Best-value annotation card ─────────────────────────────
-    const scores   = s.entries.map(e => e.score);
-    const bestIdx  = scores.indexOf(Math.max(...scores));
-    const best     = s.entries[bestIdx];
-    const card     = document.createElement('div');
-    card.className = 'best-card';
+    const scores  = s.entries.map(e => e.score);
+    const bestIdx = scores.indexOf(Math.max(...scores));
+    const best    = s.entries[bestIdx];
+    const card    = document.createElement('div'); card.className = 'best-card';
     card.innerHTML = `
-      <div class="best-card-header">
-        <div class="best-card-swatch" style="background:${cv}"></div>
-        ${s.pct}% · ref: ${s.refScene}
-      </div>
+      <div class="best-card-header"><div class="best-card-swatch" style="background:${cv}"></div>${s.pct}% · ref: ${s.refScene}</div>
       <div class="best-card-value">${best.value}</div>
       <div class="best-card-sub">best ${activeParam?.replace(/_/g,' ')} → score ${best.score.toFixed(3)}</div>`;
     cardsEl.appendChild(card);
   }
 
-// ── Brush to zoom ─────────────────────────────────────────────
-  const brush = d3.brush()
-    .extent([[0,0],[iW,iH]])
-    .on('end', (event) => {
-      if (!event.selection) return;
-      const [[x0,y0],[x1,y1]] = event.selection;
-      xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
-      yScale.domain([yScale.invert(y1), yScale.invert(y0)]); // y is flipped
-
-      g.select('.x-axis').call(d3.axisBottom(xScale).ticks(8));
-      g.select('.x-grid').call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
-      g.select('.y-axis').call(d3.axisLeft(yScale).ticks(6));
-      chartArea.selectAll('.series-line').attr('d', line);
-      chartArea.selectAll('.series-dot')
-        .attr('cx', d=>xScale(d.value))
-        .attr('cy', d=>yScale(d.score));
-      chartArea.select('.brush').call(brush.move, null);
-    });
-
+  const brush = d3.brush().extent([[0,0],[iW,iH]]).on('end', (event) => {
+    if (!event.selection) return;
+    const [[x0,y0],[x1,y1]] = event.selection;
+    xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
+    yScale.domain([yScale.invert(y1), yScale.invert(y0)]);
+    g.select('.x-axis').call(d3.axisBottom(xScale).ticks(8));
+    g.select('.x-grid').call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+    g.select('.y-axis').call(d3.axisLeft(yScale).ticks(6));
+    chartArea.selectAll('.series-line').attr('d', line);
+    chartArea.selectAll('.series-dot').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
+    chartArea.select('.brush').call(brush.move, null);
+  });
   chartArea.append('g').attr('class','brush').call(brush);
-
-  // double-click to reset zoom
   svg.on('dblclick', () => {
     xScale.domain(d3.extent(pts, d=>d.value));
     yScale.domain([d3.min(pts,d=>d.score)-yPad, d3.max(pts,d=>d.score)+yPad]);
@@ -673,140 +675,140 @@ function draw() {
     g.select('.x-grid').call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
     g.select('.y-axis').call(d3.axisLeft(yScale).ticks(6));
     chartArea.selectAll('.series-line').attr('d', line);
-    chartArea.selectAll('.series-dot')
-      .attr('cx', d=>xScale(d.value))
-      .attr('cy', d=>yScale(d.score));
+    chartArea.selectAll('.series-dot').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
   });
-
   document.addEventListener('mousemove', positionTooltip);
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// drawDeepDive — Table 1: param values × screen percentages
-//
-// Rows    = individual parameter values (0.01, 0.02, …)
-// Columns = screen percentages (100, 75, 50, 25)
-// Cells   = CGVQM score at that (value, pct) for the selected ref
-// Footer  = best value row | worst value row | range row
-//
-// Best score in each column highlighted green (.hi)
-// Worst score highlighted red (.lo)
-// Range row coloured amber if it's the widest column (.range-hi)
-//
-// To add a new footer stat: add a row in the footer block below.
+// DRAW: sensitivity bar chart (scene-by-scene tab)
+// ═══════════════════════════════════════════════════════════════════
+function drawSensitivity() {
+  const wrap = document.getElementById('sensitivity-wrap');
+  wrap.innerHTML = '';
+  if (!activeScene) return;
+
+  const sceneData = dataset[activeScene] ?? {};
+  const params    = PARAMS.filter(p => p !== 'num_samples_TAA');
+
+  // For each param × resolution, compute effect size using cross-scene ref
+  // (or self-ref for 100)
+  function getEffectSize(param, res) {
+    const resStr  = String(res);
+    const pctData = sceneData[resStr];
+    if (!pctData) return 0;
+    // find a ref key that doesn't contain screen-per
+    const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+    if (!refKey) return 0;
+    let entries = pctData[refKey][param] ?? [];
+    if (param === 'hist_percent') entries = entries.filter(e => e.value >= HIST_MIN_VAL);
+    if (entries.length < 2) return 0;
+    const scores = entries.map(e => e.score);
+    return Math.max(...scores) - Math.min(...scores);
+  }
+
+  const W = wrap.clientWidth || 700, H = Math.max(wrap.clientHeight || 400, 360);
+  const margin = { top: 24, right: 28, bottom: 60, left: 56 };
+  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+
+  const x0    = d3.scaleBand().domain(params).range([0, iW]).padding(0.25);
+  const x1    = d3.scaleBand().domain(RESOLUTIONS.map(String)).range([0, x0.bandwidth()]).padding(0.08);
+  const allES = RESOLUTIONS.flatMap(res => params.map(p => getEffectSize(p, res)));
+  const yMax  = d3.max(allES) * 1.15 || 1;
+  const yScale = d3.scaleLinear().domain([0, yMax]).range([iH, 0]);
+
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
+  const g   = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+  const tooltip = document.getElementById('tooltip');
+
+  g.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+  g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(x0).tickFormat(d => d.replace(/_/g,' ')));
+  g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(6));
+  g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+50).attr('text-anchor','middle').text('Parameter');
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text('Effect size (max − min)');
+
+  for (const param of params) {
+    const paramG = g.append('g').attr('transform', `translate(${x0(param)},0)`);
+    for (const res of RESOLUTIONS) {
+      const es = getEffectSize(param, res);
+      const color = RES_COLORS[res];
+      paramG.append('rect')
+        .attr('x', x1(String(res))).attr('y', yScale(es))
+        .attr('width', x1.bandwidth()).attr('height', iH - yScale(es))
+        .attr('fill', color).attr('opacity', 0.85)
+        .on('mousemove', (event) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${param.replace(/_/g,' ')}</div>
+            <div class="tt-score">${es.toFixed(3)}</div>
+            <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>`;
+          tooltip.classList.add('visible'); positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+  }
+
+  // Legend
+  const legG = svg.append('g').attr('transform', `translate(${margin.left + iW - 140}, ${margin.top})`);
+  RESOLUTIONS.forEach((res, i) => {
+    legG.append('rect').attr('x', 0).attr('y', i * 18).attr('width', 12).attr('height', 12).attr('fill', RES_COLORS[res]);
+    legG.append('text').attr('x', 18).attr('y', i * 18 + 10).attr('fill', 'var(--muted)').attr('font-size', 10).attr('font-family', 'JetBrains Mono').text(`${res}%`);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAW: deep-dive table
 // ═══════════════════════════════════════════════════════════════════
 function drawDeepDive() {
   const wrap = document.getElementById('deepdive-wrap');
   const ref  = document.getElementById('sel-ref-deepdive').value;
-  if (!ref || !activeScene || !activeParam) {
-    wrap.innerHTML = '<div class="empty">No data</div>'; return;
-  }
-
+  if (!ref || !activeScene || !activeParam) { wrap.innerHTML = '<div class="empty">No data</div>'; return; }
   const sceneData = dataset[activeScene] ?? {};
-  const pcts      = getPctsForRef(ref, activeParam); // desc order
-
-  if (!pcts.length) {
-    wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return;
-  }
-
-  // Build lookup: pct → entries array
+  const pcts      = getPctsForRef(ref, activeParam);
+  if (!pcts.length) { wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return; }
   const entriesByPct = {};
-  for (const pct of pcts)
-    entriesByPct[pct] = sceneData[pct]?.[ref]?.[activeParam] ?? [];
-
-  // All unique param values across all pcts (sorted numerically)
-  const allValues = [...new Set(
-    pcts.flatMap(pct => entriesByPct[pct].map(e => e.value))
-  )].sort((a,b) => a-b);
-
-  // score lookup: pct → value → score
+  for (const pct of pcts) entriesByPct[pct] = sceneData[pct]?.[ref]?.[activeParam] ?? [];
+  const allValues = [...new Set(pcts.flatMap(pct => entriesByPct[pct].map(e => e.value)))].sort((a,b) => a-b);
   const scoreLookup = {};
   for (const pct of pcts) {
     scoreLookup[pct] = {};
     for (const e of entriesByPct[pct]) scoreLookup[pct][e.value] = e.score;
   }
-
-  // Per-column stats for footer + highlighting
   const colStats = {};
   for (const pct of pcts) {
     const scores = allValues.map(v => scoreLookup[pct][v]).filter(s => s != null);
-    colStats[pct] = {
-      max:      Math.max(...scores),
-      min:      Math.min(...scores),
-      range:    Math.max(...scores) - Math.min(...scores),
-      bestVal:  allValues[scores.indexOf(Math.max(...scores))],
-      worstVal: allValues[scores.indexOf(Math.min(...scores))],
-    };
+    colStats[pct] = { max: Math.max(...scores), min: Math.min(...scores), range: Math.max(...scores)-Math.min(...scores), bestVal: allValues[scores.indexOf(Math.max(...scores))], worstVal: allValues[scores.indexOf(Math.min(...scores))] };
   }
   const maxRange = Math.max(...pcts.map(p => colStats[p].range));
-
-  // ── Header ─────────────────────────────────────────────────────
-  let html = `<table><thead><tr>
-    <th>${activeParam?.replace(/_/g,' ')}</th>
-    ${pcts.map(p => `<th>pct ${p}%</th>`).join('')}
-  </tr></thead><tbody>`;
-
-  // ── Data rows ──────────────────────────────────────────────────
+  let html = `<table><thead><tr><th>${activeParam?.replace(/_/g,' ')}</th>${pcts.map(p => `<th>pct ${p}%</th>`).join('')}</tr></thead><tbody>`;
   for (const v of allValues) {
     html += `<tr><td>${v}</td>`;
     for (const pct of pcts) {
       const score = scoreLookup[pct][v];
       if (score == null) { html += `<td style="color:var(--muted)">—</td>`; continue; }
-      const isHi  = Math.abs(score - colStats[pct].max) < 1e-9;
-      const isLo  = Math.abs(score - colStats[pct].min) < 1e-9;
+      const isHi = Math.abs(score - colStats[pct].max) < 1e-9, isLo = Math.abs(score - colStats[pct].min) < 1e-9;
       html += `<td class="${isHi ? 'hi' : isLo ? 'lo' : ''}">${score.toFixed(3)}</td>`;
     }
     html += '</tr>';
   }
-
-  // ── Footer rows ────────────────────────────────────────────────
-  html += `<tr class="footer-row"><td>↑ best value</td>
-    ${pcts.map(p => `<td class="hi">${colStats[p].bestVal}</td>`).join('')}</tr>`;
-  html += `<tr class="footer-row"><td>↓ worst value</td>
-    ${pcts.map(p => `<td class="lo">${colStats[p].worstVal}</td>`).join('')}</tr>`;
-  html += `<tr class="footer-row"><td>range</td>
-    ${pcts.map(p => {
-      const isMax = Math.abs(colStats[p].range - maxRange) < 1e-9;
-      return `<td class="${isMax ? 'range-hi' : ''}">${colStats[p].range.toFixed(3)}</td>`;
-    }).join('')}</tr>`;
-
+  html += `<tr class="footer-row"><td>↑ best value</td>${pcts.map(p => `<td class="hi">${colStats[p].bestVal}</td>`).join('')}</tr>`;
+  html += `<tr class="footer-row"><td>↓ worst value</td>${pcts.map(p => `<td class="lo">${colStats[p].worstVal}</td>`).join('')}</tr>`;
+  html += `<tr class="footer-row"><td>range</td>${pcts.map(p => { const isMax = Math.abs(colStats[p].range - maxRange) < 1e-9; return `<td class="${isMax ? 'range-hi' : ''}">${colStats[p].range.toFixed(3)}</td>`; }).join('')}</tr>`;
   html += '</tbody></table>';
   wrap.innerHTML = html;
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// drawCrossParam — Table 2: all parameters × screen percentages
-//
-// Rows    = each parameter (alpha_weight, hist_percent, …)
-// Columns = screen percentages, each split into min / max / range
-//           (sub-header row labels each group)
-// Cells   = that stat for the given (param, pct) under selected ref
-//
-// Highest range value across the whole table highlighted amber —
-// this directly answers "which param matters most at which quality?"
-//
-// To add a new statistic: add to colStats below + add sub-header +
-// add a cell in the row render.
+// DRAW: cross-param table
 // ═══════════════════════════════════════════════════════════════════
 function drawCrossParam() {
   const wrap = document.getElementById('crossparam-wrap');
   const ref  = document.getElementById('sel-ref-crossparam').value;
   if (!ref || !activeScene) { wrap.innerHTML = '<div class="empty">No data</div>'; return; }
-
   const sceneData = dataset[activeScene] ?? {};
   const params    = getAllParams();
-
-  // Pcts that have at least one param with data for this ref
-  const pcts = Object.keys(sceneData)
-    .filter(pct => pct !== 'metric' && Object.keys(sceneData[pct][ref] ?? {}).some(k => Array.isArray(sceneData[pct][ref][k])))
-    .sort((a,b) => +b - +a);
-
-  if (!pcts.length) {
-    wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return;
-  }
-
-  // Compute (min, max, range) per (param, pct)
-  const stats = {}; // stats[param][pct] = {min, max, range}
+  const pcts      = Object.keys(sceneData).filter(pct => pct !== 'metric' && Object.keys(sceneData[pct][ref] ?? {}).some(k => Array.isArray(sceneData[pct][ref][k]))).sort((a,b) => +b - +a);
+  if (!pcts.length) { wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return; }
+  const stats = {};
   for (const param of params) {
     stats[param] = {};
     for (const pct of pcts) {
@@ -817,65 +819,244 @@ function drawCrossParam() {
       stats[param][pct] = { min: mn, max: mx, range: mx - mn };
     }
   }
-
-  // Global max range — the most sensitive (param, pct) combo
   let globalMaxRange = 0;
-  for (const param of params)
-    for (const pct of pcts)
-      if (stats[param][pct]) globalMaxRange = Math.max(globalMaxRange, stats[param][pct].range);
-
-  // ── Header: pct group labels ───────────────────────────────────
-  let html = `<table><thead>
-    <tr class="pct-header">
-      <th>Parameter</th>
-      ${pcts.map(p => `<th colspan="3">pct ${p}%</th>`).join('')}
-    </tr>
-    <tr>
-      <th></th>
-      ${pcts.map(() => `<th>min</th><th>max</th><th>range</th>`).join('')}
-    </tr>
-  </thead><tbody>`;
-
-  // ── Data rows ──────────────────────────────────────────────────
+  for (const param of params) for (const pct of pcts) if (stats[param][pct]) globalMaxRange = Math.max(globalMaxRange, stats[param][pct].range);
+  let html = `<table><thead><tr class="pct-header"><th>Parameter</th>${pcts.map(p => `<th colspan="3">pct ${p}%</th>`).join('')}</tr><tr><th></th>${pcts.map(() => `<th>min</th><th>max</th><th>range</th>`).join('')}</tr></thead><tbody>`;
   for (const param of params) {
     html += `<tr><td>${param.replace(/_/g,' ')}</td>`;
     for (const pct of pcts) {
       const s = stats[param][pct];
       if (!s) { html += `<td>—</td><td>—</td><td>—</td>`; continue; }
       const isMaxRange = Math.abs(s.range - globalMaxRange) < 1e-9;
-      html += `
-        <td>${s.min.toFixed(3)}</td>
-        <td>${s.max.toFixed(3)}</td>
-        <td class="${isMaxRange ? 'range-hi' : ''}">${s.range.toFixed(3)}</td>`;
+      html += `<td>${s.min.toFixed(3)}</td><td>${s.max.toFixed(3)}</td><td class="${isMaxRange ? 'range-hi' : ''}">${s.range.toFixed(3)}</td>`;
     }
     html += '</tr>';
   }
-
   html += '</tbody></table>';
   wrap.innerHTML = html;
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// TAB SWITCHING
-// To add a tab: add btn + panel in HTML, add case here.
+// OVERALL: score curves + heatmaps
 // ═══════════════════════════════════════════════════════════════════
+
+// Extract scores across all scenes: {scene: {res: {param: [(value, score)]}}}
+function extractAllScores() {
+  const result = {};
+  for (const [scene, sceneData] of Object.entries(dataset)) {
+    if (sceneData.metric === undefined && typeof sceneData !== 'object') continue;
+    const sceneScores = {};
+    let valid = true;
+    for (const res of RESOLUTIONS) {
+      const resStr  = String(res);
+      const pctData = sceneData[resStr];
+      if (!pctData) { valid = false; break; }
+      // find ref without screen-per
+      const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+      if (!refKey) { valid = false; break; }
+      sceneScores[res] = {};
+      for (const param of PARAMS) {
+        let entries = pctData[refKey][param] ?? [];
+        if (param === 'hist_percent') entries = entries.filter(e => e.value >= HIST_MIN_VAL);
+        sceneScores[res][param] = entries.map(e => ({ value: e.value, score: e.score }));
+      }
+    }
+    if (valid) result[scene] = sceneScores;
+  }
+  return result;
+}
+
+function effectSize(entries) {
+  if (!entries || entries.length < 2) return 0;
+  const scores = entries.map(e => e.score);
+  return Math.max(...scores) - Math.min(...scores);
+}
+
+function drawOverall() {
+  drawScoreCurves();
+  drawHeatmaps();
+}
+
+// ── Score curves ─────────────────────────────────────────────────
+function drawScoreCurves() {
+  const grid   = document.getElementById('curves-grid');
+  grid.innerHTML = '';
+  const allScores = extractAllScores();
+  const scenes    = Object.keys(allScores);
+  if (!scenes.length) return;
+
+  for (const param of PARAMS) {
+    // card
+    const card = document.createElement('div'); card.className = 'chart-card';
+    card.innerHTML = `
+      <div class="chart-card-title">${param.replace(/_/g,' ')}</div>
+      <div class="chart-card-sub">averaged across ${scenes.length} scenes</div>
+      <div class="chart-card-wrap" id="curve-${param}"></div>`;
+    grid.appendChild(card);
+
+    // after DOM is in place, draw
+    requestAnimationFrame(() => {
+      const wrap = document.getElementById(`curve-${param}`);
+      if (!wrap) return;
+      const W = wrap.clientWidth || 400, H = 240;
+      const margin = { top:12, right:16, bottom:44, left:48 };
+      const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+
+      // collect all unique x values and compute per-resolution averages
+      const avgByRes = {};
+      for (const res of RESOLUTIONS) {
+        const allVals = [...new Set(scenes.flatMap(s => (allScores[s][res][param] ?? []).map(e => e.value)))].sort((a,b) => a-b);
+        avgByRes[res] = allVals.map(val => {
+          const pts = scenes.flatMap(s => (allScores[s][res][param] ?? []).filter(e => Math.abs(e.value - val) < 1e-9).map(e => e.score));
+          return pts.length ? { value: val, score: pts.reduce((a,b) => a+b,0)/pts.length } : null;
+        }).filter(Boolean);
+      }
+
+      const allPts = Object.values(avgByRes).flat();
+      if (!allPts.length) return;
+
+      const xScale = d3.scaleLinear().domain(d3.extent(allPts, d=>d.value)).nice().range([0,iW]);
+      const yPad   = (d3.max(allPts,d=>d.score) - d3.min(allPts,d=>d.score)) * 0.15 || 1;
+      const yScale = d3.scaleLinear().domain([d3.min(allPts,d=>d.score)-yPad, d3.max(allPts,d=>d.score)+yPad]).nice().range([iH,0]);
+
+      const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+      svg.append('defs').append('clipPath').attr('id',`clip-${param}`).append('rect').attr('width',iW).attr('height',iH);
+      const g = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
+      const ca = g.append('g').attr('clip-path',`url(#clip-${param})`);
+
+      ca.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+      g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(5));
+      g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(4));
+      g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+36).attr('text-anchor','middle').attr('font-size',9).text(param.replace(/_/g,' '));
+      g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-38).attr('text-anchor','middle').attr('font-size',9).text('CGVQM score');
+
+      const line = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
+      const tooltip = document.getElementById('tooltip');
+
+      for (const res of RESOLUTIONS) {
+        const pts = avgByRes[res];
+        if (!pts.length) continue;
+        const color = RES_COLORS[res];
+        ca.append('path').datum(pts).attr('class','series-line').attr('stroke',color).attr('stroke-width',1.5).attr('d',line);
+        ca.selectAll(null).data(pts).join('circle')
+          .attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
+          .attr('r',3).attr('fill',color).attr('stroke','var(--bg)').attr('stroke-width',1.5)
+          .on('mousemove', (event,d) => {
+            tooltip.innerHTML = `
+              <div class="tt-label">${param.replace(/_/g,' ')}</div>
+              <div class="tt-score">${d.score.toFixed(3)}</div>
+              <div class="tt-label">value: <b>${d.value}</b></div>
+              <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>`;
+            tooltip.classList.add('visible'); positionTooltip(event);
+          })
+          .on('mouseleave', () => tooltip.classList.remove('visible'));
+      }
+
+      // small legend inside chart
+      const legG = svg.append('g').attr('transform',`translate(${margin.left + 8},${margin.top + 8})`);
+      RESOLUTIONS.forEach((res,i) => {
+        legG.append('rect').attr('x',0).attr('y',i*14).attr('width',8).attr('height',8).attr('fill',RES_COLORS[res]);
+        legG.append('text').attr('x',12).attr('y',i*14+8).attr('fill','var(--muted)').attr('font-size',8).attr('font-family','JetBrains Mono').text(`${res}%`);
+      });
+    });
+  }
+}
+
+// ── Heatmaps ──────────────────────────────────────────────────────
+function drawHeatmaps() {
+  const grid = document.getElementById('heatmaps-grid');
+  grid.innerHTML = '';
+  const allScores = extractAllScores();
+  const scenes    = Object.keys(allScores).sort();
+  if (!scenes.length) return;
+
+  for (const param of PARAMS) {
+    // compute effect sizes: scenes × resolutions
+    const data = scenes.map(scene =>
+      RESOLUTIONS.map(res => effectSize(allScores[scene][res][param]))
+    );
+    const allES  = data.flat();
+    const maxES  = Math.max(...allES) || 1;
+
+    const card = document.createElement('div'); card.className = 'heatmap-card';
+    card.innerHTML = `<div class="heatmap-card-title">${param.replace(/_/g,' ')}</div><div class="heatmap-wrap" id="hm-${param}"></div>`;
+    grid.appendChild(card);
+
+    // build colour scale: white → accent blue
+    const colorScale = d3.scaleSequential()
+      .domain([0, maxES])
+      .interpolator(d3.interpolate('#1f2433', '#38bdf8'));
+
+    let html = `<table class="hm-table"><thead><tr>
+      <th>Scene</th>
+      ${RESOLUTIONS.map(r => `<th>${r}%</th>`).join('')}
+    </tr></thead><tbody>`;
+
+    scenes.forEach((scene, si) => {
+      html += `<tr><td>${scene}</td>`;
+      RESOLUTIONS.forEach((res, ri) => {
+        const es    = data[si][ri];
+        const bg    = colorScale(es);
+        const light = es > maxES * 0.5;
+        html += `<td style="background:${bg};color:${light ? '#0d0f14' : 'var(--text)'}">${es.toFixed(2)}</td>`;
+      });
+      html += '</tr>';
+    });
+
+    // average row
+    html += `<tr style="border-top:1px solid var(--border2)"><td style="color:var(--accent);font-weight:600">avg</td>`;
+    RESOLUTIONS.forEach((res, ri) => {
+      const avg = d3.mean(scenes.map((_,si) => data[si][ri]));
+      const bg  = colorScale(avg);
+      const light = avg > maxES * 0.5;
+      html += `<td style="background:${bg};color:${light ? '#0d0f14' : 'var(--text)'};font-weight:600">${avg.toFixed(2)}</td>`;
+    });
+    html += '</tr></tbody></table>';
+
+    document.getElementById(`hm-${param}`).innerHTML = html;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════════
+
+// Top-level tabs
+document.querySelectorAll('.top-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.top-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.top-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`top-${btn.dataset.top}`).classList.add('active');
+  });
+});
+
+// Overall inner tabs
+document.querySelectorAll('.overall-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.overall-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.overall-tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`otab-${btn.dataset.otab}`).classList.add('active');
+  });
+});
+
+// Scene inner tabs
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    if (btn.dataset.tab === 'chart')      draw();
-    if (btn.dataset.tab === 'deepdive')   drawDeepDive();
-    if (btn.dataset.tab === 'crossparam') drawCrossParam();
+    if (btn.dataset.tab === 'chart')       draw();
+    if (btn.dataset.tab === 'sensitivity') drawSensitivity();
+    if (btn.dataset.tab === 'deepdive')    drawDeepDive();
+    if (btn.dataset.tab === 'crossparam')  drawCrossParam();
   });
 });
 
-// Ref selector changes trigger their respective tables
-document.getElementById('sel-ref-deepdive')
-  .addEventListener('change', drawDeepDive);
-document.getElementById('sel-ref-crossparam')
-  .addEventListener('change', drawCrossParam);
+document.getElementById('sel-ref-deepdive').addEventListener('change', drawDeepDive);
+document.getElementById('sel-ref-crossparam').addEventListener('change', drawCrossParam);
 
 // ═══════════════════════════════════════════════════════════════════
 // UTILITIES
@@ -888,19 +1069,18 @@ function positionTooltip(event) {
   tt.style.left = x + 'px'; tt.style.top = y + 'px';
 }
 
-// CSS variables can't be used in SVG attributes — resolve to hex first.
 function getComputedColor(val) {
   if (!val.startsWith('var(')) return val;
   const name = val.match(/var\((.+)\)/)?.[1];
   return name ? getComputedStyle(document.documentElement).getPropertyValue(name).trim() : val;
 }
 
-function setStatus(msg, ok) {
-  document.getElementById('status').innerHTML =
-    `<span class="${ok?'ok':'warn'}">${msg}</span>`;
+function setStatus(msg, ok, id = 'status') {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<span class="${ok?'ok':'warn'}">${msg}</span>`;
 }
 
-const ro = new ResizeObserver(() => draw());
+const ro = new ResizeObserver(() => { if (document.getElementById('top-scene').classList.contains('active')) draw(); });
 ro.observe(document.getElementById('chart-wrap'));
 
 loadData();
