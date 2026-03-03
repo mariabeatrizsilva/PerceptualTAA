@@ -1,0 +1,19 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: false  # don't try to fetch submodules
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: .  # serve from repo root
+      - uses: actions/deploy-pages@v1
