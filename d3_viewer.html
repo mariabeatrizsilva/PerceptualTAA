@@ -1377,14 +1377,22 @@ function drawHeatmaps() {
 
 // ── Comparison ──────────────────────────────────────────────────────
 
+let expandedComparisonParam = null;
+
 function drawComparison() {
   const grid = document.getElementById('comparison-grid');
   grid.innerHTML = '';
 
   // Find scenes common to both datasets
-  const cgScenes = new Set(Object.keys(datasets.CGVQM).filter(s => Object.keys(datasets.CGVQM[s]).length > 2));
-  const cvScenes = new Set(Object.keys(datasets.CVVDP).filter(s => Object.keys(datasets.CVVDP[s]).length > 2));
-  const commonScenes = [...cgScenes].filter(s => cvScenes.has(s) && activeScenes.has(s));
+  const cgScenes  = new Set(Object.keys(datasets.CGVQM).filter(s => Object.keys(datasets.CGVQM[s]).length > 2));
+  const cvScenes  = new Set(Object.keys(datasets.CVVDP).filter(s => Object.keys(datasets.CVVDP[s]).length > 2));
+  const commonScenes = [...cgScenes].filter(s => cvScenes.has(s));
+
+  // Update sidebar to reflect which scenes are valid for comparison
+  const onComparisonTab = document.getElementById('otab-comparison')?.classList.contains('active');
+  if (onComparisonTab) {
+    updateComparisonSceneToggles(commonScenes);
+  }
 
   if (!commonScenes.length) {
     grid.innerHTML = '<div class="empty">No scenes in common between both metrics</div>';
@@ -1394,37 +1402,91 @@ function drawComparison() {
   for (const param of PARAMS) {
     const card = document.createElement('div');
     card.className = 'chart-card';
+    card.dataset.param = param;
     card.innerHTML = `
       <div class="chart-card-header">
         <div class="chart-card-title">${param.replace(/_/g, ' ')}</div>
+        <span class="expand-hint">click to expand</span>
       </div>
       <div id="comparison-${param}" style="width:100%;"></div>`;
     grid.appendChild(card);
 
-    // Defer until card is in DOM and laid out
+    card.addEventListener('click', () => {
+      const isExpanded = card.classList.contains('expanded');
+      // collapse all
+      grid.querySelectorAll('.chart-card.expanded').forEach(c => {
+        c.classList.remove('expanded');
+        c.querySelector('.expand-hint').textContent = 'click to expand';
+        const w = c.querySelector(`#comparison-${c.dataset.param}`);
+        if (w) renderOverallComparisonPair(w, c.dataset.param, commonScenes, false);
+      });
+      if (!isExpanded) {
+        expandedComparisonParam = param;
+        card.classList.add('expanded');
+        card.querySelector('.expand-hint').textContent = 'click to collapse';
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const w = card.querySelector(`#comparison-${param}`);
+        if (w) renderOverallComparisonPair(w, param, commonScenes, true);
+      } else {
+        expandedComparisonParam = null;
+      }
+    });
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const wrap = document.getElementById(`comparison-${param}`);
         if (!wrap) return;
-        renderOverallComparisonPair(wrap, param, commonScenes);
+        const isExpanded = expandedComparisonParam === param;
+        if (isExpanded) {
+          card.classList.add('expanded');
+          card.querySelector('.expand-hint').textContent = 'click to collapse';
+        }
+        renderOverallComparisonPair(wrap, param, commonScenes, isExpanded);
       });
     });
   }
 }
 
-function renderOverallComparisonPair(wrap, param, commonScenes) {
+function updateComparisonSceneToggles(commonScenes) {
+  // only run this when we're on the comparison tab
+  const togglesEl = document.getElementById('scene-toggles');
+  // mark items that aren't in commonScenes as disabled
+  togglesEl.querySelectorAll('.legend-item').forEach(item => {
+    const scene = item.querySelector('.legend-label').textContent;
+    if (!commonScenes.includes(scene)) {
+      item.classList.add('inactive');
+      item.style.opacity = '0.2';
+      item.style.pointerEvents = 'none';
+      item.title = 'Not available in both metrics';
+    } else {
+      item.style.pointerEvents = '';
+      item.title = '';
+      // restore opacity based on activeScenes
+      item.style.opacity = '';
+      item.classList.toggle('inactive', !activeScenes.has(scene));
+    }
+  });
+}
+
+function renderOverallComparisonPair(wrap, param, commonScenes, expanded = false) {
   wrap.innerHTML = '';
 
-  // Build averaged series for each metric
+  // filter to only actively selected scenes that are in commonScenes
+  const scenes = commonScenes.filter(s => activeScenes.has(s));
+
+  if (!scenes.length) {
+    wrap.innerHTML = '<div class="empty">No scenes selected</div>';
+    return;
+  }
+
+  // Build averaged % change series for each metric
   const seriesByMetric = {};
   for (const metricKey of ['CGVQM', 'CVVDP']) {
     const avgByRes = {};
     for (const res of RESOLUTIONS) {
-      // collect all values across common scenes
       const allVals = [...new Set(
-        commonScenes.flatMap(s => {
-          const sceneData = datasets[metricKey][s];
-          const pctData   = sceneData?.[String(res)];
+        scenes.flatMap(s => {
+          const pctData = datasets[metricKey][s]?.[String(res)];
           if (!pctData) return [];
           const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
           if (!refKey) return [];
@@ -1433,19 +1495,15 @@ function renderOverallComparisonPair(wrap, param, commonScenes) {
       )].sort((a, b) => a - b);
 
       avgByRes[res] = allVals.map(val => {
-        const pctChanges = commonScenes.flatMap(s => {
-          const sceneData = datasets[metricKey][s];
-          const pctData   = sceneData?.[String(res)];
+        const pctChanges = scenes.flatMap(s => {
+          const pctData = datasets[metricKey][s]?.[String(res)];
           if (!pctData) return [];
           const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
           if (!refKey) return [];
           const entries = pctData[refKey][param] ?? [];
           if (!entries.length) return [];
-
-          // baseline = mean score across all tested values for this scene+res+param
           const baseline = entries.reduce((a, b) => a + b.score, 0) / entries.length;
           if (baseline === 0) return [];
-
           const match = entries.find(e => Math.abs(e.value - val) < 1e-9);
           return match ? [(match.score - baseline) / baseline * 100] : [];
         });
@@ -1457,16 +1515,15 @@ function renderOverallComparisonPair(wrap, param, commonScenes) {
     seriesByMetric[metricKey] = avgByRes;
   }
 
-  // Single SVG, two panels
   const GAP    = 48;
   const W      = wrap.clientWidth || 900;
-  const H      = 300;
+  const H      = expanded ? 420 : 280;
   const margin = { top: 20, right: 20, bottom: 52, left: 56 };
   const panelW = (W - GAP) / 2;
   const iW     = panelW - margin.left - margin.right;
   const iH     = H - margin.top - margin.bottom;
 
-  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
+  const svg     = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
   const tooltip = document.getElementById('tooltip');
 
   ['CGVQM', 'CVVDP'].forEach((metricKey, mi) => {
@@ -1474,7 +1531,7 @@ function renderOverallComparisonPair(wrap, param, commonScenes) {
     const offsetX  = mi * (panelW + GAP);
     const allPts   = Object.values(avgByRes).flat();
 
-    const clipId = `clip-overall-comp-${param}-${mi}`;
+    const clipId = `clip-overall-comp-${param}-${mi}-${expanded}`;
     svg.append('defs').append('clipPath').attr('id', clipId)
       .append('rect').attr('width', iW).attr('height', iH);
 
@@ -1494,17 +1551,20 @@ function renderOverallComparisonPair(wrap, param, commonScenes) {
       .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
       .nice().range([iH, 0]);
 
-    // Grid
+    // zero line
+    ca.append('line')
+      .attr('x1', 0).attr('x2', iW)
+      .attr('y1', yScale(0)).attr('y2', yScale(0))
+      .attr('stroke', 'var(--border2)').attr('stroke-width', 1).attr('stroke-dasharray', '4,3');
+
     ca.append('g').attr('class', 'grid')
       .call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
 
-    // Axes
     g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
-      .call(d3.axisBottom(xScale).ticks(6));
+      .call(d3.axisBottom(xScale).ticks(expanded ? 8 : 6));
     g.append('g').attr('class', 'axis')
-      .call(d3.axisLeft(yScale).ticks(6));
+      .call(d3.axisLeft(yScale).ticks(expanded ? 8 : 5));
 
-    // Axis labels
     g.append('text').attr('class', 'axis-label')
       .attr('x', iW / 2).attr('y', iH + 42)
       .attr('text-anchor', 'middle').attr('font-size', 11)
@@ -1513,9 +1573,8 @@ function renderOverallComparisonPair(wrap, param, commonScenes) {
       .attr('transform', 'rotate(-90)')
       .attr('x', -iH / 2).attr('y', -44)
       .attr('text-anchor', 'middle').attr('font-size', 11)
-      .text(`${metricKey} score`);
+      .text('% change from mean');
 
-    // Metric label
     g.append('text')
       .attr('x', iW / 2).attr('y', -6)
       .attr('text-anchor', 'middle')
@@ -1529,25 +1588,25 @@ function renderOverallComparisonPair(wrap, param, commonScenes) {
 
     for (const res of RESOLUTIONS) {
       const pts = avgByRes[res];
-      if (!pts.length) continue;
+      if (!pts?.length) continue;
       const color = RES_COLORS[res];
 
       ca.append('path').datum(pts)
         .attr('class', 'series-line')
-        .attr('stroke', color).attr('stroke-width', 2)
+        .attr('stroke', color).attr('stroke-width', expanded ? 2.5 : 2)
         .attr('d', line);
 
       ca.selectAll(null).data(pts).join('circle')
         .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
-        .attr('r', 4).attr('fill', color)
+        .attr('r', expanded ? 5 : 3.5).attr('fill', color)
         .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
         .on('mousemove', (event, d) => {
           tooltip.innerHTML = `
             <div class="tt-label">${metricKey} · ${param.replace(/_/g, ' ')}</div>
-            <div class="tt-score">${d.score.toFixed(4)}</div>
+            <div class="tt-score">${d.score.toFixed(3)}%</div>
             <div class="tt-label">value: <b>${d.value}</b></div>
             <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>
-            <div class="tt-label">avg over <b>${commonScenes.length}</b> scenes</div>`;
+            <div class="tt-label">avg over <b>${scenes.length}</b> scenes</div>`;
           tooltip.classList.add('visible');
           positionTooltip(event);
         })
@@ -1585,7 +1644,19 @@ document.querySelectorAll('.overall-tab-btn').forEach(btn => {
     document.querySelectorAll('.overall-tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`otab-${btn.dataset.otab}`).classList.add('active');
-    if (btn.dataset.otab === 'comparison') drawComparison();  // ← add this
+    if (btn.dataset.otab === 'comparison') {
+      drawComparison();
+    } else {
+      // restore all scene toggles when leaving comparison tab
+      const togglesEl = document.getElementById('scene-toggles');
+      togglesEl.querySelectorAll('.legend-item').forEach(item => {
+        const scene = item.querySelector('.legend-label').textContent;
+        item.style.pointerEvents = '';
+        item.style.opacity = '';
+        item.style.title = '';
+        item.classList.toggle('inactive', !activeScenes.has(scene));
+      });
+    }
   });
 });
 
@@ -1643,10 +1714,25 @@ function setStatus(msg, ok, id = 'status') {
   if (el) el.innerHTML = `<span class="${ok?'ok':'warn'}">${msg}</span>`;
 }
 
-const ro = new ResizeObserver(() => { if (document.getElementById('top-scene').classList.contains('active')) draw(); });
+const ro = new ResizeObserver(() => {
+  const onSceneTab = document.getElementById('top-scene')?.classList.contains('active');
+  if (onSceneTab) renderAll();
+});
 ro.observe(document.getElementById('chart-wrap'));
 
 loadData();
+
+const roComparison = new ResizeObserver(() => {
+  const onComparisonTab = document.getElementById('otab-comparison')?.classList.contains('active');
+  if (onComparisonTab) drawComparison();
+});
+roComparison.observe(document.getElementById('comparison-grid'));
+
+const roCurves = new ResizeObserver(() => {
+  const onCurvesTab = document.getElementById('otab-curves')?.classList.contains('active');
+  if (onCurvesTab) drawScoreCurves();
+});
+roCurves.observe(document.getElementById('curves-grid'));
 </script>
 </body>
 </html>
