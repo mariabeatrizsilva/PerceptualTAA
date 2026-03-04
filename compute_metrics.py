@@ -473,6 +473,11 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         )
         
         return score, per_frame_errors
+    elif metric == Metric.CVVDP:
+        dist_frames_path_pattern = os.path.join(folder_path, test_name, FRAMES_SUFFIX)
+        ref_frames_path_pattern = os.path.join(ref_frames_folder, FRAMES_SUFFIX)
+        score = compute_metric_cvvdp(dist_frames_path_pattern, ref_frames_path_pattern, err_maps_dir)
+        return score
             
 def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None, skip_err_maps: bool = False):
     ref_scene_name = ref_scene if ref_scene else derive_ref_scene(scene_name)  
@@ -561,8 +566,8 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
                 print(f"    Score: {score:.4f}")
                 print(f"    Per-frame errors: {len(per_frame_errors)} frames")
             else:  # CVVDP
-                score, _ = result
-                results[test_name] = score
+                score = result
+                results[test_name] = {'score': score}
                 print(f"    Score: {score:.4f}")
             
             # Save results immediately after each video
@@ -601,12 +606,7 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
             print(f"Average score: {np.mean(scores):.4f}")
             print(f"Score range: [{min(scores):.4f}, {max(scores):.4f}]")
         else:
-            scores = []
-            for v in results.values():
-                if isinstance(v, dict):
-                    scores.append(v['score'])
-                else:
-                    scores.append(v)
+            scores = [v['score'] for v in results.values() if isinstance(v, dict) and 'score' in v]
             
             if scores:
                 print(f"Average score: {np.mean(scores):.4f}")

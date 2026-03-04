@@ -268,6 +268,8 @@ Examples:
   python build_dataset.py --rebuild              # full rebuild from scratch
   python build_dataset.py --dry-run              # preview without writing
   python build_dataset.py --outputs-dir /path    # custom outputs directory
+  python build_dataset.py --rebuild --no-per-frame
+  python build_dataset.py --no-per-frame
         """
     )
     parser.add_argument('--rebuild',  action='store_true',
