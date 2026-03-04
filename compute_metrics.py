@@ -475,8 +475,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         return score, per_frame_errors
     elif metric == Metric.CVVDP:
         dist_frames_path_pattern = os.path.join(folder_path, test_name, FRAMES_SUFFIX)
-        ref_frames_path_pattern = os.path.join(ref_frames_folder, FRAMES_SUFFIX)
-        score = compute_metric_cvvdp(dist_frames_path_pattern, ref_frames_path_pattern, err_maps_dir)
+        score = compute_metric_cvvdp(dist_frames_path_pattern, ref_frames_folder, err_maps_dir)
         return score
             
 def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None, skip_err_maps: bool = False):
