@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "reference_scene": "oldmine",
+    "metric": "ColorVideoVDP",
+    "scene": "oldmine-screen-per-71"
+  },
+  "vary_alpha_weight_0.01": {
+    "score": 5.4836
+  },
+  "vary_alpha_weight_0.02": {
+    "score": 5.6512
+  },
+  "vary_alpha_weight_0.04": {
+    "score": 5.0878
+  },
+  "vary_alpha_weight_0.06": {
+    "score": 5.6561
+  },
+  "vary_alpha_weight_0.1": {
+    "score": 5.111
+  },
+  "vary_alpha_weight_0.2": {
+    "score": 5.7405
+  },
+  "vary_alpha_weight_0.5": {
+    "score": 5.1542
+  },
+  "vary_alpha_weight_0.6": {
+    "score": 5.7835
+  },
+  "vary_alpha_weight_0.7": {
+    "score": 5.1274
+  },
+  "vary_alpha_weight_0.8": {
+    "score": 5.7443
+  },
+  "vary_alpha_weight_0.9": {
+    "score": 5.1468
+  },
+  "vary_alpha_weight_1.0": {
+    "score": 5.7252
+  }
+}

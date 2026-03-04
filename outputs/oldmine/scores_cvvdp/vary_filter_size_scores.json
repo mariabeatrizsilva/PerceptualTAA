@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "oldmine",
+    "metric": "ColorVideoVDP",
+    "scene": "oldmine"
+  },
+  "vary_filter_size_0.1": {
+    "score": 8.5255
+  },
+  "vary_filter_size_0.25": {
+    "score": 8.4464
+  },
+  "vary_filter_size_0.5": {
+    "score": 8.4978
+  },
+  "vary_filter_size_0.7": {
+    "score": 8.4767
+  },
+  "vary_filter_size_0.9": {
+    "score": 8.5366
+  },
+  "vary_filter_size_0.95": {
+    "score": 8.4361
+  },
+  "vary_filter_size_1.0": {
+    "score": 8.5402
+  }
+}
