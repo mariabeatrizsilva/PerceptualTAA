@@ -701,20 +701,16 @@ function drawSceneComparison() {
   wrap.innerHTML = '';
   if (!activeScene || !activeParam) return;
 
-  // build series for both metrics first
   const seriesByMetric = {};
   for (const metricKey of ['CGVQM', 'CVVDP']) {
-    const savedDataset = dataset;
-    dataset = datasets[metricKey];
-    const sceneData = dataset[activeScene];
-    dataset = savedDataset;
-
+    const sceneData = datasets[metricKey]?.[activeScene];
     if (!sceneData) { seriesByMetric[metricKey] = []; continue; }
-
     const series = [];
     const pcts = Object.keys(sceneData).filter(k => k !== 'metric').sort((a, b) => +b - +a);
     for (const pct of pcts) {
       for (const ref of Object.keys(sceneData[pct]).sort()) {
+        // Rule 1: skip screen-per refs
+        if (ref.includes('screen-per')) continue;
         const entries = sceneData[pct][ref][activeParam];
         if (!entries?.length) continue;
         series.push({ pct, ref, entries, color: RES_COLORS[+pct] ?? 'var(--accent)' });
@@ -723,104 +719,126 @@ function drawSceneComparison() {
     seriesByMetric[metricKey] = series;
   }
 
-  // find shared pct+ref combinations
-  const keyOf = s => `${s.pct}|${s.ref}`;
-  const cgvqmKeys = new Set(seriesByMetric['CGVQM'].map(keyOf));
-  const cvvdpKeys = new Set(seriesByMetric['CVVDP'].map(keyOf));
-  const sharedKeys = new Set([...cgvqmKeys].filter(k => cvvdpKeys.has(k)));
-
-  if (!sharedKeys.size) {
-    wrap.innerHTML = '<div class="empty">No matching resolution/reference combinations found in both metrics</div>';
-    return;
-  }
-
-  // filter each metric's series to only shared combinations
-  for (const metricKey of ['CGVQM', 'CVVDP']) {
-    seriesByMetric[metricKey] = seriesByMetric[metricKey].filter(s => sharedKeys.has(keyOf(s)));
-  }
-
-  // render
-  for (const metricKey of ['CGVQM', 'CVVDP']) {
-    const container = document.createElement('div');
-    container.style.cssText = 'flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;';
-
-    const label = document.createElement('div');
-    label.style.cssText = 'font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding-left:52px;';
-    label.textContent = metricKey;
-    container.appendChild(label);
-
-    const chartWrap = document.createElement('div');
-    chartWrap.style.cssText = 'position:relative;height:300px;overflow:hidden;';
-    container.appendChild(chartWrap);
-    wrap.appendChild(container);
-
-    renderSceneComparisonChart(chartWrap, seriesByMetric[metricKey], metricKey);
-  }
+// Rule 2: only keep pct values present in BOTH metrics
+const cgvqmPcts = new Set(seriesByMetric['CGVQM'].map(s => s.pct));
+const cvvdpPcts = new Set(seriesByMetric['CVVDP'].map(s => s.pct));
+const sharedPcts = new Set([...cgvqmPcts].filter(p => cvvdpPcts.has(p)));
+for (const metricKey of ['CGVQM', 'CVVDP']) {
+  seriesByMetric[metricKey] = seriesByMetric[metricKey].filter(s => sharedPcts.has(s.pct));
 }
 
-function renderSceneComparisonChart(wrap, series, metricKey) {
-  const W = wrap.clientWidth || 400, H = 300;
-  const margin = { top: 12, right: 16, bottom: 44, left: 52 };
-  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+  // Single SVG, two panels side by side
+  const GAP    = 48;  // gap between the two charts
+  const W      = wrap.clientWidth || 900;
+  const H      = 340;
+  const margin = { top: 20, right: 20, bottom: 52, left: 56 };
+  const panelW = (W - GAP) / 2;
+  const iW     = panelW - margin.left - margin.right;
+  const iH     = H - margin.top - margin.bottom;
 
-  const allPts = series.flatMap(s => s.entries);
-  const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
-  const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
-  const yScale = d3.scaleLinear()
-    .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
-    .nice().range([iH, 0]);
+  const svg = d3.select(wrap).append('svg')
+    .attr('width', W)
+    .attr('height', H);
 
-  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
-  svg.append('defs').append('clipPath').attr('id', `clip-scene-comp-${metricKey}-${activeScene}-${activeParam}`)
-    .append('rect').attr('width', iW).attr('height', iH);
-
-  const g  = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-  const ca = g.append('g').attr('clip-path', `url(#clip-scene-comp-${metricKey}-${activeScene}-${activeParam})`);
-
-  g.append('g').attr('class', 'grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
-  g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(6));
-  g.append('g').attr('class', 'axis').call(d3.axisLeft(yScale).ticks(5));
-  g.append('text').attr('class', 'axis-label').attr('x', iW / 2).attr('y', iH + 36)
-    .attr('text-anchor', 'middle').attr('font-size', 9).text(activeParam.replace(/_/g, ' '));
-  g.append('text').attr('class', 'axis-label').attr('transform', 'rotate(-90)')
-    .attr('x', -iH / 2).attr('y', -42).attr('text-anchor', 'middle')
-    .attr('font-size', 9).text(`${metricKey} score`);
-
-  const line    = d3.line().x(d => xScale(d.value)).y(d => yScale(d.score)).curve(d3.curveMonotoneX);
   const tooltip = document.getElementById('tooltip');
+  const metrics = ['CGVQM', 'CVVDP'];
 
-  for (const s of series) {
-    const color = s.color;
-    ca.append('path').datum(s.entries).attr('class', 'series-line')
-      .attr('stroke', color).attr('stroke-width', 1.5).attr('d', line);
-    ca.selectAll(null).data(s.entries).join('circle')
-      .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
-      .attr('r', 3).attr('fill', color).attr('stroke', 'var(--bg)').attr('stroke-width', 1.5)
-      .on('mousemove', (event, d) => {
-        tooltip.innerHTML = `
-          <div class="tt-label">${metricKey} · ${activeParam.replace(/_/g, ' ')}</div>
-          <div class="tt-score">${d.score.toFixed(4)}</div>
-          <div class="tt-label">value: <b>${d.value}</b></div>
-          <div class="tt-label">pct: <b style="color:${color}">${s.pct}%</b></div>
-          <div class="tt-label">ref: ${s.ref}</div>`;
-        tooltip.classList.add('visible'); positionTooltip(event);
-      })
-      .on('mouseleave', () => tooltip.classList.remove('visible'));
-  }
+  metrics.forEach((metricKey, mi) => {
+    const series  = seriesByMetric[metricKey];
+    const offsetX = mi * (panelW + GAP);
+    const allPts  = series.flatMap(s => s.entries);
 
-  // legend
-  const legG = svg.append('g').attr('transform', `translate(${margin.left + 8},${margin.top + 8})`);
-  series.forEach((s, i) => {
-    legG.append('rect').attr('x', 0).attr('y', i * 14).attr('width', 8).attr('height', 8).attr('fill', s.color);
-    legG.append('text').attr('x', 12).attr('y', i * 14 + 8)
-      .attr('fill', 'var(--muted)').attr('font-size', 8).attr('font-family', 'JetBrains Mono')
-      .text(`${s.pct}%`);
+    const clipId = `clip-sbs-${mi}`;
+    svg.append('defs').append('clipPath').attr('id', clipId)
+      .append('rect').attr('width', iW).attr('height', iH);
+
+    const g  = svg.append('g').attr('transform', `translate(${offsetX + margin.left},${margin.top})`);
+    const ca = g.append('g').attr('clip-path', `url(#${clipId})`);
+
+    if (!allPts.length) {
+      g.append('text').attr('x', iW / 2).attr('y', iH / 2)
+        .attr('text-anchor', 'middle').attr('fill', 'var(--muted)').attr('font-size', 12)
+        .text('No data');
+      return;
+    }
+
+    const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
+    const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
+    const yScale = d3.scaleLinear()
+      .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
+      .nice().range([iH, 0]);
+
+    // Grid
+    ca.append('g').attr('class', 'grid')
+      .call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+
+    // Axes
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
+      .call(d3.axisBottom(xScale).ticks(6));
+    g.append('g').attr('class', 'axis')
+      .call(d3.axisLeft(yScale).ticks(6));
+
+    // Axis labels
+    g.append('text').attr('class', 'axis-label')
+      .attr('x', iW / 2).attr('y', iH + 42)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(activeParam.replace(/_/g, ' '));
+    g.append('text').attr('class', 'axis-label')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -iH / 2).attr('y', -44)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(`${metricKey} score`);
+
+    // Metric label at top
+    g.append('text')
+      .attr('x', iW / 2).attr('y', -6)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Syne, sans-serif').attr('font-weight', 700).attr('font-size', 12)
+      .attr('fill', 'var(--muted)').attr('letter-spacing', '0.08em')
+      .text(metricKey);
+
+    const line = d3.line()
+      .x(d => xScale(d.value)).y(d => yScale(d.score))
+      .curve(d3.curveMonotoneX);
+
+    for (const s of series) {
+      ca.append('path').datum(s.entries)
+        .attr('class', 'series-line')
+        .attr('stroke', s.color).attr('stroke-width', 2)
+        .attr('d', line);
+
+      ca.selectAll(null).data(s.entries).join('circle')
+        .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
+        .attr('r', 4).attr('fill', s.color)
+        .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
+        .on('mousemove', (event, d) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${metricKey} · ${activeParam.replace(/_/g, ' ')}</div>
+            <div class="tt-score">${d.score.toFixed(4)}</div>
+            <div class="tt-label">value: <b>${d.value}</b></div>
+            <div class="tt-label">resolution: <b style="color:${s.color}">${s.pct}%</b></div>`;
+          tooltip.classList.add('visible');
+          positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+
+    // Legend
+    const legG = g.append('g').attr('transform', `translate(8, 8)`);
+    series.forEach((s, i) => {
+      legG.append('rect').attr('x', 0).attr('y', i * 16).attr('width', 10).attr('height', 10).attr('fill', s.color);
+      legG.append('text').attr('x', 14).attr('y', i * 16 + 9)
+        .attr('fill', 'var(--muted)').attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+        .text(`${s.pct}%`);
+    });
   });
 }
 
 function renderAll() {
   draw();
-  drawSceneComparison()
+  if (document.getElementById('tab-metriccomp').classList.contains('active')) {
+    drawSceneComparison();
+  }
   drawSensitivity();
   drawDeepDive();
   drawCrossParam();
@@ -1363,136 +1381,189 @@ function drawComparison() {
   const grid = document.getElementById('comparison-grid');
   grid.innerHTML = '';
 
+  // Find scenes common to both datasets
+  const cgScenes = new Set(Object.keys(datasets.CGVQM).filter(s => Object.keys(datasets.CGVQM[s]).length > 2));
+  const cvScenes = new Set(Object.keys(datasets.CVVDP).filter(s => Object.keys(datasets.CVVDP[s]).length > 2));
+  const commonScenes = [...cgScenes].filter(s => cvScenes.has(s) && activeScenes.has(s));
+
+  if (!commonScenes.length) {
+    grid.innerHTML = '<div class="empty">No scenes in common between both metrics</div>';
+    return;
+  }
+
   for (const param of PARAMS) {
     const card = document.createElement('div');
     card.className = 'chart-card';
-    card.style.gridColumn = '1 / -1'; // each param takes full width
     card.innerHTML = `
       <div class="chart-card-header">
-        <div class="chart-card-title">${param.replace(/_/g,' ')}</div>
+        <div class="chart-card-title">${param.replace(/_/g, ' ')}</div>
       </div>
-      <div style="display:flex;gap:16px;" id="comparison-${param}"></div>`;
+      <div id="comparison-${param}" style="width:100%;"></div>`;
     grid.appendChild(card);
 
+    // Defer until card is in DOM and laid out
     requestAnimationFrame(() => {
-      const wrap = document.getElementById(`comparison-${param}`);
-      if (!wrap) return;
-      renderComparisonPair(wrap, param);
+      requestAnimationFrame(() => {
+        const wrap = document.getElementById(`comparison-${param}`);
+        if (!wrap) return;
+        renderOverallComparisonPair(wrap, param, commonScenes);
+      });
     });
   }
 }
 
-function renderComparisonPair(wrap, param) {
+function renderOverallComparisonPair(wrap, param, commonScenes) {
   wrap.innerHTML = '';
+
+  // Build averaged series for each metric
+  const seriesByMetric = {};
   for (const metricKey of ['CGVQM', 'CVVDP']) {
-    const container = document.createElement('div');
-    container.style.cssText = 'flex:1;min-width:0;';
-    
-    const label = document.createElement('div');
-    label.style.cssText = 'font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;padding-left:48px;';
-    label.textContent = metricKey;
-    container.appendChild(label);
+    const avgByRes = {};
+    for (const res of RESOLUTIONS) {
+      // collect all values across common scenes
+      const allVals = [...new Set(
+        commonScenes.flatMap(s => {
+          const sceneData = datasets[metricKey][s];
+          const pctData   = sceneData?.[String(res)];
+          if (!pctData) return [];
+          const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+          if (!refKey) return [];
+          return (pctData[refKey][param] ?? []).map(e => e.value);
+        })
+      )].sort((a, b) => a - b);
 
-    const chartWrap = document.createElement('div');
-    chartWrap.style.cssText = 'position:relative;height:240px;';
-    chartWrap.style.cssText = 'position:relative;height:240px;overflow:hidden;';
-    container.appendChild(chartWrap);
-    wrap.appendChild(container);
+      avgByRes[res] = allVals.map(val => {
+        const pctChanges = commonScenes.flatMap(s => {
+          const sceneData = datasets[metricKey][s];
+          const pctData   = sceneData?.[String(res)];
+          if (!pctData) return [];
+          const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+          if (!refKey) return [];
+          const entries = pctData[refKey][param] ?? [];
+          if (!entries.length) return [];
 
-    // extract scores for this specific metric
-    const savedDataset = dataset;
-    dataset = datasets[metricKey];
-    const allScores = extractAllScores();
-    dataset = savedDataset;
+          // baseline = mean score across all tested values for this scene+res+param
+          const baseline = entries.reduce((a, b) => a + b.score, 0) / entries.length;
+          if (baseline === 0) return [];
 
-    if (!Object.keys(allScores).length) {
-      chartWrap.innerHTML = '<div class="empty">No data</div>';
-      continue;
+          const match = entries.find(e => Math.abs(e.value - val) < 1e-9);
+          return match ? [(match.score - baseline) / baseline * 100] : [];
+        });
+        return pctChanges.length
+          ? { value: val, score: pctChanges.reduce((a, b) => a + b, 0) / pctChanges.length }
+          : null;
+      }).filter(Boolean);
     }
-
-    renderComparisonChart(chartWrap, param, allScores, metricKey);
-  }
-}
-
-function renderComparisonChart(wrap, param, allScores, metricKey) {
-  const scenes = Object.keys(allScores).filter(s => activeScenes.has(s));
-  const W = wrap.clientWidth || 400, H = 240;
-  const margin = { top: 12, right: 16, bottom: 44, left: 52 };
-  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
-
-  // average raw scores (not % change) across scenes per resolution
-  const avgByRes = {};
-  for (const res of RESOLUTIONS) {
-    const allVals = [...new Set(
-      scenes.flatMap(s => (allScores[s][res]?.[param] ?? []).map(e => e.value))
-    )].sort((a, b) => a - b);
-
-    avgByRes[res] = allVals.map(val => {
-      const sceneScores = scenes.flatMap(s => {
-        const entries = allScores[s][res]?.[param] ?? [];
-        const match = entries.find(e => Math.abs(e.value - val) < 1e-9);
-        return match ? [match.score] : [];
-      });
-      return sceneScores.length
-        ? { value: val, score: sceneScores.reduce((a, b) => a + b, 0) / sceneScores.length }
-        : null;
-    }).filter(Boolean);
+    seriesByMetric[metricKey] = avgByRes;
   }
 
-  const allPts = Object.values(avgByRes).flat();
-  if (!allPts.length) { wrap.innerHTML = '<div class="empty">No data</div>'; return; }
-
-  const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
-  const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
-  const yScale = d3.scaleLinear()
-    .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
-    .nice().range([iH, 0]);
+  // Single SVG, two panels
+  const GAP    = 48;
+  const W      = wrap.clientWidth || 900;
+  const H      = 300;
+  const margin = { top: 20, right: 20, bottom: 52, left: 56 };
+  const panelW = (W - GAP) / 2;
+  const iW     = panelW - margin.left - margin.right;
+  const iH     = H - margin.top - margin.bottom;
 
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
-  const g   = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-  const ca = g.append('g').attr('clip-path', `url(#clip-comp-${metricKey}-${param})`);
-
-
-  g.append('g').attr('class', 'grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
-  g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(5));
-  g.append('g').attr('class', 'axis').call(d3.axisLeft(yScale).ticks(5));
-  g.append('text').attr('class', 'axis-label').attr('x', iW / 2).attr('y', iH + 36)
-    .attr('text-anchor', 'middle').attr('font-size', 9).text(param.replace(/_/g, ' '));
-  g.append('text').attr('class', 'axis-label').attr('transform', 'rotate(-90)')
-    .attr('x', -iH / 2).attr('y', -42).attr('text-anchor', 'middle')
-    .attr('font-size', 9).text(`${metricKey} score`);
-
-  const line    = d3.line().x(d => xScale(d.value)).y(d => yScale(d.score)).curve(d3.curveMonotoneX);
   const tooltip = document.getElementById('tooltip');
 
-  for (const res of RESOLUTIONS) {
-    const pts = avgByRes[res];
-    if (!pts.length) continue;
-    const color = RES_COLORS[res];
-    ca.append('path').datum(pts).attr('class', 'series-line').attr('stroke', color).attr('stroke-width', 1.5).attr('d', line);
-    ca.selectAll(null).data(pts).join('circle')
-      .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
-      .attr('r', 3).attr('fill', color).attr('stroke', 'var(--bg)').attr('stroke-width', 1.5)
-      .on('mousemove', (event, d) => {
-        tooltip.innerHTML = `
-          <div class="tt-label">${metricKey} · ${param.replace(/_/g, ' ')}</div>
-          <div class="tt-score">${d.score.toFixed(4)}</div>
-          <div class="tt-label">value: <b>${d.value}</b></div>
-          <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>`;
-        tooltip.classList.add('visible'); positionTooltip(event);
-      })
-      .on('mouseleave', () => tooltip.classList.remove('visible'));
-  }
+  ['CGVQM', 'CVVDP'].forEach((metricKey, mi) => {
+    const avgByRes = seriesByMetric[metricKey];
+    const offsetX  = mi * (panelW + GAP);
+    const allPts   = Object.values(avgByRes).flat();
 
-  // resolution legend
-  const legG = svg.append('g').attr('transform', `translate(${margin.left + 8},${margin.top + 8})`);
-  RESOLUTIONS.forEach((res, i) => {
-    legG.append('rect').attr('x', 0).attr('y', i * 14).attr('width', 8).attr('height', 8).attr('fill', RES_COLORS[res]);
-    legG.append('text').attr('x', 12).attr('y', i * 14 + 8)
-      .attr('fill', 'var(--muted)').attr('font-size', 8).attr('font-family', 'JetBrains Mono').text(`${res}%`);
+    const clipId = `clip-overall-comp-${param}-${mi}`;
+    svg.append('defs').append('clipPath').attr('id', clipId)
+      .append('rect').attr('width', iW).attr('height', iH);
+
+    const g  = svg.append('g').attr('transform', `translate(${offsetX + margin.left},${margin.top})`);
+    const ca = g.append('g').attr('clip-path', `url(#${clipId})`);
+
+    if (!allPts.length) {
+      g.append('text').attr('x', iW / 2).attr('y', iH / 2)
+        .attr('text-anchor', 'middle').attr('fill', 'var(--muted)').attr('font-size', 12)
+        .text('No data');
+      return;
+    }
+
+    const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
+    const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
+    const yScale = d3.scaleLinear()
+      .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
+      .nice().range([iH, 0]);
+
+    // Grid
+    ca.append('g').attr('class', 'grid')
+      .call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+
+    // Axes
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
+      .call(d3.axisBottom(xScale).ticks(6));
+    g.append('g').attr('class', 'axis')
+      .call(d3.axisLeft(yScale).ticks(6));
+
+    // Axis labels
+    g.append('text').attr('class', 'axis-label')
+      .attr('x', iW / 2).attr('y', iH + 42)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(param.replace(/_/g, ' '));
+    g.append('text').attr('class', 'axis-label')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -iH / 2).attr('y', -44)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(`${metricKey} score`);
+
+    // Metric label
+    g.append('text')
+      .attr('x', iW / 2).attr('y', -6)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Syne, sans-serif').attr('font-weight', 700).attr('font-size', 12)
+      .attr('fill', 'var(--muted)').attr('letter-spacing', '0.08em')
+      .text(metricKey);
+
+    const line = d3.line()
+      .x(d => xScale(d.value)).y(d => yScale(d.score))
+      .curve(d3.curveMonotoneX);
+
+    for (const res of RESOLUTIONS) {
+      const pts = avgByRes[res];
+      if (!pts.length) continue;
+      const color = RES_COLORS[res];
+
+      ca.append('path').datum(pts)
+        .attr('class', 'series-line')
+        .attr('stroke', color).attr('stroke-width', 2)
+        .attr('d', line);
+
+      ca.selectAll(null).data(pts).join('circle')
+        .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
+        .attr('r', 4).attr('fill', color)
+        .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
+        .on('mousemove', (event, d) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${metricKey} · ${param.replace(/_/g, ' ')}</div>
+            <div class="tt-score">${d.score.toFixed(4)}</div>
+            <div class="tt-label">value: <b>${d.value}</b></div>
+            <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>
+            <div class="tt-label">avg over <b>${commonScenes.length}</b> scenes</div>`;
+          tooltip.classList.add('visible');
+          positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+
+    // Legend
+    const legG = g.append('g').attr('transform', 'translate(8, 8)');
+    RESOLUTIONS.forEach((res, i) => {
+      legG.append('rect').attr('x', 0).attr('y', i * 16).attr('width', 10).attr('height', 10).attr('fill', RES_COLORS[res]);
+      legG.append('text').attr('x', 14).attr('y', i * 16 + 9)
+        .attr('fill', 'var(--muted)').attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+        .text(`${res}%`);
+    });
   });
 }
-
 // ═══════════════════════════════════════════════════════════════════
 // TAB SWITCHING
 // ═══════════════════════════════════════════════════════════════════
@@ -1526,7 +1597,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
     if (btn.dataset.tab === 'chart')       draw();
-    if (btn.dataset.tab === 'metriccomp') drawSceneComparison();
+    if (btn.dataset.tab === 'metriccomp')  drawSceneComparison();
     if (btn.dataset.tab === 'sensitivity') drawSensitivity();
     if (btn.dataset.tab === 'deepdive')    drawDeepDive();
     if (btn.dataset.tab === 'crossparam')  drawCrossParam();
