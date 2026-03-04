@@ -1098,10 +1098,6 @@ function renderCurveInto(wrap, param, allScores, expanded) {
     ca.selectAll('.series-line').attr('d', line);
     ca.selectAll('circle').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
   });
-
-  ca.append('g').attr('class','brush').call(brush)
-    .on('mousedown', e => e.stopPropagation())
-    .on('click', e => e.stopPropagation());
 }
 
 function drawScoreCurves() {
