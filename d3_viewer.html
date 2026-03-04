@@ -49,6 +49,15 @@
   }
   header span { color: var(--muted); font-size: 11px; }
 
+  .metric-btn {
+    background: none; border: none; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 6px 14px; cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+ .metric-btn:hover  { color: var(--text); }
+ .metric-btn.active { background: var(--accent); color: #0d0f14; }
+
   /* ── Top-level tabs ─────────────────────────────────────── */
   .top-tabs {
     display: flex; gap: 0;
@@ -316,7 +325,12 @@
 
 <header>
   <h1>PerceptualTAA</h1>
-  <span>quality explorer · cgvqm</span>
+  <span>quality explorer · choose your metric</span>
+    <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border2);border-radius:4px;overflow:hidden;">
+    <button class="metric-btn active" data-metric="CGVQM">CGVQM</button>
+    <button class="metric-btn" data-metric="CVVDP">CVVDP</button>
+  </div>
+
 </header>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -423,7 +437,7 @@
     <!-- Chart tab -->
     <div class="tab-panel active" id="tab-chart">
        <div style="font-size:11px;color:var(--muted);line-height:1.8;">
-        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how CGVQM score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
+        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how CGVQM or CVVDP score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
         <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
            The cards below summarise the best value per resolution.
           <div style="margin-top:6px;color:var(--muted);font-size:10px;">Drag to zoom into a region · Double-click to reset · Toggle resolutions in the sidebar</div>
@@ -486,7 +500,11 @@
 // ═══════════════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════════════
-const DATASET_URL  = 'dataset.json';
+const DATASETS = {
+  CGVQM: 'dataset.json',
+  CVVDP: 'dataset_cvvdp.json'
+};
+let activeMetric = 'CGVQM';
 const COLOR_VARS   = ['--c0','--c1','--c2','--c3','--c4','--c5'];
 const PARAMS       = ['alpha_weight', 'filter_size', 'hist_percent', 'num_samples'];
 const RESOLUTIONS  = [50, 71, 87, 100];
@@ -495,6 +513,7 @@ const RES_COLORS   = { 50: '#e74c3c', 71: '#e67e22', 87: '#3498db', 100: '#2ecc7
 
 // ── State ─────────────────────────────────────────────────────────
 let dataset          = {};
+let datasets         = {}
 let activeScene      = null;
 let activeParam      = null;
 let seriesVisibility = {};
@@ -507,9 +526,13 @@ async function loadData() {
   setStatus('loading dataset.json…', false, 'status');
   setStatus('loading dataset.json…', false, 'status-overall');
   try {
-    const res = await fetch(DATASET_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    dataset = await res.json();
+    const [resCG, resCVVDP] = await Promise.all([
+      fetch(DATASETS.CGVQM),
+      fetch(DATASETS.CVVDP)
+    ]);
+    datasets.CGVQM  = await resCG.json();
+    datasets.CVVDP  = await resCVVDP.json();
+    dataset = datasets[activeMetric];
     const n = Object.keys(dataset).length;
     setStatus(`dataset loaded · ${n} scenes`, true, 'status');
     setStatus(`dataset loaded · ${n} scenes`, true, 'status-overall');
@@ -525,7 +548,7 @@ async function loadData() {
 // SCENE EXPLORER — init + state
 // ═══════════════════════════════════════════════════════════════════
 function init() {
-  const scenes   = Object.keys(dataset).filter(s => Object.keys(dataset[s]).length > 2).sort();
+  const scenes   = Object.keys(dataset).filter(s => Object.keys(dataset[s]).length > 1).sort();
   const selScene = document.getElementById('sel-scene');
   selScene.innerHTML = scenes.map(s => `<option value="${s}">${s}</option>`).join('');
   selScene.addEventListener('change', () => {
@@ -691,7 +714,7 @@ function draw() {
   g.append('g').attr('class','axis x-axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(8));
   g.append('g').attr('class','axis y-axis').call(d3.axisLeft(yScale).ticks(6));
   g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+40).attr('text-anchor','middle').text(activeParam?.replace(/_/g,' ') ?? '');
-  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text('CGVQM score');
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text(`${activeMetric} score`);
 
   const line    = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
   const tooltip = document.getElementById('tooltip');
@@ -1123,7 +1146,7 @@ card.addEventListener('click', () => {
         expandedParam = null;    // <-- add this
       }
     });
-    
+
     // restore expanded state if this param was expanded before
     requestAnimationFrame(() => {
       const wrap = document.getElementById(`curve-${param}`);
@@ -1231,6 +1254,20 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     if (btn.dataset.tab === 'sensitivity') drawSensitivity();
     if (btn.dataset.tab === 'deepdive')    drawDeepDive();
     if (btn.dataset.tab === 'crossparam')  drawCrossParam();
+  });
+});
+
+document.querySelectorAll('.metric-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeMetric = btn.dataset.metric;
+    dataset = datasets[activeMetric];
+    // update subtitle
+    document.querySelector('header span').textContent = `quality explorer · ${activeMetric.toLowerCase()}`;
+    // re-render everything
+    init();
+    drawOverall();
   });
 });
 
