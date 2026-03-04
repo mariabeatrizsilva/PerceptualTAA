@@ -336,34 +336,17 @@ def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config
 Minimal changes to fix CVVDP error map generation
 Replace your compute_metric_cvvdp function with this version
 """
-def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str = None):
+def compute_metric_cvvdp(dist_path: str, ref_path: str):
     """
     Compute ColorVideoVDP score for a frame sequence pair.
     
     Args:
-        ref_path: Path pattern to reference frames (e.g., /path/to/ref/%04d.png)
         dist_path: Path pattern to distorted frames (e.g., /path/to/video_name/%04d.png)
-        heatmap_output_dir: Optional directory to save heatmap video
+        ref_path: Path pattern to reference frames (e.g., /path/to/ref/%04d.png)
     
     Returns:
         score (float)
     """
-    
-    # Determine if we need to save heatmap
-    temp_heatmap_video = None
-    if heatmap_output_dir:
-        os.makedirs(heatmap_output_dir, exist_ok=True)
-        
-        # FIXED: Extract video name correctly from the path pattern
-        # dist_path is like: /path/to/folder/video_name/%04d.png
-        # We want: video_name
-        # First remove the frame pattern (%04d.png)
-        dist_folder = os.path.dirname(dist_path)  # Gets /path/to/folder/video_name
-        video_name = os.path.basename(dist_folder)  # Gets video_name
-        
-        temp_heatmap_video = os.path.join(heatmap_output_dir, f'{video_name}_heatmap')
-    
-    # Construct the command
     command = [
         CVVDP_EXECUTABLE,
         '--test', dist_path,
@@ -372,15 +355,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
         '--fps', str(FPS_VALUE)
     ]
     
-    # Add heatmap output if requested
-    if temp_heatmap_video:
-        command.extend([
-            '--heatmap', 'raw',
-            '-o', temp_heatmap_video
-        ])
-    
     try:
-        # Execute the command
         print(f"    Running CVVDP...")
         result = subprocess.run(
             command,
@@ -390,7 +365,6 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
             shell=False
         )
         
-        # Try multiple patterns to extract the score
         score_pattern1 = re.compile(r"cvvdp\s*=\s*(\d+\.?\d*)")
         score_pattern2 = re.compile(r"cvvdp\s*:\s*(\d+\.?\d*)")
         score_pattern3 = re.compile(r"(\d+\.\d+)")
@@ -402,24 +376,11 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
             match = score_pattern3.search(result.stdout)
         
         if match:
-            score = float(match.group(1))
+            return float(match.group(1))
         else:
             print(f"    CVVDP stdout: {result.stdout}")
             print(f"    CVVDP stderr: {result.stderr}")
             raise ValueError("Could not extract score from CVVDP output")
-        
-        # Verify the heatmap was created and is valid
-        if temp_heatmap_video:
-            if os.path.exists(temp_heatmap_video):
-                file_size = os.path.getsize(temp_heatmap_video)
-                print(f"    Heatmap saved: {temp_heatmap_video} ({file_size} bytes)")
-                
-                if file_size < 1000:  # Suspiciously small file
-                    print(f"    WARNING: Heatmap file is very small, may be corrupted")
-            else:
-                print(f"    WARNING: Heatmap file was not created at {temp_heatmap_video}")
-        
-        return score
         
     except subprocess.CalledProcessError as e:
         print(f"    CVVDP stdout: {e.stdout}")
@@ -428,8 +389,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
     
     except FileNotFoundError:
         raise RuntimeError(f"CVVDP executable '{CVVDP_EXECUTABLE}' not found. "
-                         "Ensure cvvdp is installed and in PATH.")
-    
+                         "Ensure cvvdp is installed and in PATH.")    
 
 """
 Update your compute_score_single function to handle simplified CVVDP return
@@ -475,7 +435,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         return score, per_frame_errors
     elif metric == Metric.CVVDP:
         dist_frames_path_pattern = os.path.join(folder_path, test_name, FRAMES_SUFFIX)
-        score = compute_metric_cvvdp(dist_frames_path_pattern, ref_frames_folder, err_maps_dir)
+        score = compute_metric_cvvdp(dist_frames_path_pattern, ref_frames_folder)
         return score
             
 def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None, skip_err_maps: bool = False):
