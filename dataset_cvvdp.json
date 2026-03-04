@@ -671,5 +671,686 @@
         ]
       }
     }
+  },
+  "oldmine": {
+    "metric": "CVVDP",
+    "100": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.1609,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.02,
+            "score": 8.3196,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.04,
+            "score": 8.4532,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.06,
+            "score": 8.629,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.1,
+            "score": 8.7333,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.2,
+            "score": 9.0461,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 9.2525,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.6,
+            "score": 9.348,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 9.3561,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.8,
+            "score": 9.4725,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 9.3778,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 9.4618,
+            "per_frame_errors": []
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.5255,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.25,
+            "score": 8.4464,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 8.4978,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 8.4767,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 8.5366,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.95,
+            "score": 8.4361,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 8.5402,
+            "per_frame_errors": []
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 8.473,
+            "per_frame_errors": []
+          },
+          {
+            "value": 5.0,
+            "score": 8.5402,
+            "per_frame_errors": []
+          },
+          {
+            "value": 10.0,
+            "score": 8.4363,
+            "per_frame_errors": []
+          },
+          {
+            "value": 15.0,
+            "score": 8.5367,
+            "per_frame_errors": []
+          },
+          {
+            "value": 30.0,
+            "score": 8.4529,
+            "per_frame_errors": []
+          },
+          {
+            "value": 50.0,
+            "score": 8.5254,
+            "per_frame_errors": []
+          },
+          {
+            "value": 75.0,
+            "score": 8.4764,
+            "per_frame_errors": []
+          },
+          {
+            "value": 100.0,
+            "score": 8.5155,
+            "per_frame_errors": []
+          },
+          {
+            "value": 125.0,
+            "score": 8.513,
+            "per_frame_errors": []
+          },
+          {
+            "value": 150.0,
+            "score": 8.6363,
+            "per_frame_errors": []
+          },
+          {
+            "value": 200.0,
+            "score": 8.6135,
+            "per_frame_errors": []
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.4604,
+            "per_frame_errors": []
+          },
+          {
+            "value": 8.0,
+            "score": 8.4982,
+            "per_frame_errors": []
+          },
+          {
+            "value": 16.0,
+            "score": 8.4375,
+            "per_frame_errors": []
+          },
+          {
+            "value": 32.0,
+            "score": 8.5158,
+            "per_frame_errors": []
+          },
+          {
+            "value": 64.0,
+            "score": 8.4883,
+            "per_frame_errors": []
+          }
+        ]
+      }
+    },
+    "50": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 7.4935,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.02,
+            "score": 7.5662,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.04,
+            "score": 7.7506,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.06,
+            "score": 7.7936,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.1,
+            "score": 7.9557,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.2,
+            "score": 8.0803,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 8.2741,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.6,
+            "score": 8.1664,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 7.9325,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.8,
+            "score": 7.7703,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 7.2731,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 6.8645,
+            "per_frame_errors": []
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 7.6797,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.25,
+            "score": 7.7406,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 7.7008,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 7.7637,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 7.7037,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.95,
+            "score": 7.7673,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 7.6979,
+            "per_frame_errors": []
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 7.7531,
+            "per_frame_errors": []
+          },
+          {
+            "value": 5.0,
+            "score": 7.693,
+            "per_frame_errors": []
+          },
+          {
+            "value": 10.0,
+            "score": 7.7544,
+            "per_frame_errors": []
+          },
+          {
+            "value": 15.0,
+            "score": 7.7033,
+            "per_frame_errors": []
+          },
+          {
+            "value": 30.0,
+            "score": 7.7647,
+            "per_frame_errors": []
+          },
+          {
+            "value": 50.0,
+            "score": 7.6894,
+            "per_frame_errors": []
+          },
+          {
+            "value": 75.0,
+            "score": 7.7492,
+            "per_frame_errors": []
+          },
+          {
+            "value": 100.0,
+            "score": 7.6913,
+            "per_frame_errors": []
+          },
+          {
+            "value": 125.0,
+            "score": 7.7721,
+            "per_frame_errors": []
+          },
+          {
+            "value": 150.0,
+            "score": 7.7323,
+            "per_frame_errors": []
+          },
+          {
+            "value": 200.0,
+            "score": 7.9984,
+            "per_frame_errors": []
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 7.7406,
+            "per_frame_errors": []
+          },
+          {
+            "value": 8.0,
+            "score": 7.7045,
+            "per_frame_errors": []
+          },
+          {
+            "value": 16.0,
+            "score": 7.752,
+            "per_frame_errors": []
+          },
+          {
+            "value": 32.0,
+            "score": 7.6975,
+            "per_frame_errors": []
+          },
+          {
+            "value": 64.0,
+            "score": 7.7465,
+            "per_frame_errors": []
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 5.4836,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.02,
+            "score": 5.6512,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.04,
+            "score": 5.0878,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.06,
+            "score": 5.6561,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.1,
+            "score": 5.111,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.2,
+            "score": 5.7405,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 5.1542,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.6,
+            "score": 5.7835,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 5.1274,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.8,
+            "score": 5.7443,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 5.1468,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 5.7252,
+            "per_frame_errors": []
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 5.6396,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.25,
+            "score": 5.0848,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 5.6427,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 5.0596,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 5.6396,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.95,
+            "score": 5.085,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 5.6397,
+            "per_frame_errors": []
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 5.0573,
+            "per_frame_errors": []
+          },
+          {
+            "value": 125.0,
+            "score": 5.6851,
+            "per_frame_errors": []
+          },
+          {
+            "value": 150.0,
+            "score": 5.0729,
+            "per_frame_errors": []
+          },
+          {
+            "value": 200.0,
+            "score": 5.6746,
+            "per_frame_errors": []
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 5.0848,
+            "per_frame_errors": []
+          },
+          {
+            "value": 8.0,
+            "score": 5.6668,
+            "per_frame_errors": []
+          },
+          {
+            "value": 16.0,
+            "score": 5.0597,
+            "per_frame_errors": []
+          },
+          {
+            "value": 32.0,
+            "score": 5.6391,
+            "per_frame_errors": []
+          },
+          {
+            "value": 64.0,
+            "score": 5.0908,
+            "per_frame_errors": []
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 5.3267,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.02,
+            "score": 5.6987,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.04,
+            "score": 4.9915,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.06,
+            "score": 5.7464,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.1,
+            "score": 4.9919,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.2,
+            "score": 5.7601,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 5.0186,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.6,
+            "score": 5.7962,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 5.0474,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.8,
+            "score": 5.8007,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 5.0265,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 5.8402,
+            "per_frame_errors": []
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 5.7306,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.25,
+            "score": 4.9982,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.5,
+            "score": 5.7219,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.7,
+            "score": 4.9734,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.9,
+            "score": 5.6937,
+            "per_frame_errors": []
+          },
+          {
+            "value": 0.95,
+            "score": 4.9912,
+            "per_frame_errors": []
+          },
+          {
+            "value": 1.0,
+            "score": 5.6969,
+            "per_frame_errors": []
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 4.9733,
+            "per_frame_errors": []
+          },
+          {
+            "value": 125.0,
+            "score": 5.7083,
+            "per_frame_errors": []
+          },
+          {
+            "value": 150.0,
+            "score": 5.0025,
+            "per_frame_errors": []
+          },
+          {
+            "value": 200.0,
+            "score": 5.7304,
+            "per_frame_errors": []
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 4.9991,
+            "per_frame_errors": []
+          },
+          {
+            "value": 8.0,
+            "score": 5.7271,
+            "per_frame_errors": []
+          },
+          {
+            "value": 16.0,
+            "score": 4.9685,
+            "per_frame_errors": []
+          },
+          {
+            "value": 32.0,
+            "score": 5.6942,
+            "per_frame_errors": []
+          },
+          {
+            "value": 64.0,
+            "score": 4.9944,
+            "per_frame_errors": []
+          }
+        ]
+      }
+    }
   }
 }
