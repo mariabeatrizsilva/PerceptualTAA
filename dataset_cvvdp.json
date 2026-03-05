@@ -169,6 +169,378 @@
           }
         ]
       }
+    },
+    "50": {
+      "ref-abandoned": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.4932
+          },
+          {
+            "value": 0.02,
+            "score": 8.5125
+          },
+          {
+            "value": 0.04,
+            "score": 8.57
+          },
+          {
+            "value": 0.06,
+            "score": 8.6035
+          },
+          {
+            "value": 0.1,
+            "score": 8.6616
+          },
+          {
+            "value": 0.2,
+            "score": 8.7482
+          },
+          {
+            "value": 0.5,
+            "score": 8.875
+          },
+          {
+            "value": 0.6,
+            "score": 8.8842
+          },
+          {
+            "value": 0.7,
+            "score": 8.8856
+          },
+          {
+            "value": 0.8,
+            "score": 8.8946
+          },
+          {
+            "value": 0.9,
+            "score": 8.8938
+          },
+          {
+            "value": 1.0,
+            "score": 8.8888
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.5664
+          },
+          {
+            "value": 0.25,
+            "score": 8.5786
+          },
+          {
+            "value": 0.5,
+            "score": 8.567
+          },
+          {
+            "value": 0.7,
+            "score": 8.5692
+          },
+          {
+            "value": 0.9,
+            "score": 8.5569
+          },
+          {
+            "value": 0.95,
+            "score": 8.5615
+          },
+          {
+            "value": 1.0,
+            "score": 8.567
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.5611
+          },
+          {
+            "value": 125.0,
+            "score": 8.6138
+          },
+          {
+            "value": 150.0,
+            "score": 8.6479
+          },
+          {
+            "value": 200.0,
+            "score": 8.7645
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.5562
+          },
+          {
+            "value": 8.0,
+            "score": 8.5623
+          },
+          {
+            "value": 16.0,
+            "score": 8.56
+          },
+          {
+            "value": 32.0,
+            "score": 8.5712
+          },
+          {
+            "value": 64.0,
+            "score": 8.5621
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-abandoned": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.7183
+          },
+          {
+            "value": 0.02,
+            "score": 8.742
+          },
+          {
+            "value": 0.04,
+            "score": 8.7903
+          },
+          {
+            "value": 0.06,
+            "score": 8.8233
+          },
+          {
+            "value": 0.1,
+            "score": 8.8838
+          },
+          {
+            "value": 0.2,
+            "score": 8.9923
+          },
+          {
+            "value": 0.5,
+            "score": 9.1559
+          },
+          {
+            "value": 0.6,
+            "score": 9.1833
+          },
+          {
+            "value": 0.7,
+            "score": 9.1898
+          },
+          {
+            "value": 0.8,
+            "score": 9.2061
+          },
+          {
+            "value": 0.9,
+            "score": 9.203
+          },
+          {
+            "value": 1.0,
+            "score": 9.2153
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.7785
+          },
+          {
+            "value": 0.25,
+            "score": 8.7845
+          },
+          {
+            "value": 0.5,
+            "score": 8.7898
+          },
+          {
+            "value": 0.7,
+            "score": 8.7895
+          },
+          {
+            "value": 0.9,
+            "score": 8.7841
+          },
+          {
+            "value": 0.95,
+            "score": 8.7871
+          },
+          {
+            "value": 1.0,
+            "score": 8.7701
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.7838
+          },
+          {
+            "value": 125.0,
+            "score": 8.8296
+          },
+          {
+            "value": 150.0,
+            "score": 8.8532
+          },
+          {
+            "value": 200.0,
+            "score": 8.9088
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.8021
+          },
+          {
+            "value": 8.0,
+            "score": 8.7866
+          },
+          {
+            "value": 16.0,
+            "score": 8.7938
+          },
+          {
+            "value": 32.0,
+            "score": 8.7888
+          },
+          {
+            "value": 64.0,
+            "score": 8.8037
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-abandoned": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.8091
+          },
+          {
+            "value": 0.02,
+            "score": 8.8257
+          },
+          {
+            "value": 0.04,
+            "score": 8.8782
+          },
+          {
+            "value": 0.06,
+            "score": 8.9105
+          },
+          {
+            "value": 0.1,
+            "score": 8.9765
+          },
+          {
+            "value": 0.2,
+            "score": 9.0801
+          },
+          {
+            "value": 0.5,
+            "score": 9.259
+          },
+          {
+            "value": 0.6,
+            "score": 9.2999
+          },
+          {
+            "value": 0.7,
+            "score": 9.2943
+          },
+          {
+            "value": 0.8,
+            "score": 9.3275
+          },
+          {
+            "value": 0.9,
+            "score": 9.3187
+          },
+          {
+            "value": 1.0,
+            "score": 9.3299
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.8838
+          },
+          {
+            "value": 0.25,
+            "score": 8.8739
+          },
+          {
+            "value": 0.5,
+            "score": 8.8875
+          },
+          {
+            "value": 0.7,
+            "score": 8.8777
+          },
+          {
+            "value": 0.9,
+            "score": 8.8763
+          },
+          {
+            "value": 0.95,
+            "score": 8.8784
+          },
+          {
+            "value": 1.0,
+            "score": 8.8835
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.8851
+          },
+          {
+            "value": 125.0,
+            "score": 8.916
+          },
+          {
+            "value": 150.0,
+            "score": 8.9329
+          },
+          {
+            "value": 200.0,
+            "score": 8.9944
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.8877
+          },
+          {
+            "value": 8.0,
+            "score": 8.8875
+          },
+          {
+            "value": 16.0,
+            "score": 8.8837
+          },
+          {
+            "value": 32.0,
+            "score": 8.8849
+          },
+          {
+            "value": 64.0,
+            "score": 8.878
+          }
+        ]
+      }
     }
   },
   "abandoned-demo": {
@@ -667,6 +1039,378 @@
             "value": 64.0,
             "score": 9.724,
             "per_frame_errors": []
+          }
+        ]
+      }
+    },
+    "50": {
+      "ref-cubetest": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.5864
+          },
+          {
+            "value": 0.02,
+            "score": 9.5963
+          },
+          {
+            "value": 0.04,
+            "score": 9.6206
+          },
+          {
+            "value": 0.06,
+            "score": 9.638
+          },
+          {
+            "value": 0.1,
+            "score": 9.6664
+          },
+          {
+            "value": 0.2,
+            "score": 9.7018
+          },
+          {
+            "value": 0.5,
+            "score": 9.7149
+          },
+          {
+            "value": 0.6,
+            "score": 9.6946
+          },
+          {
+            "value": 0.7,
+            "score": 9.6727
+          },
+          {
+            "value": 0.8,
+            "score": 9.6662
+          },
+          {
+            "value": 0.9,
+            "score": 9.4929
+          },
+          {
+            "value": 1.0,
+            "score": 9.4136
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.6202
+          },
+          {
+            "value": 0.25,
+            "score": 9.6208
+          },
+          {
+            "value": 0.5,
+            "score": 9.6186
+          },
+          {
+            "value": 0.7,
+            "score": 9.6209
+          },
+          {
+            "value": 0.9,
+            "score": 9.6203
+          },
+          {
+            "value": 0.95,
+            "score": 9.6208
+          },
+          {
+            "value": 1.0,
+            "score": 9.6155
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.6204
+          },
+          {
+            "value": 125.0,
+            "score": 9.6541
+          },
+          {
+            "value": 150.0,
+            "score": 9.682
+          },
+          {
+            "value": 200.0,
+            "score": 9.7112
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.6246
+          },
+          {
+            "value": 8.0,
+            "score": 9.618
+          },
+          {
+            "value": 16.0,
+            "score": 9.6173
+          },
+          {
+            "value": 32.0,
+            "score": 9.6135
+          },
+          {
+            "value": 64.0,
+            "score": 9.6135
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-cubetest": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.6739
+          },
+          {
+            "value": 0.02,
+            "score": 9.6874
+          },
+          {
+            "value": 0.04,
+            "score": 9.6981
+          },
+          {
+            "value": 0.06,
+            "score": 9.7077
+          },
+          {
+            "value": 0.1,
+            "score": 9.7111
+          },
+          {
+            "value": 0.2,
+            "score": 9.7441
+          },
+          {
+            "value": 0.5,
+            "score": 9.7599
+          },
+          {
+            "value": 0.6,
+            "score": 9.7604
+          },
+          {
+            "value": 0.7,
+            "score": 9.7638
+          },
+          {
+            "value": 0.8,
+            "score": 9.7549
+          },
+          {
+            "value": 0.9,
+            "score": 9.7269
+          },
+          {
+            "value": 1.0,
+            "score": 9.7413
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.6982
+          },
+          {
+            "value": 0.25,
+            "score": 9.6912
+          },
+          {
+            "value": 0.5,
+            "score": 9.6986
+          },
+          {
+            "value": 0.7,
+            "score": 9.6943
+          },
+          {
+            "value": 0.9,
+            "score": 9.698
+          },
+          {
+            "value": 0.95,
+            "score": 9.6923
+          },
+          {
+            "value": 1.0,
+            "score": 9.6984
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.6935
+          },
+          {
+            "value": 125.0,
+            "score": 9.7201
+          },
+          {
+            "value": 150.0,
+            "score": 9.7402
+          },
+          {
+            "value": 200.0,
+            "score": 9.7545
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.68
+          },
+          {
+            "value": 8.0,
+            "score": 9.6983
+          },
+          {
+            "value": 16.0,
+            "score": 9.6909
+          },
+          {
+            "value": 32.0,
+            "score": 9.6978
+          },
+          {
+            "value": 64.0,
+            "score": 9.6878
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-cubetest": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.7024
+          },
+          {
+            "value": 0.02,
+            "score": 9.7101
+          },
+          {
+            "value": 0.04,
+            "score": 9.7135
+          },
+          {
+            "value": 0.06,
+            "score": 9.7011
+          },
+          {
+            "value": 0.1,
+            "score": 9.7305
+          },
+          {
+            "value": 0.2,
+            "score": 9.7392
+          },
+          {
+            "value": 0.5,
+            "score": 9.7621
+          },
+          {
+            "value": 0.6,
+            "score": 9.7535
+          },
+          {
+            "value": 0.7,
+            "score": 9.764
+          },
+          {
+            "value": 0.8,
+            "score": 9.776
+          },
+          {
+            "value": 0.9,
+            "score": 9.7633
+          },
+          {
+            "value": 1.0,
+            "score": 9.7384
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.7176
+          },
+          {
+            "value": 0.25,
+            "score": 9.7137
+          },
+          {
+            "value": 0.5,
+            "score": 9.6972
+          },
+          {
+            "value": 0.7,
+            "score": 9.7137
+          },
+          {
+            "value": 0.9,
+            "score": 9.7181
+          },
+          {
+            "value": 0.95,
+            "score": 9.7133
+          },
+          {
+            "value": 1.0,
+            "score": 9.7024
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.7133
+          },
+          {
+            "value": 125.0,
+            "score": 9.7229
+          },
+          {
+            "value": 150.0,
+            "score": 9.7416
+          },
+          {
+            "value": 200.0,
+            "score": 9.7376
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.7141
+          },
+          {
+            "value": 8.0,
+            "score": 9.7161
+          },
+          {
+            "value": 16.0,
+            "score": 9.714
+          },
+          {
+            "value": 32.0,
+            "score": 9.6854
+          },
+          {
+            "value": 64.0,
+            "score": 9.7136
           }
         ]
       }
@@ -1348,6 +2092,2517 @@
             "value": 64.0,
             "score": 4.9944,
             "per_frame_errors": []
+          }
+        ]
+      }
+    },
+    "25": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 6.4924
+          },
+          {
+            "value": 0.02,
+            "score": 6.5389
+          },
+          {
+            "value": 0.04,
+            "score": 6.5469
+          },
+          {
+            "value": 0.06,
+            "score": 6.608
+          },
+          {
+            "value": 0.1,
+            "score": 6.606
+          },
+          {
+            "value": 0.2,
+            "score": 6.6836
+          },
+          {
+            "value": 0.5,
+            "score": 6.0784
+          },
+          {
+            "value": 0.6,
+            "score": 6.2717
+          },
+          {
+            "value": 0.7,
+            "score": 6.0967
+          },
+          {
+            "value": 0.8,
+            "score": 6.1554
+          },
+          {
+            "value": 0.9,
+            "score": 5.9849
+          },
+          {
+            "value": 1.0,
+            "score": 5.1878
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 6.5718
+          },
+          {
+            "value": 0.25,
+            "score": 6.5351
+          },
+          {
+            "value": 0.5,
+            "score": 6.5735
+          },
+          {
+            "value": 0.7,
+            "score": 6.5377
+          },
+          {
+            "value": 0.9,
+            "score": 6.5758
+          },
+          {
+            "value": 0.95,
+            "score": 6.539
+          },
+          {
+            "value": 1.0,
+            "score": 6.5798
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 6.5362
+          },
+          {
+            "value": 5.0,
+            "score": 6.5806
+          },
+          {
+            "value": 10.0,
+            "score": 6.5393
+          },
+          {
+            "value": 15.0,
+            "score": 6.5704
+          },
+          {
+            "value": 30.0,
+            "score": 6.5391
+          },
+          {
+            "value": 50.0,
+            "score": 6.5672
+          },
+          {
+            "value": 75.0,
+            "score": 6.533
+          },
+          {
+            "value": 100.0,
+            "score": 6.5823
+          },
+          {
+            "value": 125.0,
+            "score": 6.6349
+          },
+          {
+            "value": 150.0,
+            "score": 6.5035
+          },
+          {
+            "value": 200.0,
+            "score": 6.5305
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 6.5348
+          },
+          {
+            "value": 8.0,
+            "score": 6.5735
+          },
+          {
+            "value": 16.0,
+            "score": 6.5353
+          },
+          {
+            "value": 32.0,
+            "score": 6.5781
+          },
+          {
+            "value": 64.0,
+            "score": 6.5497
+          }
+        ]
+      }
+    },
+    "75": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 7.8499
+          },
+          {
+            "value": 0.02,
+            "score": 8.0137
+          },
+          {
+            "value": 0.04,
+            "score": 8.1174
+          },
+          {
+            "value": 0.06,
+            "score": 8.2732
+          },
+          {
+            "value": 0.1,
+            "score": 8.3292
+          },
+          {
+            "value": 0.2,
+            "score": 8.5934
+          },
+          {
+            "value": 0.5,
+            "score": 8.7654
+          },
+          {
+            "value": 0.6,
+            "score": 8.8371
+          },
+          {
+            "value": 0.7,
+            "score": 8.7819
+          },
+          {
+            "value": 0.8,
+            "score": 8.7793
+          },
+          {
+            "value": 0.9,
+            "score": 8.8427
+          },
+          {
+            "value": 1.0,
+            "score": 8.8221
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.1606
+          },
+          {
+            "value": 0.25,
+            "score": 8.1009
+          },
+          {
+            "value": 0.5,
+            "score": 8.1659
+          },
+          {
+            "value": 0.7,
+            "score": 8.1006
+          },
+          {
+            "value": 0.9,
+            "score": 8.166
+          },
+          {
+            "value": 0.95,
+            "score": 8.087
+          },
+          {
+            "value": 1.0,
+            "score": 8.1658
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 8.0869
+          },
+          {
+            "value": 5.0,
+            "score": 8.1774
+          },
+          {
+            "value": 10.0,
+            "score": 8.0953
+          },
+          {
+            "value": 15.0,
+            "score": 8.1462
+          },
+          {
+            "value": 30.0,
+            "score": 8.1171
+          },
+          {
+            "value": 50.0,
+            "score": 8.1657
+          },
+          {
+            "value": 75.0,
+            "score": 8.0872
+          },
+          {
+            "value": 100.0,
+            "score": 8.1461
+          },
+          {
+            "value": 125.0,
+            "score": 8.1355
+          },
+          {
+            "value": 150.0,
+            "score": 8.239
+          },
+          {
+            "value": 200.0,
+            "score": 8.2192
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.0876
+          },
+          {
+            "value": 8.0,
+            "score": 8.1657
+          },
+          {
+            "value": 16.0,
+            "score": 8.0957
+          },
+          {
+            "value": 32.0,
+            "score": 8.145
+          },
+          {
+            "value": 64.0,
+            "score": 8.1154
+          }
+        ]
+      }
+    }
+  },
+  "fantasticvillage-open": {
+    "metric": "CVVDP",
+    "25": {
+      "ref-fantasticvillage-open": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.0835
+          },
+          {
+            "value": 0.02,
+            "score": 9.0877
+          },
+          {
+            "value": 0.04,
+            "score": 9.0963
+          },
+          {
+            "value": 0.06,
+            "score": 9.1039
+          },
+          {
+            "value": 0.1,
+            "score": 9.1148
+          },
+          {
+            "value": 0.2,
+            "score": 9.1222
+          },
+          {
+            "value": 0.5,
+            "score": 9.0645
+          },
+          {
+            "value": 0.6,
+            "score": 9.0188
+          },
+          {
+            "value": 0.7,
+            "score": 8.9794
+          },
+          {
+            "value": 0.8,
+            "score": 8.9034
+          },
+          {
+            "value": 0.9,
+            "score": 8.8644
+          },
+          {
+            "value": 1.0,
+            "score": 8.7967
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.0963
+          },
+          {
+            "value": 0.25,
+            "score": 9.0963
+          },
+          {
+            "value": 0.5,
+            "score": 9.0962
+          },
+          {
+            "value": 0.7,
+            "score": 9.0963
+          },
+          {
+            "value": 0.9,
+            "score": 9.0963
+          },
+          {
+            "value": 0.95,
+            "score": 9.0963
+          },
+          {
+            "value": 1.0,
+            "score": 9.0964
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 9.0963
+          },
+          {
+            "value": 5.0,
+            "score": 9.0962
+          },
+          {
+            "value": 10.0,
+            "score": 9.0963
+          },
+          {
+            "value": 15.0,
+            "score": 9.0962
+          },
+          {
+            "value": 30.0,
+            "score": 9.0963
+          },
+          {
+            "value": 50.0,
+            "score": 9.0964
+          },
+          {
+            "value": 75.0,
+            "score": 9.0963
+          },
+          {
+            "value": 100.0,
+            "score": 9.0963
+          },
+          {
+            "value": 125.0,
+            "score": 9.0508
+          },
+          {
+            "value": 150.0,
+            "score": 8.8125
+          },
+          {
+            "value": 200.0,
+            "score": 8.8231
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.0933
+          },
+          {
+            "value": 8.0,
+            "score": 9.0962
+          },
+          {
+            "value": 16.0,
+            "score": 9.098
+          },
+          {
+            "value": 32.0,
+            "score": 9.098
+          },
+          {
+            "value": 64.0,
+            "score": 9.0981
+          }
+        ]
+      }
+    },
+    "50": {
+      "ref-fantasticvillage-open": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.425
+          },
+          {
+            "value": 0.02,
+            "score": 9.469
+          },
+          {
+            "value": 0.04,
+            "score": 9.5295
+          },
+          {
+            "value": 0.06,
+            "score": 9.5722
+          },
+          {
+            "value": 0.1,
+            "score": 9.6326
+          },
+          {
+            "value": 0.2,
+            "score": 9.7169
+          },
+          {
+            "value": 0.5,
+            "score": 9.7225
+          },
+          {
+            "value": 0.6,
+            "score": 9.5986
+          },
+          {
+            "value": 0.7,
+            "score": 9.4808
+          },
+          {
+            "value": 0.8,
+            "score": 9.4674
+          },
+          {
+            "value": 0.9,
+            "score": 9.3525
+          },
+          {
+            "value": 1.0,
+            "score": 9.2814
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.5296
+          },
+          {
+            "value": 0.25,
+            "score": 9.5295
+          },
+          {
+            "value": 0.5,
+            "score": 9.5294
+          },
+          {
+            "value": 0.7,
+            "score": 9.5294
+          },
+          {
+            "value": 0.9,
+            "score": 9.5294
+          },
+          {
+            "value": 0.95,
+            "score": 9.5295
+          },
+          {
+            "value": 1.0,
+            "score": 9.5295
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 9.5295
+          },
+          {
+            "value": 5.0,
+            "score": 9.5295
+          },
+          {
+            "value": 10.0,
+            "score": 9.5295
+          },
+          {
+            "value": 15.0,
+            "score": 9.5295
+          },
+          {
+            "value": 30.0,
+            "score": 9.5295
+          },
+          {
+            "value": 50.0,
+            "score": 9.5294
+          },
+          {
+            "value": 75.0,
+            "score": 9.5296
+          },
+          {
+            "value": 100.0,
+            "score": 9.5295
+          },
+          {
+            "value": 125.0,
+            "score": 9.5342
+          },
+          {
+            "value": 150.0,
+            "score": 9.5642
+          },
+          {
+            "value": 200.0,
+            "score": 9.7286
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.5222
+          },
+          {
+            "value": 8.0,
+            "score": 9.5295
+          },
+          {
+            "value": 16.0,
+            "score": 9.5288
+          },
+          {
+            "value": 32.0,
+            "score": 9.525
+          },
+          {
+            "value": 64.0,
+            "score": 9.5253
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-fantasticvillage-open": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.5371
+          },
+          {
+            "value": 0.02,
+            "score": 9.5687
+          },
+          {
+            "value": 0.04,
+            "score": 9.6104
+          },
+          {
+            "value": 0.06,
+            "score": 9.6403
+          },
+          {
+            "value": 0.1,
+            "score": 9.6847
+          },
+          {
+            "value": 0.2,
+            "score": 9.7504
+          },
+          {
+            "value": 0.5,
+            "score": 9.805
+          },
+          {
+            "value": 0.6,
+            "score": 9.8032
+          },
+          {
+            "value": 0.7,
+            "score": 9.7953
+          },
+          {
+            "value": 0.8,
+            "score": 9.7802
+          },
+          {
+            "value": 0.9,
+            "score": 9.7599
+          },
+          {
+            "value": 1.0,
+            "score": 9.717
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.6103
+          },
+          {
+            "value": 0.25,
+            "score": 9.6102
+          },
+          {
+            "value": 0.5,
+            "score": 9.6103
+          },
+          {
+            "value": 0.7,
+            "score": 9.6102
+          },
+          {
+            "value": 0.9,
+            "score": 9.6102
+          },
+          {
+            "value": 0.95,
+            "score": 9.6102
+          },
+          {
+            "value": 1.0,
+            "score": 9.6102
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.6102
+          },
+          {
+            "value": 125.0,
+            "score": 9.6549
+          },
+          {
+            "value": 150.0,
+            "score": 9.6877
+          },
+          {
+            "value": 200.0,
+            "score": 9.7301
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.6134
+          },
+          {
+            "value": 8.0,
+            "score": 9.6103
+          },
+          {
+            "value": 16.0,
+            "score": 9.6139
+          },
+          {
+            "value": 32.0,
+            "score": 9.6155
+          },
+          {
+            "value": 64.0,
+            "score": 9.6156
+          }
+        ]
+      }
+    },
+    "75": {
+      "ref-fantasticvillage-open": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.5573
+          },
+          {
+            "value": 0.02,
+            "score": 9.5875
+          },
+          {
+            "value": 0.04,
+            "score": 9.6269
+          },
+          {
+            "value": 0.06,
+            "score": 9.6549
+          },
+          {
+            "value": 0.1,
+            "score": 9.6966
+          },
+          {
+            "value": 0.2,
+            "score": 9.7588
+          },
+          {
+            "value": 0.5,
+            "score": 9.8119
+          },
+          {
+            "value": 0.6,
+            "score": 9.8107
+          },
+          {
+            "value": 0.7,
+            "score": 9.8039
+          },
+          {
+            "value": 0.8,
+            "score": 9.7911
+          },
+          {
+            "value": 0.9,
+            "score": 9.7748
+          },
+          {
+            "value": 1.0,
+            "score": 9.7099
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.6267
+          },
+          {
+            "value": 0.25,
+            "score": 9.6267
+          },
+          {
+            "value": 0.5,
+            "score": 9.6268
+          },
+          {
+            "value": 0.7,
+            "score": 9.6268
+          },
+          {
+            "value": 0.9,
+            "score": 9.6267
+          },
+          {
+            "value": 0.95,
+            "score": 9.6267
+          },
+          {
+            "value": 1.0,
+            "score": 9.6266
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 9.6267
+          },
+          {
+            "value": 5.0,
+            "score": 9.6267
+          },
+          {
+            "value": 10.0,
+            "score": 9.6266
+          },
+          {
+            "value": 15.0,
+            "score": 9.6266
+          },
+          {
+            "value": 30.0,
+            "score": 9.6268
+          },
+          {
+            "value": 50.0,
+            "score": 9.6267
+          },
+          {
+            "value": 75.0,
+            "score": 9.6268
+          },
+          {
+            "value": 100.0,
+            "score": 9.6267
+          },
+          {
+            "value": 125.0,
+            "score": 9.666
+          },
+          {
+            "value": 150.0,
+            "score": 9.7035
+          },
+          {
+            "value": 200.0,
+            "score": 9.7431
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.622
+          },
+          {
+            "value": 8.0,
+            "score": 9.6267
+          },
+          {
+            "value": 16.0,
+            "score": 9.6264
+          },
+          {
+            "value": 32.0,
+            "score": 9.6223
+          },
+          {
+            "value": 64.0,
+            "score": 9.621
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-fantasticvillage-open": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.5786
+          },
+          {
+            "value": 0.02,
+            "score": 9.6028
+          },
+          {
+            "value": 0.04,
+            "score": 9.6364
+          },
+          {
+            "value": 0.06,
+            "score": 9.6609
+          },
+          {
+            "value": 0.1,
+            "score": 9.6978
+          },
+          {
+            "value": 0.2,
+            "score": 9.7551
+          },
+          {
+            "value": 0.5,
+            "score": 9.8121
+          },
+          {
+            "value": 0.6,
+            "score": 9.816
+          },
+          {
+            "value": 0.7,
+            "score": 9.8166
+          },
+          {
+            "value": 0.8,
+            "score": 9.8147
+          },
+          {
+            "value": 0.9,
+            "score": 9.8106
+          },
+          {
+            "value": 1.0,
+            "score": 9.8038
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.6365
+          },
+          {
+            "value": 0.25,
+            "score": 9.6364
+          },
+          {
+            "value": 0.5,
+            "score": 9.6365
+          },
+          {
+            "value": 0.7,
+            "score": 9.6366
+          },
+          {
+            "value": 0.9,
+            "score": 9.6364
+          },
+          {
+            "value": 0.95,
+            "score": 9.6366
+          },
+          {
+            "value": 1.0,
+            "score": 9.6364
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.6365
+          },
+          {
+            "value": 125.0,
+            "score": 9.6774
+          },
+          {
+            "value": 150.0,
+            "score": 9.7066
+          },
+          {
+            "value": 200.0,
+            "score": 9.7474
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.6323
+          },
+          {
+            "value": 8.0,
+            "score": 9.6364
+          },
+          {
+            "value": 16.0,
+            "score": 9.6423
+          },
+          {
+            "value": 32.0,
+            "score": 9.6409
+          },
+          {
+            "value": 64.0,
+            "score": 9.6427
+          }
+        ]
+      }
+    }
+  },
+  "lightfoliage": {
+    "metric": "CVVDP",
+    "50": {
+      "ref-lightfoliage": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.8732
+          },
+          {
+            "value": 0.02,
+            "score": 8.8945
+          },
+          {
+            "value": 0.04,
+            "score": 8.9098
+          },
+          {
+            "value": 0.06,
+            "score": 8.927
+          },
+          {
+            "value": 0.1,
+            "score": 8.952
+          },
+          {
+            "value": 0.2,
+            "score": 9.0013
+          },
+          {
+            "value": 0.5,
+            "score": 9.0093
+          },
+          {
+            "value": 0.6,
+            "score": 8.9885
+          },
+          {
+            "value": 0.7,
+            "score": 8.9609
+          },
+          {
+            "value": 0.8,
+            "score": 8.9313
+          },
+          {
+            "value": 0.9,
+            "score": 8.9012
+          },
+          {
+            "value": 1.0,
+            "score": 8.8676
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.9114
+          },
+          {
+            "value": 0.25,
+            "score": 8.9097
+          },
+          {
+            "value": 0.5,
+            "score": 8.9116
+          },
+          {
+            "value": 0.7,
+            "score": 8.9097
+          },
+          {
+            "value": 0.9,
+            "score": 8.9116
+          },
+          {
+            "value": 0.95,
+            "score": 8.9098
+          },
+          {
+            "value": 1.0,
+            "score": 8.9116
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.9098
+          },
+          {
+            "value": 125.0,
+            "score": 8.9273
+          },
+          {
+            "value": 150.0,
+            "score": 8.9376
+          },
+          {
+            "value": 200.0,
+            "score": 8.903
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.9084
+          },
+          {
+            "value": 8.0,
+            "score": 8.9114
+          },
+          {
+            "value": 16.0,
+            "score": 8.9137
+          },
+          {
+            "value": 32.0,
+            "score": 8.9171
+          },
+          {
+            "value": 64.0,
+            "score": 8.9161
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-lightfoliage": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.1407
+          },
+          {
+            "value": 0.02,
+            "score": 9.1447
+          },
+          {
+            "value": 0.04,
+            "score": 9.1607
+          },
+          {
+            "value": 0.06,
+            "score": 9.1714
+          },
+          {
+            "value": 0.1,
+            "score": 9.199
+          },
+          {
+            "value": 0.2,
+            "score": 9.2279
+          },
+          {
+            "value": 0.5,
+            "score": 9.3004
+          },
+          {
+            "value": 0.6,
+            "score": 9.2955
+          },
+          {
+            "value": 0.7,
+            "score": 9.2896
+          },
+          {
+            "value": 0.8,
+            "score": 9.2747
+          },
+          {
+            "value": 0.9,
+            "score": 9.263
+          },
+          {
+            "value": 1.0,
+            "score": 9.2456
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.1582
+          },
+          {
+            "value": 0.25,
+            "score": 9.1611
+          },
+          {
+            "value": 0.5,
+            "score": 9.1583
+          },
+          {
+            "value": 0.7,
+            "score": 9.161
+          },
+          {
+            "value": 0.9,
+            "score": 9.1582
+          },
+          {
+            "value": 0.95,
+            "score": 9.1604
+          },
+          {
+            "value": 1.0,
+            "score": 9.1456
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.161
+          },
+          {
+            "value": 125.0,
+            "score": 9.1907
+          },
+          {
+            "value": 150.0,
+            "score": 9.219
+          },
+          {
+            "value": 200.0,
+            "score": 9.2515
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.1504
+          },
+          {
+            "value": 8.0,
+            "score": 9.1582
+          },
+          {
+            "value": 16.0,
+            "score": 9.1506
+          },
+          {
+            "value": 32.0,
+            "score": 9.1496
+          },
+          {
+            "value": 64.0,
+            "score": 9.152
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-lightfoliage": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.2585
+          },
+          {
+            "value": 0.02,
+            "score": 9.2658
+          },
+          {
+            "value": 0.04,
+            "score": 9.2596
+          },
+          {
+            "value": 0.06,
+            "score": 9.2875
+          },
+          {
+            "value": 0.1,
+            "score": 9.3062
+          },
+          {
+            "value": 0.2,
+            "score": 9.3517
+          },
+          {
+            "value": 0.5,
+            "score": 9.4123
+          },
+          {
+            "value": 0.6,
+            "score": 9.4226
+          },
+          {
+            "value": 0.7,
+            "score": 9.4216
+          },
+          {
+            "value": 0.8,
+            "score": 9.4227
+          },
+          {
+            "value": 0.9,
+            "score": 9.4154
+          },
+          {
+            "value": 1.0,
+            "score": 9.4106
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.2765
+          },
+          {
+            "value": 0.25,
+            "score": 9.2742
+          },
+          {
+            "value": 0.5,
+            "score": 9.277
+          },
+          {
+            "value": 0.7,
+            "score": 9.2743
+          },
+          {
+            "value": 0.9,
+            "score": 9.277
+          },
+          {
+            "value": 0.95,
+            "score": 9.2744
+          },
+          {
+            "value": 1.0,
+            "score": 9.2767
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.2743
+          },
+          {
+            "value": 125.0,
+            "score": 9.307
+          },
+          {
+            "value": 150.0,
+            "score": 9.3277
+          },
+          {
+            "value": 200.0,
+            "score": 9.3649
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.2725
+          },
+          {
+            "value": 8.0,
+            "score": 9.2764
+          },
+          {
+            "value": 16.0,
+            "score": 9.271
+          },
+          {
+            "value": 32.0,
+            "score": 9.2686
+          },
+          {
+            "value": 64.0,
+            "score": 9.2659
+          }
+        ]
+      }
+    }
+  },
+  "scifi": {
+    "metric": "CVVDP",
+    "50": {
+      "ref-scifi": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.0526
+          },
+          {
+            "value": 0.02,
+            "score": 9.0728
+          },
+          {
+            "value": 0.04,
+            "score": 9.1145
+          },
+          {
+            "value": 0.06,
+            "score": 9.1549
+          },
+          {
+            "value": 0.1,
+            "score": 9.2295
+          },
+          {
+            "value": 0.2,
+            "score": 9.3816
+          },
+          {
+            "value": 0.5,
+            "score": 9.5865
+          },
+          {
+            "value": 0.6,
+            "score": 9.5954
+          },
+          {
+            "value": 0.7,
+            "score": 9.5922
+          },
+          {
+            "value": 0.8,
+            "score": 9.58
+          },
+          {
+            "value": 0.9,
+            "score": 9.4861
+          },
+          {
+            "value": 1.0,
+            "score": 9.5175
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.1147
+          },
+          {
+            "value": 0.25,
+            "score": 9.1147
+          },
+          {
+            "value": 0.5,
+            "score": 9.1146
+          },
+          {
+            "value": 0.7,
+            "score": 9.1147
+          },
+          {
+            "value": 0.9,
+            "score": 9.1146
+          },
+          {
+            "value": 0.95,
+            "score": 9.1145
+          },
+          {
+            "value": 1.0,
+            "score": 9.1144
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.1145
+          },
+          {
+            "value": 125.0,
+            "score": 9.2025
+          },
+          {
+            "value": 150.0,
+            "score": 9.31
+          },
+          {
+            "value": 200.0,
+            "score": 9.4455
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.0818
+          },
+          {
+            "value": 8.0,
+            "score": 9.1146
+          },
+          {
+            "value": 16.0,
+            "score": 9.0983
+          },
+          {
+            "value": 32.0,
+            "score": 9.099
+          },
+          {
+            "value": 64.0,
+            "score": 9.0988
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-scifi": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.1573
+          },
+          {
+            "value": 0.02,
+            "score": 9.1705
+          },
+          {
+            "value": 0.04,
+            "score": 9.2031
+          },
+          {
+            "value": 0.06,
+            "score": 9.2371
+          },
+          {
+            "value": 0.1,
+            "score": 9.3028
+          },
+          {
+            "value": 0.2,
+            "score": 9.4446
+          },
+          {
+            "value": 0.5,
+            "score": 9.6784
+          },
+          {
+            "value": 0.6,
+            "score": 9.6977
+          },
+          {
+            "value": 0.7,
+            "score": 9.7015
+          },
+          {
+            "value": 0.8,
+            "score": 9.6974
+          },
+          {
+            "value": 0.9,
+            "score": 9.6896
+          },
+          {
+            "value": 1.0,
+            "score": 9.6794
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.2029
+          },
+          {
+            "value": 0.25,
+            "score": 9.2031
+          },
+          {
+            "value": 0.5,
+            "score": 9.2032
+          },
+          {
+            "value": 0.7,
+            "score": 9.203
+          },
+          {
+            "value": 0.9,
+            "score": 9.2033
+          },
+          {
+            "value": 0.95,
+            "score": 9.2031
+          },
+          {
+            "value": 1.0,
+            "score": 9.2031
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.2031
+          },
+          {
+            "value": 125.0,
+            "score": 9.2746
+          },
+          {
+            "value": 150.0,
+            "score": 9.3386
+          },
+          {
+            "value": 200.0,
+            "score": 9.4511
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.2117
+          },
+          {
+            "value": 8.0,
+            "score": 9.2029
+          },
+          {
+            "value": 16.0,
+            "score": 9.2086
+          },
+          {
+            "value": 32.0,
+            "score": 9.2101
+          },
+          {
+            "value": 64.0,
+            "score": 9.2103
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-scifi": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 9.2736
+          },
+          {
+            "value": 0.02,
+            "score": 9.2818
+          },
+          {
+            "value": 0.04,
+            "score": 9.304
+          },
+          {
+            "value": 0.06,
+            "score": 9.329
+          },
+          {
+            "value": 0.1,
+            "score": 9.378
+          },
+          {
+            "value": 0.2,
+            "score": 9.4853
+          },
+          {
+            "value": 0.5,
+            "score": 9.6855
+          },
+          {
+            "value": 0.6,
+            "score": 9.7151
+          },
+          {
+            "value": 0.7,
+            "score": 9.7309
+          },
+          {
+            "value": 0.8,
+            "score": 9.7369
+          },
+          {
+            "value": 0.9,
+            "score": 9.7371
+          },
+          {
+            "value": 1.0,
+            "score": 9.7338
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 9.3041
+          },
+          {
+            "value": 0.25,
+            "score": 9.3041
+          },
+          {
+            "value": 0.5,
+            "score": 9.3041
+          },
+          {
+            "value": 0.7,
+            "score": 9.3041
+          },
+          {
+            "value": 0.9,
+            "score": 9.3042
+          },
+          {
+            "value": 0.95,
+            "score": 9.3042
+          },
+          {
+            "value": 1.0,
+            "score": 9.3041
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 9.304
+          },
+          {
+            "value": 125.0,
+            "score": 9.3537
+          },
+          {
+            "value": 150.0,
+            "score": 9.4042
+          },
+          {
+            "value": 200.0,
+            "score": 9.491
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 9.313
+          },
+          {
+            "value": 8.0,
+            "score": 9.3041
+          },
+          {
+            "value": 16.0,
+            "score": 9.3061
+          },
+          {
+            "value": 32.0,
+            "score": 9.3093
+          },
+          {
+            "value": 64.0,
+            "score": 9.3093
+          }
+        ]
+      }
+    }
+  },
+  "subway-lookdown": {
+    "metric": "CVVDP",
+    "50": {
+      "ref-subway-lookdown": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 7.7653
+          },
+          {
+            "value": 0.02,
+            "score": 7.812
+          },
+          {
+            "value": 0.04,
+            "score": 7.8923
+          },
+          {
+            "value": 0.06,
+            "score": 7.9563
+          },
+          {
+            "value": 0.1,
+            "score": 8.0519
+          },
+          {
+            "value": 0.2,
+            "score": 8.2009
+          },
+          {
+            "value": 0.5,
+            "score": 8.3434
+          },
+          {
+            "value": 0.6,
+            "score": 8.3366
+          },
+          {
+            "value": 0.7,
+            "score": 8.3175
+          },
+          {
+            "value": 0.8,
+            "score": 8.287
+          },
+          {
+            "value": 0.9,
+            "score": 8.2714
+          },
+          {
+            "value": 1.0,
+            "score": 8.252
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 7.8923
+          },
+          {
+            "value": 0.25,
+            "score": 7.8923
+          },
+          {
+            "value": 0.5,
+            "score": 7.8923
+          },
+          {
+            "value": 0.7,
+            "score": 7.8923
+          },
+          {
+            "value": 0.9,
+            "score": 7.8922
+          },
+          {
+            "value": 0.95,
+            "score": 7.8923
+          },
+          {
+            "value": 1.0,
+            "score": 7.8925
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 7.8923
+          },
+          {
+            "value": 125.0,
+            "score": 7.9313
+          },
+          {
+            "value": 150.0,
+            "score": 7.9862
+          },
+          {
+            "value": 200.0,
+            "score": 8.156
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 7.8755
+          },
+          {
+            "value": 8.0,
+            "score": 7.8923
+          },
+          {
+            "value": 16.0,
+            "score": 7.8903
+          },
+          {
+            "value": 32.0,
+            "score": 7.8875
+          },
+          {
+            "value": 64.0,
+            "score": 7.8867
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-subway-lookdown": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.0841
+          },
+          {
+            "value": 0.02,
+            "score": 8.1336
+          },
+          {
+            "value": 0.04,
+            "score": 8.2241
+          },
+          {
+            "value": 0.06,
+            "score": 8.3009
+          },
+          {
+            "value": 0.1,
+            "score": 8.4199
+          },
+          {
+            "value": 0.2,
+            "score": 8.6042
+          },
+          {
+            "value": 0.5,
+            "score": 8.8132
+          },
+          {
+            "value": 0.6,
+            "score": 8.835
+          },
+          {
+            "value": 0.7,
+            "score": 8.834
+          },
+          {
+            "value": 0.8,
+            "score": 8.8304
+          },
+          {
+            "value": 0.9,
+            "score": 8.8176
+          },
+          {
+            "value": 1.0,
+            "score": 8.8088
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.2242
+          },
+          {
+            "value": 0.25,
+            "score": 8.2241
+          },
+          {
+            "value": 0.5,
+            "score": 8.2242
+          },
+          {
+            "value": 0.7,
+            "score": 8.2241
+          },
+          {
+            "value": 0.9,
+            "score": 8.2242
+          },
+          {
+            "value": 0.95,
+            "score": 8.2241
+          },
+          {
+            "value": 1.0,
+            "score": 8.2242
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.2241
+          },
+          {
+            "value": 125.0,
+            "score": 8.272
+          },
+          {
+            "value": 150.0,
+            "score": 8.3143
+          },
+          {
+            "value": 200.0,
+            "score": 8.3925
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.2295
+          },
+          {
+            "value": 8.0,
+            "score": 8.2242
+          },
+          {
+            "value": 16.0,
+            "score": 8.2283
+          },
+          {
+            "value": 32.0,
+            "score": 8.2311
+          },
+          {
+            "value": 64.0,
+            "score": 8.2296
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-subway-lookdown": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.2101
+          },
+          {
+            "value": 0.02,
+            "score": 8.255
+          },
+          {
+            "value": 0.04,
+            "score": 8.3405
+          },
+          {
+            "value": 0.06,
+            "score": 8.4155
+          },
+          {
+            "value": 0.1,
+            "score": 8.5361
+          },
+          {
+            "value": 0.2,
+            "score": 8.7288
+          },
+          {
+            "value": 0.5,
+            "score": 8.9672
+          },
+          {
+            "value": 0.6,
+            "score": 8.9961
+          },
+          {
+            "value": 0.7,
+            "score": 9.0118
+          },
+          {
+            "value": 0.8,
+            "score": 9.0184
+          },
+          {
+            "value": 0.9,
+            "score": 9.0181
+          },
+          {
+            "value": 1.0,
+            "score": 9.0031
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.3405
+          },
+          {
+            "value": 0.25,
+            "score": 8.3405
+          },
+          {
+            "value": 0.5,
+            "score": 8.3405
+          },
+          {
+            "value": 0.7,
+            "score": 8.3405
+          },
+          {
+            "value": 0.9,
+            "score": 8.3405
+          },
+          {
+            "value": 0.95,
+            "score": 8.3405
+          },
+          {
+            "value": 1.0,
+            "score": 8.3405
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.3405
+          },
+          {
+            "value": 125.0,
+            "score": 8.3812
+          },
+          {
+            "value": 150.0,
+            "score": 8.4349
+          },
+          {
+            "value": 200.0,
+            "score": 8.5038
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.3434
+          },
+          {
+            "value": 8.0,
+            "score": 8.3405
+          },
+          {
+            "value": 16.0,
+            "score": 8.3496
+          },
+          {
+            "value": 32.0,
+            "score": 8.3524
+          },
+          {
+            "value": 64.0,
+            "score": 8.3511
+          }
+        ]
+      }
+    }
+  },
+  "subway-turn": {
+    "metric": "CVVDP",
+    "50": {
+      "ref-subway-turn": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 7.5278
+          },
+          {
+            "value": 0.02,
+            "score": 7.5561
+          },
+          {
+            "value": 0.04,
+            "score": 7.6015
+          },
+          {
+            "value": 0.06,
+            "score": 7.6355
+          },
+          {
+            "value": 0.1,
+            "score": 7.6823
+          },
+          {
+            "value": 0.2,
+            "score": 7.745
+          },
+          {
+            "value": 0.5,
+            "score": 7.7982
+          },
+          {
+            "value": 0.6,
+            "score": 7.7696
+          },
+          {
+            "value": 0.7,
+            "score": 7.7553
+          },
+          {
+            "value": 0.8,
+            "score": 7.6635
+          },
+          {
+            "value": 0.9,
+            "score": 7.6447
+          },
+          {
+            "value": 1.0,
+            "score": 7.6307
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 7.6013
+          },
+          {
+            "value": 0.25,
+            "score": 7.6015
+          },
+          {
+            "value": 0.5,
+            "score": 7.6013
+          },
+          {
+            "value": 0.7,
+            "score": 7.6015
+          },
+          {
+            "value": 0.9,
+            "score": 7.6013
+          },
+          {
+            "value": 0.95,
+            "score": 7.6015
+          },
+          {
+            "value": 1.0,
+            "score": 7.6013
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 7.6015
+          },
+          {
+            "value": 125.0,
+            "score": 7.6117
+          },
+          {
+            "value": 150.0,
+            "score": 7.6671
+          },
+          {
+            "value": 200.0,
+            "score": 7.884
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 7.5957
+          },
+          {
+            "value": 8.0,
+            "score": 7.6013
+          },
+          {
+            "value": 16.0,
+            "score": 7.5986
+          },
+          {
+            "value": 32.0,
+            "score": 7.5987
+          },
+          {
+            "value": 64.0,
+            "score": 7.5992
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-subway-turn": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.0437
+          },
+          {
+            "value": 0.02,
+            "score": 8.0749
+          },
+          {
+            "value": 0.04,
+            "score": 8.1232
+          },
+          {
+            "value": 0.06,
+            "score": 8.1606
+          },
+          {
+            "value": 0.1,
+            "score": 8.2136
+          },
+          {
+            "value": 0.2,
+            "score": 8.2876
+          },
+          {
+            "value": 0.5,
+            "score": 8.368
+          },
+          {
+            "value": 0.6,
+            "score": 8.3512
+          },
+          {
+            "value": 0.7,
+            "score": 8.4049
+          },
+          {
+            "value": 0.8,
+            "score": 8.3858
+          },
+          {
+            "value": 0.9,
+            "score": 8.3641
+          },
+          {
+            "value": 1.0,
+            "score": 7.9425
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.1236
+          },
+          {
+            "value": 0.25,
+            "score": 8.1232
+          },
+          {
+            "value": 0.5,
+            "score": 8.1236
+          },
+          {
+            "value": 0.7,
+            "score": 8.1232
+          },
+          {
+            "value": 0.9,
+            "score": 8.1236
+          },
+          {
+            "value": 0.95,
+            "score": 8.1232
+          },
+          {
+            "value": 1.0,
+            "score": 8.1236
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.1232
+          },
+          {
+            "value": 125.0,
+            "score": 8.1448
+          },
+          {
+            "value": 150.0,
+            "score": 8.1811
+          },
+          {
+            "value": 200.0,
+            "score": 8.1663
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.1245
+          },
+          {
+            "value": 8.0,
+            "score": 8.1236
+          },
+          {
+            "value": 16.0,
+            "score": 8.1226
+          },
+          {
+            "value": 32.0,
+            "score": 8.1243
+          },
+          {
+            "value": 64.0,
+            "score": 8.1296
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-subway-turn": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.2996
+          },
+          {
+            "value": 0.02,
+            "score": 8.3316
+          },
+          {
+            "value": 0.04,
+            "score": 8.3826
+          },
+          {
+            "value": 0.06,
+            "score": 8.4228
+          },
+          {
+            "value": 0.1,
+            "score": 8.4805
+          },
+          {
+            "value": 0.2,
+            "score": 8.5639
+          },
+          {
+            "value": 0.5,
+            "score": 8.6569
+          },
+          {
+            "value": 0.6,
+            "score": 8.6713
+          },
+          {
+            "value": 0.7,
+            "score": 8.683
+          },
+          {
+            "value": 0.8,
+            "score": 8.6951
+          },
+          {
+            "value": 0.9,
+            "score": 8.7101
+          },
+          {
+            "value": 1.0,
+            "score": 8.7046
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.383
+          },
+          {
+            "value": 0.25,
+            "score": 8.3826
+          },
+          {
+            "value": 0.5,
+            "score": 8.383
+          },
+          {
+            "value": 0.7,
+            "score": 8.3826
+          },
+          {
+            "value": 0.9,
+            "score": 8.383
+          },
+          {
+            "value": 0.95,
+            "score": 8.3826
+          },
+          {
+            "value": 1.0,
+            "score": 8.383
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 8.3826
+          },
+          {
+            "value": 125.0,
+            "score": 8.4022
+          },
+          {
+            "value": 150.0,
+            "score": 8.4563
+          },
+          {
+            "value": 200.0,
+            "score": 8.5212
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.3854
+          },
+          {
+            "value": 8.0,
+            "score": 8.383
+          },
+          {
+            "value": 16.0,
+            "score": 8.3849
+          },
+          {
+            "value": 32.0,
+            "score": 8.3889
+          },
+          {
+            "value": 64.0,
+            "score": 8.3877
           }
         ]
       }
