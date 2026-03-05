@@ -6,166 +6,135 @@
         "alpha_weight": [
           {
             "value": 0.01,
-            "score": 9.0063,
-            "per_frame_errors": []
+            "score": 9.0063
           },
           {
             "value": 0.02,
-            "score": 9.0202,
-            "per_frame_errors": []
+            "score": 9.0202
           },
           {
             "value": 0.04,
-            "score": 9.06,
-            "per_frame_errors": []
+            "score": 9.06
           },
           {
             "value": 0.06,
-            "score": 9.0901,
-            "per_frame_errors": []
+            "score": 9.0901
           },
           {
             "value": 0.1,
-            "score": 9.1477,
-            "per_frame_errors": []
+            "score": 9.1477
           },
           {
             "value": 0.2,
-            "score": 9.2555,
-            "per_frame_errors": []
+            "score": 9.2555
           },
           {
             "value": 0.5,
-            "score": 9.3712,
-            "per_frame_errors": []
+            "score": 9.3712
           },
           {
             "value": 1.0,
-            "score": 9.4459,
-            "per_frame_errors": []
+            "score": 9.4459
           }
         ],
         "filter_size": [
           {
             "value": 0.1,
-            "score": 9.0609,
-            "per_frame_errors": []
+            "score": 9.0609
           },
           {
             "value": 0.25,
-            "score": 9.072,
-            "per_frame_errors": []
+            "score": 9.072
           },
           {
             "value": 0.5,
-            "score": 9.0538,
-            "per_frame_errors": []
+            "score": 9.0538
           },
           {
             "value": 0.7,
-            "score": 9.0597,
-            "per_frame_errors": []
+            "score": 9.0597
           },
           {
             "value": 0.9,
-            "score": 9.0675,
-            "per_frame_errors": []
+            "score": 9.0675
           },
           {
             "value": 0.95,
-            "score": 9.0525,
-            "per_frame_errors": []
+            "score": 9.0525
           },
           {
             "value": 1.0,
-            "score": 9.06,
-            "per_frame_errors": []
+            "score": 9.06
           }
         ],
         "hist_percent": [
           {
             "value": 50.0,
-            "score": 9.0637,
-            "per_frame_errors": []
+            "score": 9.0637
           },
           {
             "value": 75.0,
-            "score": 9.059,
-            "per_frame_errors": []
+            "score": 9.059
           },
           {
             "value": 100.0,
-            "score": 9.0659,
-            "per_frame_errors": []
+            "score": 9.0659
           },
           {
             "value": 125.0,
-            "score": 9.0972,
-            "per_frame_errors": []
+            "score": 9.0972
           },
           {
             "value": 150.0,
-            "score": 9.1242,
-            "per_frame_errors": []
+            "score": 9.1242
           },
           {
             "value": 200.0,
-            "score": 9.1633,
-            "per_frame_errors": []
+            "score": 9.1633
           }
         ],
         "num_samples_TAA": [
           {
             "value": 4.0,
-            "score": 9.2111,
-            "per_frame_errors": []
+            "score": 9.2111
           },
           {
             "value": 8.0,
-            "score": 9.2741,
-            "per_frame_errors": []
+            "score": 9.2741
           },
           {
             "value": 16.0,
-            "score": 9.3175,
-            "per_frame_errors": []
+            "score": 9.3175
           },
           {
             "value": 32.0,
-            "score": 9.3313,
-            "per_frame_errors": []
+            "score": 9.3313
           },
           {
             "value": 64.0,
-            "score": 9.3359,
-            "per_frame_errors": []
+            "score": 9.3359
           }
         ],
         "num_samples": [
           {
             "value": 4.0,
-            "score": 9.0554,
-            "per_frame_errors": []
+            "score": 9.0554
           },
           {
             "value": 8.0,
-            "score": 9.063,
-            "per_frame_errors": []
+            "score": 9.063
           },
           {
             "value": 16.0,
-            "score": 9.0543,
-            "per_frame_errors": []
+            "score": 9.0543
           },
           {
             "value": 32.0,
-            "score": 9.0679,
-            "per_frame_errors": []
+            "score": 9.0679
           },
           {
             "value": 64.0,
-            "score": 9.0785,
-            "per_frame_errors": []
+            "score": 9.0785
           }
         ]
       }
@@ -550,161 +519,131 @@
         "alpha_weight": [
           {
             "value": 0.01,
-            "score": 9.618,
-            "per_frame_errors": []
+            "score": 9.618
           },
           {
             "value": 0.02,
-            "score": 9.6209,
-            "per_frame_errors": []
+            "score": 9.6209
           },
           {
             "value": 0.04,
-            "score": 9.6296,
-            "per_frame_errors": []
+            "score": 9.6296
           },
           {
             "value": 0.06,
-            "score": 9.6383,
-            "per_frame_errors": []
+            "score": 9.6383
           },
           {
             "value": 0.1,
-            "score": 9.6575,
-            "per_frame_errors": []
+            "score": 9.6575
           },
           {
             "value": 0.2,
-            "score": 9.6929,
-            "per_frame_errors": []
+            "score": 9.6929
           },
           {
             "value": 0.5,
-            "score": 9.7555,
-            "per_frame_errors": []
+            "score": 9.7555
           },
           {
             "value": 1.0,
-            "score": 9.774,
-            "per_frame_errors": []
+            "score": 9.774
           }
         ],
         "filter_size": [
           {
             "value": 0.1,
-            "score": 9.6295,
-            "per_frame_errors": []
+            "score": 9.6295
           },
           {
             "value": 0.25,
-            "score": 9.6292,
-            "per_frame_errors": []
+            "score": 9.6292
           },
           {
             "value": 0.5,
-            "score": 9.6295,
-            "per_frame_errors": []
+            "score": 9.6295
           },
           {
             "value": 0.7,
-            "score": 9.63,
-            "per_frame_errors": []
+            "score": 9.63
           },
           {
             "value": 0.9,
-            "score": 9.6313,
-            "per_frame_errors": []
+            "score": 9.6313
           },
           {
             "value": 0.95,
-            "score": 9.63,
-            "per_frame_errors": []
+            "score": 9.63
           },
           {
             "value": 1.0,
-            "score": 9.6297,
-            "per_frame_errors": []
+            "score": 9.6297
           }
         ],
         "hist_percent": [
           {
             "value": 50.0,
-            "score": 9.6293,
-            "per_frame_errors": []
+            "score": 9.6293
           },
           {
             "value": 75.0,
-            "score": 9.6303,
-            "per_frame_errors": []
+            "score": 9.6303
           },
           {
             "value": 100.0,
-            "score": 9.6294,
-            "per_frame_errors": []
+            "score": 9.6294
           },
           {
             "value": 125.0,
-            "score": 9.6554,
-            "per_frame_errors": []
+            "score": 9.6554
           },
           {
             "value": 200.0,
-            "score": 9.7059,
-            "per_frame_errors": []
+            "score": 9.7059
           }
         ],
         "num_samples_TAA": [
           {
             "value": 4.0,
-            "score": 9.6906,
-            "per_frame_errors": []
+            "score": 9.6906
           },
           {
             "value": 8.0,
-            "score": 9.691,
-            "per_frame_errors": []
+            "score": 9.691
           },
           {
             "value": 16.0,
-            "score": 9.672,
-            "per_frame_errors": []
+            "score": 9.672
           },
           {
             "value": 32.0,
-            "score": 9.6474,
-            "per_frame_errors": []
+            "score": 9.6474
           },
           {
             "value": 64.0,
-            "score": 9.6314,
-            "per_frame_errors": []
+            "score": 9.6314
           }
         ],
         "num_samples": [
           {
             "value": 4.0,
-            "score": 9.6087,
-            "per_frame_errors": []
+            "score": 9.6087
           },
           {
             "value": 8.0,
-            "score": 9.6296,
-            "per_frame_errors": []
+            "score": 9.6296
           },
           {
             "value": 16.0,
-            "score": 9.6279,
-            "per_frame_errors": []
+            "score": 9.6279
           },
           {
             "value": 32.0,
-            "score": 9.6345,
-            "per_frame_errors": []
+            "score": 9.6345
           },
           {
             "value": 64.0,
-            "score": 9.6391,
-            "per_frame_errors": []
+            "score": 9.6391
           }
         ]
       }
@@ -717,161 +656,131 @@
         "alpha_weight": [
           {
             "value": 0.01,
-            "score": 9.0639,
-            "per_frame_errors": []
+            "score": 9.0639
           },
           {
             "value": 0.02,
-            "score": 9.0746,
-            "per_frame_errors": []
+            "score": 9.0746
           },
           {
             "value": 0.04,
-            "score": 9.1146,
-            "per_frame_errors": []
+            "score": 9.1146
           },
           {
             "value": 0.06,
-            "score": 9.1165,
-            "per_frame_errors": []
+            "score": 9.1165
           },
           {
             "value": 0.1,
-            "score": 9.167,
-            "per_frame_errors": []
+            "score": 9.167
           },
           {
             "value": 0.2,
-            "score": 9.2379,
-            "per_frame_errors": []
+            "score": 9.2379
           },
           {
             "value": 0.5,
-            "score": 9.3424,
-            "per_frame_errors": []
+            "score": 9.3424
           },
           {
             "value": 1.0,
-            "score": 9.2738,
-            "per_frame_errors": []
+            "score": 9.2738
           }
         ],
         "filter_size": [
           {
             "value": 0.1,
-            "score": 9.0907,
-            "per_frame_errors": []
+            "score": 9.0907
           },
           {
             "value": 0.25,
-            "score": 9.092,
-            "per_frame_errors": []
+            "score": 9.092
           },
           {
             "value": 0.7,
-            "score": 9.0908,
-            "per_frame_errors": []
+            "score": 9.0908
           },
           {
             "value": 0.9,
-            "score": 9.0946,
-            "per_frame_errors": []
+            "score": 9.0946
           },
           {
             "value": 0.95,
-            "score": 9.0764,
-            "per_frame_errors": []
+            "score": 9.0764
           },
           {
             "value": 1.0,
-            "score": 9.1011,
-            "per_frame_errors": []
+            "score": 9.1011
           }
         ],
         "hist_percent": [
           {
             "value": 50.0,
-            "score": 9.0939,
-            "per_frame_errors": []
+            "score": 9.0939
           },
           {
             "value": 75.0,
-            "score": 9.0861,
-            "per_frame_errors": []
+            "score": 9.0861
           },
           {
             "value": 100.0,
-            "score": 9.0956,
-            "per_frame_errors": []
+            "score": 9.0956
           },
           {
             "value": 125.0,
-            "score": 9.1314,
-            "per_frame_errors": []
+            "score": 9.1314
           },
           {
             "value": 150.0,
-            "score": 9.1607,
-            "per_frame_errors": []
+            "score": 9.1607
           },
           {
             "value": 200.0,
-            "score": 9.2013,
-            "per_frame_errors": []
+            "score": 9.2013
           }
         ],
         "num_samples_TAA": [
           {
             "value": 4.0,
-            "score": 9.1377,
-            "per_frame_errors": []
+            "score": 9.1377
           },
           {
             "value": 8.0,
-            "score": 9.1363,
-            "per_frame_errors": []
+            "score": 9.1363
           },
           {
             "value": 16.0,
-            "score": 9.107,
-            "per_frame_errors": []
+            "score": 9.107
           },
           {
             "value": 32.0,
-            "score": 9.1327,
-            "per_frame_errors": []
+            "score": 9.1327
           },
           {
             "value": 64.0,
-            "score": 9.1024,
-            "per_frame_errors": []
+            "score": 9.1024
           }
         ],
         "num_samples": [
           {
             "value": 4.0,
-            "score": 9.0932,
-            "per_frame_errors": []
+            "score": 9.0932
           },
           {
             "value": 8.0,
-            "score": 9.0998,
-            "per_frame_errors": []
+            "score": 9.0998
           },
           {
             "value": 16.0,
-            "score": 9.0963,
-            "per_frame_errors": []
+            "score": 9.0963
           },
           {
             "value": 32.0,
-            "score": 9.0811,
-            "per_frame_errors": []
+            "score": 9.0811
           },
           {
             "value": 64.0,
-            "score": 9.1189,
-            "per_frame_errors": []
+            "score": 9.1189
           }
         ]
       }
@@ -884,161 +793,131 @@
         "alpha_weight": [
           {
             "value": 0.01,
-            "score": 9.7175,
-            "per_frame_errors": []
+            "score": 9.7175
           },
           {
             "value": 0.02,
-            "score": 9.7154,
-            "per_frame_errors": []
+            "score": 9.7154
           },
           {
             "value": 0.04,
-            "score": 9.7209,
-            "per_frame_errors": []
+            "score": 9.7209
           },
           {
             "value": 0.06,
-            "score": 9.7041,
-            "per_frame_errors": []
+            "score": 9.7041
           },
           {
             "value": 0.1,
-            "score": 9.7352,
-            "per_frame_errors": []
+            "score": 9.7352
           },
           {
             "value": 0.2,
-            "score": 9.7438,
-            "per_frame_errors": []
+            "score": 9.7438
           },
           {
             "value": 0.5,
-            "score": 9.7619,
-            "per_frame_errors": []
+            "score": 9.7619
           },
           {
             "value": 1.0,
-            "score": 9.7375,
-            "per_frame_errors": []
+            "score": 9.7375
           }
         ],
         "filter_size": [
           {
             "value": 0.1,
-            "score": 9.7098,
-            "per_frame_errors": []
+            "score": 9.7098
           },
           {
             "value": 0.25,
-            "score": 9.7212,
-            "per_frame_errors": []
+            "score": 9.7212
           },
           {
             "value": 0.5,
-            "score": 9.7174,
-            "per_frame_errors": []
+            "score": 9.7174
           },
           {
             "value": 0.7,
-            "score": 9.7213,
-            "per_frame_errors": []
+            "score": 9.7213
           },
           {
             "value": 0.9,
-            "score": 9.7191,
-            "per_frame_errors": []
+            "score": 9.7191
           },
           {
             "value": 0.95,
-            "score": 9.7207,
-            "per_frame_errors": []
+            "score": 9.7207
           },
           {
             "value": 1.0,
-            "score": 9.6966,
-            "per_frame_errors": []
+            "score": 9.6966
           }
         ],
         "hist_percent": [
           {
             "value": 50.0,
-            "score": 9.7208,
-            "per_frame_errors": []
+            "score": 9.7208
           },
           {
             "value": 75.0,
-            "score": 9.7092,
-            "per_frame_errors": []
+            "score": 9.7092
           },
           {
             "value": 100.0,
-            "score": 9.7206,
-            "per_frame_errors": []
+            "score": 9.7206
           },
           {
             "value": 125.0,
-            "score": 9.7202,
-            "per_frame_errors": []
+            "score": 9.7202
           },
           {
             "value": 150.0,
-            "score": 9.7461,
-            "per_frame_errors": []
+            "score": 9.7461
           }
         ],
         "num_samples_TAA": [
           {
             "value": 4.0,
-            "score": 9.5868,
-            "per_frame_errors": []
+            "score": 9.5868
           },
           {
             "value": 8.0,
-            "score": 9.7548,
-            "per_frame_errors": []
+            "score": 9.7548
           },
           {
             "value": 16.0,
-            "score": 9.7615,
-            "per_frame_errors": []
+            "score": 9.7615
           },
           {
             "value": 32.0,
-            "score": 9.7647,
-            "per_frame_errors": []
+            "score": 9.7647
           },
           {
             "value": 64.0,
-            "score": 9.7745,
-            "per_frame_errors": []
+            "score": 9.7745
           }
         ],
         "num_samples": [
           {
             "value": 4.0,
-            "score": 9.7134,
-            "per_frame_errors": []
+            "score": 9.7134
           },
           {
             "value": 8.0,
-            "score": 9.7125,
-            "per_frame_errors": []
+            "score": 9.7125
           },
           {
             "value": 16.0,
-            "score": 9.7218,
-            "per_frame_errors": []
+            "score": 9.7218
           },
           {
             "value": 32.0,
-            "score": 9.7219,
-            "per_frame_errors": []
+            "score": 9.7219
           },
           {
             "value": 64.0,
-            "score": 9.724,
-            "per_frame_errors": []
+            "score": 9.724
           }
         ]
       }
@@ -1411,991 +1290,6 @@
           {
             "value": 64.0,
             "score": 9.7136
-          }
-        ]
-      }
-    }
-  },
-  "oldmine": {
-    "metric": "CVVDP",
-    "100": {
-      "ref-oldmine": {
-        "alpha_weight": [
-          {
-            "value": 0.01,
-            "score": 8.1609,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.02,
-            "score": 8.3196,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.04,
-            "score": 8.4532,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.06,
-            "score": 8.629,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.1,
-            "score": 8.7333,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.2,
-            "score": 9.0461,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 9.2525,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.6,
-            "score": 9.348,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 9.3561,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.8,
-            "score": 9.4725,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 9.3778,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 9.4618,
-            "per_frame_errors": []
-          }
-        ],
-        "filter_size": [
-          {
-            "value": 0.1,
-            "score": 8.5255,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.25,
-            "score": 8.4464,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 8.4978,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 8.4767,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 8.5366,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.95,
-            "score": 8.4361,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 8.5402,
-            "per_frame_errors": []
-          }
-        ],
-        "hist_percent": [
-          {
-            "value": 1.0,
-            "score": 8.473,
-            "per_frame_errors": []
-          },
-          {
-            "value": 5.0,
-            "score": 8.5402,
-            "per_frame_errors": []
-          },
-          {
-            "value": 10.0,
-            "score": 8.4363,
-            "per_frame_errors": []
-          },
-          {
-            "value": 15.0,
-            "score": 8.5367,
-            "per_frame_errors": []
-          },
-          {
-            "value": 30.0,
-            "score": 8.4529,
-            "per_frame_errors": []
-          },
-          {
-            "value": 50.0,
-            "score": 8.5254,
-            "per_frame_errors": []
-          },
-          {
-            "value": 75.0,
-            "score": 8.4764,
-            "per_frame_errors": []
-          },
-          {
-            "value": 100.0,
-            "score": 8.5155,
-            "per_frame_errors": []
-          },
-          {
-            "value": 125.0,
-            "score": 8.513,
-            "per_frame_errors": []
-          },
-          {
-            "value": 150.0,
-            "score": 8.6363,
-            "per_frame_errors": []
-          },
-          {
-            "value": 200.0,
-            "score": 8.6135,
-            "per_frame_errors": []
-          }
-        ],
-        "num_samples": [
-          {
-            "value": 4.0,
-            "score": 8.4604,
-            "per_frame_errors": []
-          },
-          {
-            "value": 8.0,
-            "score": 8.4982,
-            "per_frame_errors": []
-          },
-          {
-            "value": 16.0,
-            "score": 8.4375,
-            "per_frame_errors": []
-          },
-          {
-            "value": 32.0,
-            "score": 8.5158,
-            "per_frame_errors": []
-          },
-          {
-            "value": 64.0,
-            "score": 8.4883,
-            "per_frame_errors": []
-          }
-        ]
-      }
-    },
-    "50": {
-      "ref-oldmine": {
-        "alpha_weight": [
-          {
-            "value": 0.01,
-            "score": 7.4935,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.02,
-            "score": 7.5662,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.04,
-            "score": 7.7506,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.06,
-            "score": 7.7936,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.1,
-            "score": 7.9557,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.2,
-            "score": 8.0803,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 8.2741,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.6,
-            "score": 8.1664,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 7.9325,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.8,
-            "score": 7.7703,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 7.2731,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 6.8645,
-            "per_frame_errors": []
-          }
-        ],
-        "filter_size": [
-          {
-            "value": 0.1,
-            "score": 7.6797,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.25,
-            "score": 7.7406,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 7.7008,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 7.7637,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 7.7037,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.95,
-            "score": 7.7673,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 7.6979,
-            "per_frame_errors": []
-          }
-        ],
-        "hist_percent": [
-          {
-            "value": 1.0,
-            "score": 7.7531,
-            "per_frame_errors": []
-          },
-          {
-            "value": 5.0,
-            "score": 7.693,
-            "per_frame_errors": []
-          },
-          {
-            "value": 10.0,
-            "score": 7.7544,
-            "per_frame_errors": []
-          },
-          {
-            "value": 15.0,
-            "score": 7.7033,
-            "per_frame_errors": []
-          },
-          {
-            "value": 30.0,
-            "score": 7.7647,
-            "per_frame_errors": []
-          },
-          {
-            "value": 50.0,
-            "score": 7.6894,
-            "per_frame_errors": []
-          },
-          {
-            "value": 75.0,
-            "score": 7.7492,
-            "per_frame_errors": []
-          },
-          {
-            "value": 100.0,
-            "score": 7.6913,
-            "per_frame_errors": []
-          },
-          {
-            "value": 125.0,
-            "score": 7.7721,
-            "per_frame_errors": []
-          },
-          {
-            "value": 150.0,
-            "score": 7.7323,
-            "per_frame_errors": []
-          },
-          {
-            "value": 200.0,
-            "score": 7.9984,
-            "per_frame_errors": []
-          }
-        ],
-        "num_samples": [
-          {
-            "value": 4.0,
-            "score": 7.7406,
-            "per_frame_errors": []
-          },
-          {
-            "value": 8.0,
-            "score": 7.7045,
-            "per_frame_errors": []
-          },
-          {
-            "value": 16.0,
-            "score": 7.752,
-            "per_frame_errors": []
-          },
-          {
-            "value": 32.0,
-            "score": 7.6975,
-            "per_frame_errors": []
-          },
-          {
-            "value": 64.0,
-            "score": 7.7465,
-            "per_frame_errors": []
-          }
-        ]
-      }
-    },
-    "71": {
-      "ref-oldmine": {
-        "alpha_weight": [
-          {
-            "value": 0.01,
-            "score": 5.4836,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.02,
-            "score": 5.6512,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.04,
-            "score": 5.0878,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.06,
-            "score": 5.6561,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.1,
-            "score": 5.111,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.2,
-            "score": 5.7405,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 5.1542,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.6,
-            "score": 5.7835,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 5.1274,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.8,
-            "score": 5.7443,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 5.1468,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 5.7252,
-            "per_frame_errors": []
-          }
-        ],
-        "filter_size": [
-          {
-            "value": 0.1,
-            "score": 5.6396,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.25,
-            "score": 5.0848,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 5.6427,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 5.0596,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 5.6396,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.95,
-            "score": 5.085,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 5.6397,
-            "per_frame_errors": []
-          }
-        ],
-        "hist_percent": [
-          {
-            "value": 100.0,
-            "score": 5.0573,
-            "per_frame_errors": []
-          },
-          {
-            "value": 125.0,
-            "score": 5.6851,
-            "per_frame_errors": []
-          },
-          {
-            "value": 150.0,
-            "score": 5.0729,
-            "per_frame_errors": []
-          },
-          {
-            "value": 200.0,
-            "score": 5.6746,
-            "per_frame_errors": []
-          }
-        ],
-        "num_samples": [
-          {
-            "value": 4.0,
-            "score": 5.0848,
-            "per_frame_errors": []
-          },
-          {
-            "value": 8.0,
-            "score": 5.6668,
-            "per_frame_errors": []
-          },
-          {
-            "value": 16.0,
-            "score": 5.0597,
-            "per_frame_errors": []
-          },
-          {
-            "value": 32.0,
-            "score": 5.6391,
-            "per_frame_errors": []
-          },
-          {
-            "value": 64.0,
-            "score": 5.0908,
-            "per_frame_errors": []
-          }
-        ]
-      }
-    },
-    "87": {
-      "ref-oldmine": {
-        "alpha_weight": [
-          {
-            "value": 0.01,
-            "score": 5.3267,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.02,
-            "score": 5.6987,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.04,
-            "score": 4.9915,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.06,
-            "score": 5.7464,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.1,
-            "score": 4.9919,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.2,
-            "score": 5.7601,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 5.0186,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.6,
-            "score": 5.7962,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 5.0474,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.8,
-            "score": 5.8007,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 5.0265,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 5.8402,
-            "per_frame_errors": []
-          }
-        ],
-        "filter_size": [
-          {
-            "value": 0.1,
-            "score": 5.7306,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.25,
-            "score": 4.9982,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.5,
-            "score": 5.7219,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.7,
-            "score": 4.9734,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.9,
-            "score": 5.6937,
-            "per_frame_errors": []
-          },
-          {
-            "value": 0.95,
-            "score": 4.9912,
-            "per_frame_errors": []
-          },
-          {
-            "value": 1.0,
-            "score": 5.6969,
-            "per_frame_errors": []
-          }
-        ],
-        "hist_percent": [
-          {
-            "value": 100.0,
-            "score": 4.9733,
-            "per_frame_errors": []
-          },
-          {
-            "value": 125.0,
-            "score": 5.7083,
-            "per_frame_errors": []
-          },
-          {
-            "value": 150.0,
-            "score": 5.0025,
-            "per_frame_errors": []
-          },
-          {
-            "value": 200.0,
-            "score": 5.7304,
-            "per_frame_errors": []
-          }
-        ],
-        "num_samples": [
-          {
-            "value": 4.0,
-            "score": 4.9991,
-            "per_frame_errors": []
-          },
-          {
-            "value": 8.0,
-            "score": 5.7271,
-            "per_frame_errors": []
-          },
-          {
-            "value": 16.0,
-            "score": 4.9685,
-            "per_frame_errors": []
-          },
-          {
-            "value": 32.0,
-            "score": 5.6942,
-            "per_frame_errors": []
-          },
-          {
-            "value": 64.0,
-            "score": 4.9944,
-            "per_frame_errors": []
-          }
-        ]
-      }
-    },
-    "25": {
-      "ref-oldmine": {
-        "alpha_weight": [
-          {
-            "value": 0.01,
-            "score": 6.4924
-          },
-          {
-            "value": 0.02,
-            "score": 6.5389
-          },
-          {
-            "value": 0.04,
-            "score": 6.5469
-          },
-          {
-            "value": 0.06,
-            "score": 6.608
-          },
-          {
-            "value": 0.1,
-            "score": 6.606
-          },
-          {
-            "value": 0.2,
-            "score": 6.6836
-          },
-          {
-            "value": 0.5,
-            "score": 6.0784
-          },
-          {
-            "value": 0.6,
-            "score": 6.2717
-          },
-          {
-            "value": 0.7,
-            "score": 6.0967
-          },
-          {
-            "value": 0.8,
-            "score": 6.1554
-          },
-          {
-            "value": 0.9,
-            "score": 5.9849
-          },
-          {
-            "value": 1.0,
-            "score": 5.1878
-          }
-        ],
-        "filter_size": [
-          {
-            "value": 0.1,
-            "score": 6.5718
-          },
-          {
-            "value": 0.25,
-            "score": 6.5351
-          },
-          {
-            "value": 0.5,
-            "score": 6.5735
-          },
-          {
-            "value": 0.7,
-            "score": 6.5377
-          },
-          {
-            "value": 0.9,
-            "score": 6.5758
-          },
-          {
-            "value": 0.95,
-            "score": 6.539
-          },
-          {
-            "value": 1.0,
-            "score": 6.5798
-          }
-        ],
-        "hist_percent": [
-          {
-            "value": 1.0,
-            "score": 6.5362
-          },
-          {
-            "value": 5.0,
-            "score": 6.5806
-          },
-          {
-            "value": 10.0,
-            "score": 6.5393
-          },
-          {
-            "value": 15.0,
-            "score": 6.5704
-          },
-          {
-            "value": 30.0,
-            "score": 6.5391
-          },
-          {
-            "value": 50.0,
-            "score": 6.5672
-          },
-          {
-            "value": 75.0,
-            "score": 6.533
-          },
-          {
-            "value": 100.0,
-            "score": 6.5823
-          },
-          {
-            "value": 125.0,
-            "score": 6.6349
-          },
-          {
-            "value": 150.0,
-            "score": 6.5035
-          },
-          {
-            "value": 200.0,
-            "score": 6.5305
-          }
-        ],
-        "num_samples": [
-          {
-            "value": 4.0,
-            "score": 6.5348
-          },
-          {
-            "value": 8.0,
-            "score": 6.5735
-          },
-          {
-            "value": 16.0,
-            "score": 6.5353
-          },
-          {
-            "value": 32.0,
-            "score": 6.5781
-          },
-          {
-            "value": 64.0,
-            "score": 6.5497
-          }
-        ]
-      }
-    },
-    "75": {
-      "ref-oldmine": {
-        "alpha_weight": [
-          {
-            "value": 0.01,
-            "score": 7.8499
-          },
-          {
-            "value": 0.02,
-            "score": 8.0137
-          },
-          {
-            "value": 0.04,
-            "score": 8.1174
-          },
-          {
-            "value": 0.06,
-            "score": 8.2732
-          },
-          {
-            "value": 0.1,
-            "score": 8.3292
-          },
-          {
-            "value": 0.2,
-            "score": 8.5934
-          },
-          {
-            "value": 0.5,
-            "score": 8.7654
-          },
-          {
-            "value": 0.6,
-            "score": 8.8371
-          },
-          {
-            "value": 0.7,
-            "score": 8.7819
-          },
-          {
-            "value": 0.8,
-            "score": 8.7793
-          },
-          {
-            "value": 0.9,
-            "score": 8.8427
-          },
-          {
-            "value": 1.0,
-            "score": 8.8221
-          }
-        ],
-        "filter_size": [
-          {
-            "value": 0.1,
-            "score": 8.1606
-          },
-          {
-            "value": 0.25,
-            "score": 8.1009
-          },
-          {
-            "value": 0.5,
-            "score": 8.1659
-          },
-          {
-            "value": 0.7,
-            "score": 8.1006
-          },
-          {
-            "value": 0.9,
-            "score": 8.166
-          },
-          {
-            "value": 0.95,
-            "score": 8.087
-          },
-          {
-            "value": 1.0,
-            "score": 8.1658
-          }
-        ],
-        "hist_percent": [
-          {
-            "value": 1.0,
-            "score": 8.0869
-          },
-          {
-            "value": 5.0,
-            "score": 8.1774
-          },
-          {
-            "value": 10.0,
-            "score": 8.0953
-          },
-          {
-            "value": 15.0,
-            "score": 8.1462
-          },
-          {
-            "value": 30.0,
-            "score": 8.1171
-          },
-          {
-            "value": 50.0,
-            "score": 8.1657
-          },
-          {
-            "value": 75.0,
-            "score": 8.0872
-          },
-          {
-            "value": 100.0,
-            "score": 8.1461
-          },
-          {
-            "value": 125.0,
-            "score": 8.1355
-          },
-          {
-            "value": 150.0,
-            "score": 8.239
-          },
-          {
-            "value": 200.0,
-            "score": 8.2192
-          }
-        ],
-        "num_samples": [
-          {
-            "value": 4.0,
-            "score": 8.0876
-          },
-          {
-            "value": 8.0,
-            "score": 8.1657
-          },
-          {
-            "value": 16.0,
-            "score": 8.0957
-          },
-          {
-            "value": 32.0,
-            "score": 8.145
-          },
-          {
-            "value": 64.0,
-            "score": 8.1154
           }
         ]
       }
@@ -3478,6 +2372,865 @@
           {
             "value": 64.0,
             "score": 9.2659
+          }
+        ]
+      }
+    }
+  },
+  "oldmine": {
+    "metric": "CVVDP",
+    "100": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 8.1609
+          },
+          {
+            "value": 0.02,
+            "score": 8.3196
+          },
+          {
+            "value": 0.04,
+            "score": 8.4532
+          },
+          {
+            "value": 0.06,
+            "score": 8.629
+          },
+          {
+            "value": 0.1,
+            "score": 8.7333
+          },
+          {
+            "value": 0.2,
+            "score": 9.0461
+          },
+          {
+            "value": 0.5,
+            "score": 9.2525
+          },
+          {
+            "value": 0.6,
+            "score": 9.348
+          },
+          {
+            "value": 0.7,
+            "score": 9.3561
+          },
+          {
+            "value": 0.8,
+            "score": 9.4725
+          },
+          {
+            "value": 0.9,
+            "score": 9.3778
+          },
+          {
+            "value": 1.0,
+            "score": 9.4618
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.5255
+          },
+          {
+            "value": 0.25,
+            "score": 8.4464
+          },
+          {
+            "value": 0.5,
+            "score": 8.4978
+          },
+          {
+            "value": 0.7,
+            "score": 8.4767
+          },
+          {
+            "value": 0.9,
+            "score": 8.5366
+          },
+          {
+            "value": 0.95,
+            "score": 8.4361
+          },
+          {
+            "value": 1.0,
+            "score": 8.5402
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 8.473
+          },
+          {
+            "value": 5.0,
+            "score": 8.5402
+          },
+          {
+            "value": 10.0,
+            "score": 8.4363
+          },
+          {
+            "value": 15.0,
+            "score": 8.5367
+          },
+          {
+            "value": 30.0,
+            "score": 8.4529
+          },
+          {
+            "value": 50.0,
+            "score": 8.5254
+          },
+          {
+            "value": 75.0,
+            "score": 8.4764
+          },
+          {
+            "value": 100.0,
+            "score": 8.5155
+          },
+          {
+            "value": 125.0,
+            "score": 8.513
+          },
+          {
+            "value": 150.0,
+            "score": 8.6363
+          },
+          {
+            "value": 200.0,
+            "score": 8.6135
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.4604
+          },
+          {
+            "value": 8.0,
+            "score": 8.4982
+          },
+          {
+            "value": 16.0,
+            "score": 8.4375
+          },
+          {
+            "value": 32.0,
+            "score": 8.5158
+          },
+          {
+            "value": 64.0,
+            "score": 8.4883
+          }
+        ]
+      }
+    },
+    "25": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 6.4924
+          },
+          {
+            "value": 0.02,
+            "score": 6.5389
+          },
+          {
+            "value": 0.04,
+            "score": 6.5469
+          },
+          {
+            "value": 0.06,
+            "score": 6.608
+          },
+          {
+            "value": 0.1,
+            "score": 6.606
+          },
+          {
+            "value": 0.2,
+            "score": 6.6836
+          },
+          {
+            "value": 0.5,
+            "score": 6.0784
+          },
+          {
+            "value": 0.6,
+            "score": 6.2717
+          },
+          {
+            "value": 0.7,
+            "score": 6.0967
+          },
+          {
+            "value": 0.8,
+            "score": 6.1554
+          },
+          {
+            "value": 0.9,
+            "score": 5.9849
+          },
+          {
+            "value": 1.0,
+            "score": 5.1878
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 6.5718
+          },
+          {
+            "value": 0.25,
+            "score": 6.5351
+          },
+          {
+            "value": 0.5,
+            "score": 6.5735
+          },
+          {
+            "value": 0.7,
+            "score": 6.5377
+          },
+          {
+            "value": 0.9,
+            "score": 6.5758
+          },
+          {
+            "value": 0.95,
+            "score": 6.539
+          },
+          {
+            "value": 1.0,
+            "score": 6.5798
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 6.5362
+          },
+          {
+            "value": 5.0,
+            "score": 6.5806
+          },
+          {
+            "value": 10.0,
+            "score": 6.5393
+          },
+          {
+            "value": 15.0,
+            "score": 6.5704
+          },
+          {
+            "value": 30.0,
+            "score": 6.5391
+          },
+          {
+            "value": 50.0,
+            "score": 6.5672
+          },
+          {
+            "value": 75.0,
+            "score": 6.533
+          },
+          {
+            "value": 100.0,
+            "score": 6.5823
+          },
+          {
+            "value": 125.0,
+            "score": 6.6349
+          },
+          {
+            "value": 150.0,
+            "score": 6.5035
+          },
+          {
+            "value": 200.0,
+            "score": 6.5305
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 6.5348
+          },
+          {
+            "value": 8.0,
+            "score": 6.5735
+          },
+          {
+            "value": 16.0,
+            "score": 6.5353
+          },
+          {
+            "value": 32.0,
+            "score": 6.5781
+          },
+          {
+            "value": 64.0,
+            "score": 6.5497
+          }
+        ]
+      }
+    },
+    "50": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 7.4935
+          },
+          {
+            "value": 0.02,
+            "score": 7.5662
+          },
+          {
+            "value": 0.04,
+            "score": 7.7506
+          },
+          {
+            "value": 0.06,
+            "score": 7.7936
+          },
+          {
+            "value": 0.1,
+            "score": 7.9557
+          },
+          {
+            "value": 0.2,
+            "score": 8.0803
+          },
+          {
+            "value": 0.5,
+            "score": 8.2741
+          },
+          {
+            "value": 0.6,
+            "score": 8.1664
+          },
+          {
+            "value": 0.7,
+            "score": 7.9325
+          },
+          {
+            "value": 0.8,
+            "score": 7.7703
+          },
+          {
+            "value": 0.9,
+            "score": 7.2731
+          },
+          {
+            "value": 1.0,
+            "score": 6.8645
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 7.6797
+          },
+          {
+            "value": 0.25,
+            "score": 7.7406
+          },
+          {
+            "value": 0.5,
+            "score": 7.7008
+          },
+          {
+            "value": 0.7,
+            "score": 7.7637
+          },
+          {
+            "value": 0.9,
+            "score": 7.7037
+          },
+          {
+            "value": 0.95,
+            "score": 7.7673
+          },
+          {
+            "value": 1.0,
+            "score": 7.6979
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 7.7531
+          },
+          {
+            "value": 5.0,
+            "score": 7.693
+          },
+          {
+            "value": 10.0,
+            "score": 7.7544
+          },
+          {
+            "value": 15.0,
+            "score": 7.7033
+          },
+          {
+            "value": 30.0,
+            "score": 7.7647
+          },
+          {
+            "value": 50.0,
+            "score": 7.6894
+          },
+          {
+            "value": 75.0,
+            "score": 7.7492
+          },
+          {
+            "value": 100.0,
+            "score": 7.6913
+          },
+          {
+            "value": 125.0,
+            "score": 7.7721
+          },
+          {
+            "value": 150.0,
+            "score": 7.7323
+          },
+          {
+            "value": 200.0,
+            "score": 7.9984
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 7.7406
+          },
+          {
+            "value": 8.0,
+            "score": 7.7045
+          },
+          {
+            "value": 16.0,
+            "score": 7.752
+          },
+          {
+            "value": 32.0,
+            "score": 7.6975
+          },
+          {
+            "value": 64.0,
+            "score": 7.7465
+          }
+        ]
+      }
+    },
+    "71": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 5.4836
+          },
+          {
+            "value": 0.02,
+            "score": 5.6512
+          },
+          {
+            "value": 0.04,
+            "score": 5.0878
+          },
+          {
+            "value": 0.06,
+            "score": 5.6561
+          },
+          {
+            "value": 0.1,
+            "score": 5.111
+          },
+          {
+            "value": 0.2,
+            "score": 5.7405
+          },
+          {
+            "value": 0.5,
+            "score": 5.1542
+          },
+          {
+            "value": 0.6,
+            "score": 5.7835
+          },
+          {
+            "value": 0.7,
+            "score": 5.1274
+          },
+          {
+            "value": 0.8,
+            "score": 5.7443
+          },
+          {
+            "value": 0.9,
+            "score": 5.1468
+          },
+          {
+            "value": 1.0,
+            "score": 5.7252
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 5.6396
+          },
+          {
+            "value": 0.25,
+            "score": 5.0848
+          },
+          {
+            "value": 0.5,
+            "score": 5.6427
+          },
+          {
+            "value": 0.7,
+            "score": 5.0596
+          },
+          {
+            "value": 0.9,
+            "score": 5.6396
+          },
+          {
+            "value": 0.95,
+            "score": 5.085
+          },
+          {
+            "value": 1.0,
+            "score": 5.6397
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 5.0573
+          },
+          {
+            "value": 125.0,
+            "score": 5.6851
+          },
+          {
+            "value": 150.0,
+            "score": 5.0729
+          },
+          {
+            "value": 200.0,
+            "score": 5.6746
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 5.0848
+          },
+          {
+            "value": 8.0,
+            "score": 5.6668
+          },
+          {
+            "value": 16.0,
+            "score": 5.0597
+          },
+          {
+            "value": 32.0,
+            "score": 5.6391
+          },
+          {
+            "value": 64.0,
+            "score": 5.0908
+          }
+        ]
+      }
+    },
+    "75": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 7.8499
+          },
+          {
+            "value": 0.02,
+            "score": 8.0137
+          },
+          {
+            "value": 0.04,
+            "score": 8.1174
+          },
+          {
+            "value": 0.06,
+            "score": 8.2732
+          },
+          {
+            "value": 0.1,
+            "score": 8.3292
+          },
+          {
+            "value": 0.2,
+            "score": 8.5934
+          },
+          {
+            "value": 0.5,
+            "score": 8.7654
+          },
+          {
+            "value": 0.6,
+            "score": 8.8371
+          },
+          {
+            "value": 0.7,
+            "score": 8.7819
+          },
+          {
+            "value": 0.8,
+            "score": 8.7793
+          },
+          {
+            "value": 0.9,
+            "score": 8.8427
+          },
+          {
+            "value": 1.0,
+            "score": 8.8221
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 8.1606
+          },
+          {
+            "value": 0.25,
+            "score": 8.1009
+          },
+          {
+            "value": 0.5,
+            "score": 8.1659
+          },
+          {
+            "value": 0.7,
+            "score": 8.1006
+          },
+          {
+            "value": 0.9,
+            "score": 8.166
+          },
+          {
+            "value": 0.95,
+            "score": 8.087
+          },
+          {
+            "value": 1.0,
+            "score": 8.1658
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 1.0,
+            "score": 8.0869
+          },
+          {
+            "value": 5.0,
+            "score": 8.1774
+          },
+          {
+            "value": 10.0,
+            "score": 8.0953
+          },
+          {
+            "value": 15.0,
+            "score": 8.1462
+          },
+          {
+            "value": 30.0,
+            "score": 8.1171
+          },
+          {
+            "value": 50.0,
+            "score": 8.1657
+          },
+          {
+            "value": 75.0,
+            "score": 8.0872
+          },
+          {
+            "value": 100.0,
+            "score": 8.1461
+          },
+          {
+            "value": 125.0,
+            "score": 8.1355
+          },
+          {
+            "value": 150.0,
+            "score": 8.239
+          },
+          {
+            "value": 200.0,
+            "score": 8.2192
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 8.0876
+          },
+          {
+            "value": 8.0,
+            "score": 8.1657
+          },
+          {
+            "value": 16.0,
+            "score": 8.0957
+          },
+          {
+            "value": 32.0,
+            "score": 8.145
+          },
+          {
+            "value": 64.0,
+            "score": 8.1154
+          }
+        ]
+      }
+    },
+    "87": {
+      "ref-oldmine": {
+        "alpha_weight": [
+          {
+            "value": 0.01,
+            "score": 5.3267
+          },
+          {
+            "value": 0.02,
+            "score": 5.6987
+          },
+          {
+            "value": 0.04,
+            "score": 4.9915
+          },
+          {
+            "value": 0.06,
+            "score": 5.7464
+          },
+          {
+            "value": 0.1,
+            "score": 4.9919
+          },
+          {
+            "value": 0.2,
+            "score": 5.7601
+          },
+          {
+            "value": 0.5,
+            "score": 5.0186
+          },
+          {
+            "value": 0.6,
+            "score": 5.7962
+          },
+          {
+            "value": 0.7,
+            "score": 5.0474
+          },
+          {
+            "value": 0.8,
+            "score": 5.8007
+          },
+          {
+            "value": 0.9,
+            "score": 5.0265
+          },
+          {
+            "value": 1.0,
+            "score": 5.8402
+          }
+        ],
+        "filter_size": [
+          {
+            "value": 0.1,
+            "score": 5.7306
+          },
+          {
+            "value": 0.25,
+            "score": 4.9982
+          },
+          {
+            "value": 0.5,
+            "score": 5.7219
+          },
+          {
+            "value": 0.7,
+            "score": 4.9734
+          },
+          {
+            "value": 0.9,
+            "score": 5.6937
+          },
+          {
+            "value": 0.95,
+            "score": 4.9912
+          },
+          {
+            "value": 1.0,
+            "score": 5.6969
+          }
+        ],
+        "hist_percent": [
+          {
+            "value": 100.0,
+            "score": 4.9733
+          },
+          {
+            "value": 125.0,
+            "score": 5.7083
+          },
+          {
+            "value": 150.0,
+            "score": 5.0025
+          },
+          {
+            "value": 200.0,
+            "score": 5.7304
+          }
+        ],
+        "num_samples": [
+          {
+            "value": 4.0,
+            "score": 4.9991
+          },
+          {
+            "value": 8.0,
+            "score": 5.7271
+          },
+          {
+            "value": 16.0,
+            "score": 4.9685
+          },
+          {
+            "value": 32.0,
+            "score": 5.6942
+          },
+          {
+            "value": 64.0,
+            "score": 4.9944
           }
         ]
       }
