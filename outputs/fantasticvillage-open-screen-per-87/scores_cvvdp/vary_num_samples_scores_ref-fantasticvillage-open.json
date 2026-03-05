@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "fantasticvillage-open",
+    "metric": "ColorVideoVDP",
+    "scene": "fantasticvillage-open-screen-per-87"
+  },
+  "vary_num_samples_16": {
+    "score": 9.6423
+  },
+  "vary_num_samples_32": {
+    "score": 9.6409
+  },
+  "vary_num_samples_4": {
+    "score": 9.6323
+  },
+  "vary_num_samples_64": {
+    "score": 9.6427
+  },
+  "vary_num_samples_8": {
+    "score": 9.6364
+  }
+}

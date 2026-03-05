@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "scifi",
+    "metric": "ColorVideoVDP",
+    "scene": "scifi-screen-per-71"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.2029
+  },
+  "vary_filter_size_0.25": {
+    "score": 9.2031
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.2032
+  },
+  "vary_filter_size_0.7": {
+    "score": 9.203
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.2033
+  },
+  "vary_filter_size_0.95": {
+    "score": 9.2031
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.2031
+  }
+}

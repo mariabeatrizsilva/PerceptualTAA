@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "cubetest",
+    "metric": "ColorVideoVDP",
+    "scene": "cubetest-screen-per-87"
+  },
+  "vary_hist_percent_100": {
+    "score": 9.7133
+  },
+  "vary_hist_percent_125": {
+    "score": 9.7229
+  },
+  "vary_hist_percent_150": {
+    "score": 9.7416
+  },
+  "vary_hist_percent_200": {
+    "score": 9.7376
+  }
+}

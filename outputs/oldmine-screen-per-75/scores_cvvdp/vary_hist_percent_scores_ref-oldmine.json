@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "oldmine",
+    "metric": "ColorVideoVDP",
+    "scene": "oldmine-screen-per-75"
+  },
+  "vary_hist_percent_1": {
+    "score": 8.0869
+  },
+  "vary_hist_percent_10": {
+    "score": 8.0953
+  },
+  "vary_hist_percent_100": {
+    "score": 8.1461
+  },
+  "vary_hist_percent_125": {
+    "score": 8.1355
+  },
+  "vary_hist_percent_15": {
+    "score": 8.1462
+  },
+  "vary_hist_percent_150": {
+    "score": 8.239
+  },
+  "vary_hist_percent_200": {
+    "score": 8.2192
+  },
+  "vary_hist_percent_30": {
+    "score": 8.1171
+  },
+  "vary_hist_percent_5": {
+    "score": 8.1774
+  },
+  "vary_hist_percent_50": {
+    "score": 8.1657
+  },
+  "vary_hist_percent_75": {
+    "score": 8.0872
+  }
+}

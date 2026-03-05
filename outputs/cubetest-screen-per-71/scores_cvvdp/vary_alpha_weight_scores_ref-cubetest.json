@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "reference_scene": "cubetest",
+    "metric": "ColorVideoVDP",
+    "scene": "cubetest-screen-per-71"
+  },
+  "vary_alpha_weight_0.01": {
+    "score": 9.6739
+  },
+  "vary_alpha_weight_0.02": {
+    "score": 9.6874
+  },
+  "vary_alpha_weight_0.04": {
+    "score": 9.6981
+  },
+  "vary_alpha_weight_0.06": {
+    "score": 9.7077
+  },
+  "vary_alpha_weight_0.1": {
+    "score": 9.7111
+  },
+  "vary_alpha_weight_0.2": {
+    "score": 9.7441
+  },
+  "vary_alpha_weight_0.5": {
+    "score": 9.7599
+  },
+  "vary_alpha_weight_0.6": {
+    "score": 9.7604
+  },
+  "vary_alpha_weight_0.7": {
+    "score": 9.7638
+  },
+  "vary_alpha_weight_0.8": {
+    "score": 9.7549
+  },
+  "vary_alpha_weight_0.9": {
+    "score": 9.7269
+  },
+  "vary_alpha_weight_1.0": {
+    "score": 9.7413
+  }
+}

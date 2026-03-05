@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "subway-turn",
+    "metric": "ColorVideoVDP",
+    "scene": "subway-turn-screen-per-71"
+  },
+  "vary_num_samples_16": {
+    "score": 8.1226
+  },
+  "vary_num_samples_32": {
+    "score": 8.1243
+  },
+  "vary_num_samples_4": {
+    "score": 8.1245
+  },
+  "vary_num_samples_64": {
+    "score": 8.1296
+  },
+  "vary_num_samples_8": {
+    "score": 8.1236
+  }
+}
