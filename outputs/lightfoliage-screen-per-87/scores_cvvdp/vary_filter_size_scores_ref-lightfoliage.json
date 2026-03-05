@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "lightfoliage",
+    "metric": "ColorVideoVDP",
+    "scene": "lightfoliage-screen-per-87"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.2765
+  },
+  "vary_filter_size_0.25": {
+    "score": 9.2742
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.277
+  },
+  "vary_filter_size_0.7": {
+    "score": 9.2743
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.277
+  },
+  "vary_filter_size_0.95": {
+    "score": 9.2744
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.2767
+  }
+}

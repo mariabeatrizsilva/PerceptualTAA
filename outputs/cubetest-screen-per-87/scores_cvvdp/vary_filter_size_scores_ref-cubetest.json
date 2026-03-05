@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "cubetest",
+    "metric": "ColorVideoVDP",
+    "scene": "cubetest-screen-per-87"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.7176
+  },
+  "vary_filter_size_0.25": {
+    "score": 9.7137
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.6972
+  },
+  "vary_filter_size_0.7": {
+    "score": 9.7137
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.7181
+  },
+  "vary_filter_size_0.95": {
+    "score": 9.7133
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.7024
+  }
+}

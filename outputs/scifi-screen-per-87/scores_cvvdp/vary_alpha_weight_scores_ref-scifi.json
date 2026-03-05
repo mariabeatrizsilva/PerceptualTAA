@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "reference_scene": "scifi",
+    "metric": "ColorVideoVDP",
+    "scene": "scifi-screen-per-87"
+  },
+  "vary_alpha_weight_0.01": {
+    "score": 9.2736
+  },
+  "vary_alpha_weight_0.02": {
+    "score": 9.2818
+  },
+  "vary_alpha_weight_0.04": {
+    "score": 9.304
+  },
+  "vary_alpha_weight_0.06": {
+    "score": 9.329
+  },
+  "vary_alpha_weight_0.1": {
+    "score": 9.378
+  },
+  "vary_alpha_weight_0.2": {
+    "score": 9.4853
+  },
+  "vary_alpha_weight_0.5": {
+    "score": 9.6855
+  },
+  "vary_alpha_weight_0.6": {
+    "score": 9.7151
+  },
+  "vary_alpha_weight_0.7": {
+    "score": 9.7309
+  },
+  "vary_alpha_weight_0.8": {
+    "score": 9.7369
+  },
+  "vary_alpha_weight_0.9": {
+    "score": 9.7371
+  },
+  "vary_alpha_weight_1.0": {
+    "score": 9.7338
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "subway-lookdown",
+    "metric": "ColorVideoVDP",
+    "scene": "subway-lookdown-screen-per-71"
+  },
+  "vary_hist_percent_100": {
+    "score": 8.2241
+  },
+  "vary_hist_percent_125": {
+    "score": 8.272
+  },
+  "vary_hist_percent_150": {
+    "score": 8.3143
+  },
+  "vary_hist_percent_200": {
+    "score": 8.3925
+  }
+}

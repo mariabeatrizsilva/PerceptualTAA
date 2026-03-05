@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "subway-turn",
+    "metric": "ColorVideoVDP",
+    "scene": "subway-turn-screen-per-71"
+  },
+  "vary_hist_percent_100": {
+    "score": 8.1232
+  },
+  "vary_hist_percent_125": {
+    "score": 8.1448
+  },
+  "vary_hist_percent_150": {
+    "score": 8.1811
+  },
+  "vary_hist_percent_200": {
+    "score": 8.1663
+  }
+}

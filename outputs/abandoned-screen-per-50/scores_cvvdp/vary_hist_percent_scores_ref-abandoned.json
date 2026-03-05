@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "abandoned",
+    "metric": "ColorVideoVDP",
+    "scene": "abandoned-screen-per-50"
+  },
+  "vary_hist_percent_100": {
+    "score": 8.5611
+  },
+  "vary_hist_percent_125": {
+    "score": 8.6138
+  },
+  "vary_hist_percent_150": {
+    "score": 8.6479
+  },
+  "vary_hist_percent_200": {
+    "score": 8.7645
+  }
+}

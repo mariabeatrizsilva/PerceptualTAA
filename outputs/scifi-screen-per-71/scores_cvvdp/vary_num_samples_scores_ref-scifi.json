@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "scifi",
+    "metric": "ColorVideoVDP",
+    "scene": "scifi-screen-per-71"
+  },
+  "vary_num_samples_16": {
+    "score": 9.2086
+  },
+  "vary_num_samples_32": {
+    "score": 9.2101
+  },
+  "vary_num_samples_4": {
+    "score": 9.2117
+  },
+  "vary_num_samples_64": {
+    "score": 9.2103
+  },
+  "vary_num_samples_8": {
+    "score": 9.2029
+  }
+}
