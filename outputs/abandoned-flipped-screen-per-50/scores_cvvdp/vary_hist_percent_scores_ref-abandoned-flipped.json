@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "abandoned-flipped",
+    "metric": "ColorVideoVDP",
+    "scene": "abandoned-flipped-screen-per-50"
+  },
+  "vary_hist_percent_100": {
+    "score": 8.5533
+  },
+  "vary_hist_percent_125": {
+    "score": 8.5522
+  },
+  "vary_hist_percent_150": {
+    "score": 8.5736
+  },
+  "vary_hist_percent_200": {
+    "score": 8.6055
+  }
+}
