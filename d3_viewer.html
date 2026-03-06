@@ -49,6 +49,15 @@
   }
   header span { color: var(--muted); font-size: 11px; }
 
+  .metric-btn {
+    background: none; border: none; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 6px 14px; cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+ .metric-btn:hover  { color: var(--text); }
+ .metric-btn.active { background: var(--accent); color: #0d0f14; }
+
   /* ── Top-level tabs ─────────────────────────────────────── */
   .top-tabs {
     display: flex; gap: 0;
@@ -316,7 +325,12 @@
 
 <header>
   <h1>PerceptualTAA</h1>
-  <span>quality explorer · cgvqm</span>
+  <span>quality explorer · choose your metric</span>
+    <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border2);border-radius:4px;overflow:hidden;">
+    <button class="metric-btn active" data-metric="CGVQM">CGVQM</button>
+    <button class="metric-btn" data-metric="CVVDP">CVVDP</button>
+  </div>
+
 </header>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -348,6 +362,7 @@
     <div class="overall-tabs">
       <button class="overall-tab-btn active" data-otab="curves">Score Curves</button>
       <button class="overall-tab-btn" data-otab="heatmaps">Sensitivity Heatmaps</button>
+      <button class="overall-tab-btn" data-otab="comparison">Metric Comparison</button>
     </div>
 
     <!-- Score curves tab -->
@@ -379,7 +394,15 @@
   </div>   
     <div class="heatmap-grid" id="heatmaps-grid"></div>
     </div>
-
+    <!-- Compare Two Metrics tab -->
+<div class="overall-tab-panel" id="otab-comparison">
+  <div class="section-sub">
+    <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+      <span style="color:var(--accent);font-weight:600;">Side-by-side comparison</span> — same parameter, both metrics, averaged over selected scenes. Left = CGVQM, Right = CVVDP.
+    </div>
+  </div>
+  <div class="chart-grid" id="comparison-grid"></div>
+</div>
     <div class="status" id="status-overall"></div>
   </div>
 </div>
@@ -415,6 +438,7 @@
     </div>
     <div class="tabs">
       <button class="tab-btn active" data-tab="chart">Chart</button>
+      <button class="tab-btn" data-tab="metriccomp">Metric Comparison</button>
       <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
       <button class="tab-btn" data-tab="deepdive">Parameter deep-dive</button>
       <button class="tab-btn" data-tab="crossparam">Cross-parameter summary</button>
@@ -423,7 +447,7 @@
     <!-- Chart tab -->
     <div class="tab-panel active" id="tab-chart">
        <div style="font-size:11px;color:var(--muted);line-height:1.8;">
-        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how CGVQM score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
+        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how CGVQM or CVVDP score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
         <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
            The cards below summarise the best value per resolution.
           <div style="margin-top:6px;color:var(--muted);font-size:10px;">Drag to zoom into a region · Double-click to reset · Toggle resolutions in the sidebar</div>
@@ -432,6 +456,13 @@
       <div id="chart-wrap"></div>
       
       <div class="best-cards" id="best-cards"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-metriccomp">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+        <span style="color:var(--accent);font-weight:600;">Metric comparison</span> — CGVQM vs CVVDP for the current scene and parameter. Each line is a resolution.
+      </div>
+      <div style="display:flex;gap:16px;" id="scene-comparison-wrap"></div>
     </div>
 
     <!-- Sensitivity bar chart tab -->
@@ -486,7 +517,11 @@
 // ═══════════════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════════════
-const DATASET_URL  = 'dataset.json';
+const DATASETS = {
+  CGVQM: 'dataset.json',
+  CVVDP: 'dataset_cvvdp.json'
+};
+let activeMetric = 'CGVQM';
 const COLOR_VARS   = ['--c0','--c1','--c2','--c3','--c4','--c5'];
 const PARAMS       = ['alpha_weight', 'filter_size', 'hist_percent', 'num_samples'];
 const RESOLUTIONS  = [50, 71, 87, 100];
@@ -495,6 +530,7 @@ const RES_COLORS   = { 50: '#e74c3c', 71: '#e67e22', 87: '#3498db', 100: '#2ecc7
 
 // ── State ─────────────────────────────────────────────────────────
 let dataset          = {};
+let datasets         = {}
 let activeScene      = null;
 let activeParam      = null;
 let seriesVisibility = {};
@@ -507,9 +543,13 @@ async function loadData() {
   setStatus('loading dataset.json…', false, 'status');
   setStatus('loading dataset.json…', false, 'status-overall');
   try {
-    const res = await fetch(DATASET_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    dataset = await res.json();
+    const [resCG, resCVVDP] = await Promise.all([
+      fetch(DATASETS.CGVQM),
+      fetch(DATASETS.CVVDP)
+    ]);
+    datasets.CGVQM  = await resCG.json();
+    datasets.CVVDP  = await resCVVDP.json();
+    dataset = datasets[activeMetric];
     const n = Object.keys(dataset).length;
     setStatus(`dataset loaded · ${n} scenes`, true, 'status');
     setStatus(`dataset loaded · ${n} scenes`, true, 'status-overall');
@@ -656,8 +696,149 @@ function syncRefSelectors() {
   });
 }
 
+function drawSceneComparison() {
+  const wrap = document.getElementById('scene-comparison-wrap');
+  wrap.innerHTML = '';
+  if (!activeScene || !activeParam) return;
+
+  const seriesByMetric = {};
+  for (const metricKey of ['CGVQM', 'CVVDP']) {
+    const sceneData = datasets[metricKey]?.[activeScene];
+    if (!sceneData) { seriesByMetric[metricKey] = []; continue; }
+    const series = [];
+    const pcts = Object.keys(sceneData).filter(k => k !== 'metric').sort((a, b) => +b - +a);
+    for (const pct of pcts) {
+      for (const ref of Object.keys(sceneData[pct]).sort()) {
+        // Rule 1: skip screen-per refs
+        if (ref.includes('screen-per')) continue;
+        const entries = sceneData[pct][ref][activeParam];
+        if (!entries?.length) continue;
+        series.push({ pct, ref, entries, color: RES_COLORS[+pct] ?? 'var(--accent)' });
+      }
+    }
+    seriesByMetric[metricKey] = series;
+  }
+
+// Rule 2: only keep pct values present in BOTH metrics
+const cgvqmPcts = new Set(seriesByMetric['CGVQM'].map(s => s.pct));
+const cvvdpPcts = new Set(seriesByMetric['CVVDP'].map(s => s.pct));
+const sharedPcts = new Set([...cgvqmPcts].filter(p => cvvdpPcts.has(p)));
+for (const metricKey of ['CGVQM', 'CVVDP']) {
+  seriesByMetric[metricKey] = seriesByMetric[metricKey].filter(s => sharedPcts.has(s.pct));
+}
+
+  // Single SVG, two panels side by side
+  const GAP    = 48;  // gap between the two charts
+  const W      = wrap.clientWidth || 900;
+  const H      = 340;
+  const margin = { top: 20, right: 20, bottom: 52, left: 56 };
+  const panelW = (W - GAP) / 2;
+  const iW     = panelW - margin.left - margin.right;
+  const iH     = H - margin.top - margin.bottom;
+
+  const svg = d3.select(wrap).append('svg')
+    .attr('width', W)
+    .attr('height', H);
+
+  const tooltip = document.getElementById('tooltip');
+  const metrics = ['CGVQM', 'CVVDP'];
+
+  metrics.forEach((metricKey, mi) => {
+    const series  = seriesByMetric[metricKey];
+    const offsetX = mi * (panelW + GAP);
+    const allPts  = series.flatMap(s => s.entries);
+
+    const clipId = `clip-sbs-${mi}`;
+    svg.append('defs').append('clipPath').attr('id', clipId)
+      .append('rect').attr('width', iW).attr('height', iH);
+
+    const g  = svg.append('g').attr('transform', `translate(${offsetX + margin.left},${margin.top})`);
+    const ca = g.append('g').attr('clip-path', `url(#${clipId})`);
+
+    if (!allPts.length) {
+      g.append('text').attr('x', iW / 2).attr('y', iH / 2)
+        .attr('text-anchor', 'middle').attr('fill', 'var(--muted)').attr('font-size', 12)
+        .text('No data');
+      return;
+    }
+
+    const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
+    const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
+    const yScale = d3.scaleLinear()
+      .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
+      .nice().range([iH, 0]);
+
+    // Grid
+    ca.append('g').attr('class', 'grid')
+      .call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+
+    // Axes
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
+      .call(d3.axisBottom(xScale).ticks(6));
+    g.append('g').attr('class', 'axis')
+      .call(d3.axisLeft(yScale).ticks(6));
+
+    // Axis labels
+    g.append('text').attr('class', 'axis-label')
+      .attr('x', iW / 2).attr('y', iH + 42)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(activeParam.replace(/_/g, ' '));
+    g.append('text').attr('class', 'axis-label')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -iH / 2).attr('y', -44)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(`${metricKey} score`);
+
+    // Metric label at top
+    g.append('text')
+      .attr('x', iW / 2).attr('y', -6)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Syne, sans-serif').attr('font-weight', 700).attr('font-size', 12)
+      .attr('fill', 'var(--muted)').attr('letter-spacing', '0.08em')
+      .text(metricKey);
+
+    const line = d3.line()
+      .x(d => xScale(d.value)).y(d => yScale(d.score))
+      .curve(d3.curveMonotoneX);
+
+    for (const s of series) {
+      ca.append('path').datum(s.entries)
+        .attr('class', 'series-line')
+        .attr('stroke', s.color).attr('stroke-width', 2)
+        .attr('d', line);
+
+      ca.selectAll(null).data(s.entries).join('circle')
+        .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
+        .attr('r', 4).attr('fill', s.color)
+        .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
+        .on('mousemove', (event, d) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${metricKey} · ${activeParam.replace(/_/g, ' ')}</div>
+            <div class="tt-score">${d.score.toFixed(4)}</div>
+            <div class="tt-label">value: <b>${d.value}</b></div>
+            <div class="tt-label">resolution: <b style="color:${s.color}">${s.pct}%</b></div>`;
+          tooltip.classList.add('visible');
+          positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+
+    // Legend
+    const legG = g.append('g').attr('transform', `translate(8, 8)`);
+    series.forEach((s, i) => {
+      legG.append('rect').attr('x', 0).attr('y', i * 16).attr('width', 10).attr('height', 10).attr('fill', s.color);
+      legG.append('text').attr('x', 14).attr('y', i * 16 + 9)
+        .attr('fill', 'var(--muted)').attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+        .text(`${s.pct}%`);
+    });
+  });
+}
+
 function renderAll() {
   draw();
+  if (document.getElementById('tab-metriccomp').classList.contains('active')) {
+    drawSceneComparison();
+  }
   drawSensitivity();
   drawDeepDive();
   drawCrossParam();
@@ -691,7 +872,7 @@ function draw() {
   g.append('g').attr('class','axis x-axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(8));
   g.append('g').attr('class','axis y-axis').call(d3.axisLeft(yScale).ticks(6));
   g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+40).attr('text-anchor','middle').text(activeParam?.replace(/_/g,' ') ?? '');
-  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text('CGVQM score');
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text(`${activeMetric} score`);
 
   const line    = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
   const tooltip = document.getElementById('tooltip');
@@ -947,7 +1128,7 @@ function drawOverall() {
 
   // populate toggles once (or re-populate if scenes changed)
   const togglesEl = document.getElementById('scene-toggles');
-  if (togglesEl.children.length === 0) {
+  togglesEl.innerHTML = '';
     activeScenes = new Set(scenes); // all on by default
     togglesEl.innerHTML = '';
     for (const scene of scenes) {
@@ -970,10 +1151,12 @@ function drawOverall() {
       });
       togglesEl.appendChild(item);
     }
-  }
+
 
   drawScoreCurves();
   drawHeatmaps();
+  drawComparison();
+  
 }
 
 // ── Score curves ─────────────────────────────────────────────────
@@ -1075,10 +1258,6 @@ function renderCurveInto(wrap, param, allScores, expanded) {
     ca.selectAll('.series-line').attr('d', line);
     ca.selectAll('circle').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
   });
-
-  ca.append('g').attr('class','brush').call(brush)
-    .on('mousedown', e => e.stopPropagation())
-    .on('click', e => e.stopPropagation());
 }
 
 function drawScoreCurves() {
@@ -1123,7 +1302,7 @@ card.addEventListener('click', () => {
         expandedParam = null;    // <-- add this
       }
     });
-    
+
     // restore expanded state if this param was expanded before
     requestAnimationFrame(() => {
       const wrap = document.getElementById(`curve-${param}`);
@@ -1196,6 +1375,254 @@ function drawHeatmaps() {
   }
 }
 
+// ── Comparison ──────────────────────────────────────────────────────
+
+let expandedComparisonParam = null;
+
+function drawComparison() {
+  const grid = document.getElementById('comparison-grid');
+  grid.innerHTML = '';
+
+  // Find scenes common to both datasets
+  const cgScenes  = new Set(Object.keys(datasets.CGVQM).filter(s => Object.keys(datasets.CGVQM[s]).length > 2));
+  const cvScenes  = new Set(Object.keys(datasets.CVVDP).filter(s => Object.keys(datasets.CVVDP[s]).length > 2));
+  const commonScenes = [...cgScenes].filter(s => cvScenes.has(s));
+
+  // Update sidebar to reflect which scenes are valid for comparison
+  const onComparisonTab = document.getElementById('otab-comparison')?.classList.contains('active');
+  if (onComparisonTab) {
+    updateComparisonSceneToggles(commonScenes);
+  }
+
+  if (!commonScenes.length) {
+    grid.innerHTML = '<div class="empty">No scenes in common between both metrics</div>';
+    return;
+  }
+
+  for (const param of PARAMS) {
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.dataset.param = param;
+    card.innerHTML = `
+      <div class="chart-card-header">
+        <div class="chart-card-title">${param.replace(/_/g, ' ')}</div>
+        <span class="expand-hint">click to expand</span>
+      </div>
+      <div id="comparison-${param}" style="width:100%;"></div>`;
+    grid.appendChild(card);
+
+    card.addEventListener('click', () => {
+      const isExpanded = card.classList.contains('expanded');
+      // collapse all
+      grid.querySelectorAll('.chart-card.expanded').forEach(c => {
+        c.classList.remove('expanded');
+        c.querySelector('.expand-hint').textContent = 'click to expand';
+        const w = c.querySelector(`#comparison-${c.dataset.param}`);
+        if (w) renderOverallComparisonPair(w, c.dataset.param, commonScenes, false);
+      });
+      if (!isExpanded) {
+        expandedComparisonParam = param;
+        card.classList.add('expanded');
+        card.querySelector('.expand-hint').textContent = 'click to collapse';
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const w = card.querySelector(`#comparison-${param}`);
+        if (w) renderOverallComparisonPair(w, param, commonScenes, true);
+      } else {
+        expandedComparisonParam = null;
+      }
+    });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const wrap = document.getElementById(`comparison-${param}`);
+        if (!wrap) return;
+        const isExpanded = expandedComparisonParam === param;
+        if (isExpanded) {
+          card.classList.add('expanded');
+          card.querySelector('.expand-hint').textContent = 'click to collapse';
+        }
+        renderOverallComparisonPair(wrap, param, commonScenes, isExpanded);
+      });
+    });
+  }
+}
+
+function updateComparisonSceneToggles(commonScenes) {
+  // only run this when we're on the comparison tab
+  const togglesEl = document.getElementById('scene-toggles');
+  // mark items that aren't in commonScenes as disabled
+  togglesEl.querySelectorAll('.legend-item').forEach(item => {
+    const scene = item.querySelector('.legend-label').textContent;
+    if (!commonScenes.includes(scene)) {
+      item.classList.add('inactive');
+      item.style.opacity = '0.2';
+      item.style.pointerEvents = 'none';
+      item.title = 'Not available in both metrics';
+    } else {
+      item.style.pointerEvents = '';
+      item.title = '';
+      // restore opacity based on activeScenes
+      item.style.opacity = '';
+      item.classList.toggle('inactive', !activeScenes.has(scene));
+    }
+  });
+}
+
+function renderOverallComparisonPair(wrap, param, commonScenes, expanded = false) {
+  wrap.innerHTML = '';
+
+  // filter to only actively selected scenes that are in commonScenes
+  const scenes = commonScenes.filter(s => activeScenes.has(s));
+
+  if (!scenes.length) {
+    wrap.innerHTML = '<div class="empty">No scenes selected</div>';
+    return;
+  }
+
+  // Build averaged % change series for each metric
+  const seriesByMetric = {};
+  for (const metricKey of ['CGVQM', 'CVVDP']) {
+    const avgByRes = {};
+    for (const res of RESOLUTIONS) {
+      const allVals = [...new Set(
+        scenes.flatMap(s => {
+          const pctData = datasets[metricKey][s]?.[String(res)];
+          if (!pctData) return [];
+          const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+          if (!refKey) return [];
+          return (pctData[refKey][param] ?? []).map(e => e.value);
+        })
+      )].sort((a, b) => a - b);
+
+      avgByRes[res] = allVals.map(val => {
+        const pctChanges = scenes.flatMap(s => {
+          const pctData = datasets[metricKey][s]?.[String(res)];
+          if (!pctData) return [];
+          const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+          if (!refKey) return [];
+          const entries = pctData[refKey][param] ?? [];
+          if (!entries.length) return [];
+          const baseline = entries.reduce((a, b) => a + b.score, 0) / entries.length;
+          if (baseline === 0) return [];
+          const match = entries.find(e => Math.abs(e.value - val) < 1e-9);
+          return match ? [(match.score - baseline) / baseline * 100] : [];
+        });
+        return pctChanges.length
+          ? { value: val, score: pctChanges.reduce((a, b) => a + b, 0) / pctChanges.length }
+          : null;
+      }).filter(Boolean);
+    }
+    seriesByMetric[metricKey] = avgByRes;
+  }
+
+  const GAP    = 48;
+  const W      = wrap.clientWidth || 900;
+  const H      = expanded ? 420 : 280;
+  const margin = { top: 20, right: 20, bottom: 52, left: 56 };
+  const panelW = (W - GAP) / 2;
+  const iW     = panelW - margin.left - margin.right;
+  const iH     = H - margin.top - margin.bottom;
+
+  const svg     = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
+  const tooltip = document.getElementById('tooltip');
+
+  ['CGVQM', 'CVVDP'].forEach((metricKey, mi) => {
+    const avgByRes = seriesByMetric[metricKey];
+    const offsetX  = mi * (panelW + GAP);
+    const allPts   = Object.values(avgByRes).flat();
+
+    const clipId = `clip-overall-comp-${param}-${mi}-${expanded}`;
+    svg.append('defs').append('clipPath').attr('id', clipId)
+      .append('rect').attr('width', iW).attr('height', iH);
+
+    const g  = svg.append('g').attr('transform', `translate(${offsetX + margin.left},${margin.top})`);
+    const ca = g.append('g').attr('clip-path', `url(#${clipId})`);
+
+    if (!allPts.length) {
+      g.append('text').attr('x', iW / 2).attr('y', iH / 2)
+        .attr('text-anchor', 'middle').attr('fill', 'var(--muted)').attr('font-size', 12)
+        .text('No data');
+      return;
+    }
+
+    const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
+    const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
+    const yScale = d3.scaleLinear()
+      .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
+      .nice().range([iH, 0]);
+
+    // zero line
+    ca.append('line')
+      .attr('x1', 0).attr('x2', iW)
+      .attr('y1', yScale(0)).attr('y2', yScale(0))
+      .attr('stroke', 'var(--border2)').attr('stroke-width', 1).attr('stroke-dasharray', '4,3');
+
+    ca.append('g').attr('class', 'grid')
+      .call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
+      .call(d3.axisBottom(xScale).ticks(expanded ? 8 : 6));
+    g.append('g').attr('class', 'axis')
+      .call(d3.axisLeft(yScale).ticks(expanded ? 8 : 5));
+
+    g.append('text').attr('class', 'axis-label')
+      .attr('x', iW / 2).attr('y', iH + 42)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(param.replace(/_/g, ' '));
+    g.append('text').attr('class', 'axis-label')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -iH / 2).attr('y', -44)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text('% change from mean');
+
+    g.append('text')
+      .attr('x', iW / 2).attr('y', -6)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Syne, sans-serif').attr('font-weight', 700).attr('font-size', 12)
+      .attr('fill', 'var(--muted)').attr('letter-spacing', '0.08em')
+      .text(metricKey);
+
+    const line = d3.line()
+      .x(d => xScale(d.value)).y(d => yScale(d.score))
+      .curve(d3.curveMonotoneX);
+
+    for (const res of RESOLUTIONS) {
+      const pts = avgByRes[res];
+      if (!pts?.length) continue;
+      const color = RES_COLORS[res];
+
+      ca.append('path').datum(pts)
+        .attr('class', 'series-line')
+        .attr('stroke', color).attr('stroke-width', expanded ? 2.5 : 2)
+        .attr('d', line);
+
+      ca.selectAll(null).data(pts).join('circle')
+        .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
+        .attr('r', expanded ? 5 : 3.5).attr('fill', color)
+        .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
+        .on('mousemove', (event, d) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${metricKey} · ${param.replace(/_/g, ' ')}</div>
+            <div class="tt-score">${d.score.toFixed(3)}%</div>
+            <div class="tt-label">value: <b>${d.value}</b></div>
+            <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>
+            <div class="tt-label">avg over <b>${scenes.length}</b> scenes</div>`;
+          tooltip.classList.add('visible');
+          positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+
+    // Legend
+    const legG = g.append('g').attr('transform', 'translate(8, 8)');
+    RESOLUTIONS.forEach((res, i) => {
+      legG.append('rect').attr('x', 0).attr('y', i * 16).attr('width', 10).attr('height', 10).attr('fill', RES_COLORS[res]);
+      legG.append('text').attr('x', 14).attr('y', i * 16 + 9)
+        .attr('fill', 'var(--muted)').attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+        .text(`${res}%`);
+    });
+  });
+}
 // ═══════════════════════════════════════════════════════════════════
 // TAB SWITCHING
 // ═══════════════════════════════════════════════════════════════════
@@ -1217,6 +1644,19 @@ document.querySelectorAll('.overall-tab-btn').forEach(btn => {
     document.querySelectorAll('.overall-tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`otab-${btn.dataset.otab}`).classList.add('active');
+    if (btn.dataset.otab === 'comparison') {
+      drawComparison();
+    } else {
+      // restore all scene toggles when leaving comparison tab
+      const togglesEl = document.getElementById('scene-toggles');
+      togglesEl.querySelectorAll('.legend-item').forEach(item => {
+        const scene = item.querySelector('.legend-label').textContent;
+        item.style.pointerEvents = '';
+        item.style.opacity = '';
+        item.style.title = '';
+        item.classList.toggle('inactive', !activeScenes.has(scene));
+      });
+    }
   });
 });
 
@@ -1228,9 +1668,24 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
     if (btn.dataset.tab === 'chart')       draw();
+    if (btn.dataset.tab === 'metriccomp')  drawSceneComparison();
     if (btn.dataset.tab === 'sensitivity') drawSensitivity();
     if (btn.dataset.tab === 'deepdive')    drawDeepDive();
     if (btn.dataset.tab === 'crossparam')  drawCrossParam();
+  });
+});
+
+document.querySelectorAll('.metric-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeMetric = btn.dataset.metric;
+    dataset = datasets[activeMetric];
+    // update subtitle
+    document.querySelector('header span').textContent = `quality explorer · ${activeMetric.toLowerCase()}`;
+    // re-render everything
+    init();
+    drawOverall();
   });
 });
 
@@ -1259,10 +1714,25 @@ function setStatus(msg, ok, id = 'status') {
   if (el) el.innerHTML = `<span class="${ok?'ok':'warn'}">${msg}</span>`;
 }
 
-const ro = new ResizeObserver(() => { if (document.getElementById('top-scene').classList.contains('active')) draw(); });
+const ro = new ResizeObserver(() => {
+  const onSceneTab = document.getElementById('top-scene')?.classList.contains('active');
+  if (onSceneTab) renderAll();
+});
 ro.observe(document.getElementById('chart-wrap'));
 
 loadData();
+
+const roComparison = new ResizeObserver(() => {
+  const onComparisonTab = document.getElementById('otab-comparison')?.classList.contains('active');
+  if (onComparisonTab) drawComparison();
+});
+roComparison.observe(document.getElementById('comparison-grid'));
+
+const roCurves = new ResizeObserver(() => {
+  const onCurvesTab = document.getElementById('otab-curves')?.classList.contains('active');
+  if (onCurvesTab) drawScoreCurves();
+});
+roCurves.observe(document.getElementById('curves-grid'));
 </script>
 </body>
 </html>
