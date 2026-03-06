@@ -1,8 +1,40 @@
 {
-  "vary_hist_percent_100": 9.0956,
-  "vary_hist_percent_125": 9.1314,
-  "vary_hist_percent_150": 9.1607,
-  "vary_hist_percent_200": 9.2013,
-  "vary_hist_percent_50": 9.0939,
-  "vary_hist_percent_75": 9.0861
+  "_meta": {
+    "reference_scene": "abandoned-flipped",
+    "metric": "ColorVideoVDP",
+    "scene": "abandoned-flipped"
+  },
+  "vary_hist_percent_1": {
+    "score": 9.0937
+  },
+  "vary_hist_percent_5": {
+    "score": 9.11
+  },
+  "vary_hist_percent_10": {
+    "score": 9.0941
+  },
+  "vary_hist_percent_15": {
+    "score": 9.0958
+  },
+  "vary_hist_percent_30": {
+    "score": 9.0952
+  },
+  "vary_hist_percent_50": {
+    "score": 9.0939
+  },
+  "vary_hist_percent_75": {
+    "score": 9.0861
+  },
+  "vary_hist_percent_100": {
+    "score": 9.0956
+  },
+  "vary_hist_percent_125": {
+    "score": 9.1314
+  },
+  "vary_hist_percent_150": {
+    "score": 9.1607
+  },
+  "vary_hist_percent_200": {
+    "score": 9.2013
+  }
 }

@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "lightfoliage-close",
+    "metric": "ColorVideoVDP",
+    "scene": "lightfoliage-close"
+  },
+  "vary_hist_percent_1": {
+    "score": 8.1667
+  },
+  "vary_hist_percent_10": {
+    "score": 8.1672
+  },
+  "vary_hist_percent_100": {
+    "score": 8.168
+  },
+  "vary_hist_percent_125": {
+    "score": 8.0665
+  },
+  "vary_hist_percent_15": {
+    "score": 8.1625
+  },
+  "vary_hist_percent_150": {
+    "score": 8.205
+  },
+  "vary_hist_percent_200": {
+    "score": 8.4691
+  },
+  "vary_hist_percent_30": {
+    "score": 8.1671
+  },
+  "vary_hist_percent_5": {
+    "score": 8.1625
+  },
+  "vary_hist_percent_50": {
+    "score": 8.1677
+  },
+  "vary_hist_percent_75": {
+    "score": 8.1624
+  }
+}
