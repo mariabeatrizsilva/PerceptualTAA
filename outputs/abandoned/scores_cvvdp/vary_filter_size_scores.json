@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "abandoned",
+    "metric": "ColorVideoVDP",
+    "scene": "abandoned"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.0609
+  },
+  "vary_filter_size_0.25": {
+    "score": 9.072
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.0538
+  },
+  "vary_filter_size_0.7": {
+    "score": 9.0597
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.0675
+  },
+  "vary_filter_size_0.95": {
+    "score": 9.0525
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.06
+  }
+}

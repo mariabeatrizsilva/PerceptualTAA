@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "junkyard-mound1",
+    "metric": "ColorVideoVDP",
+    "scene": "junkyard-mound1-screen-per-50"
+  },
+  "vary_filter_size_0.1": {
+    "score": 8.2855
+  },
+  "vary_filter_size_0.25": {
+    "score": 8.0809
+  },
+  "vary_filter_size_0.5": {
+    "score": 8.2624
+  },
+  "vary_filter_size_0.7": {
+    "score": 8.2917
+  },
+  "vary_filter_size_0.9": {
+    "score": 8.3145
+  },
+  "vary_filter_size_0.95": {
+    "score": 8.2999
+  },
+  "vary_filter_size_1.0": {
+    "score": 8.2698
+  }
+}

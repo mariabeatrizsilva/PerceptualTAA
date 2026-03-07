@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "scifi",
+    "metric": "ColorVideoVDP",
+    "scene": "scifi"
+  },
+  "vary_hist_percent_1": {
+    "score": 9.373
+  },
+  "vary_hist_percent_10": {
+    "score": 9.3729
+  },
+  "vary_hist_percent_100": {
+    "score": 9.373
+  },
+  "vary_hist_percent_125": {
+    "score": 9.4112
+  },
+  "vary_hist_percent_15": {
+    "score": 9.3729
+  },
+  "vary_hist_percent_150": {
+    "score": 9.4506
+  },
+  "vary_hist_percent_200": {
+    "score": 9.5283
+  },
+  "vary_hist_percent_30": {
+    "score": 9.373
+  },
+  "vary_hist_percent_5": {
+    "score": 9.373
+  },
+  "vary_hist_percent_50": {
+    "score": 9.3729
+  },
+  "vary_hist_percent_75": {
+    "score": 9.3731
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "resto-fwd",
+    "metric": "ColorVideoVDP",
+    "scene": "resto-fwd"
+  },
+  "vary_hist_percent_1": {
+    "score": 9.5076
+  },
+  "vary_hist_percent_10": {
+    "score": 9.5075
+  },
+  "vary_hist_percent_100": {
+    "score": 9.5286
+  },
+  "vary_hist_percent_125": {
+    "score": 9.5132
+  },
+  "vary_hist_percent_15": {
+    "score": 9.5285
+  },
+  "vary_hist_percent_150": {
+    "score": 9.5421
+  },
+  "vary_hist_percent_200": {
+    "score": 9.5266
+  },
+  "vary_hist_percent_30": {
+    "score": 9.5076
+  },
+  "vary_hist_percent_5": {
+    "score": 9.5284
+  },
+  "vary_hist_percent_50": {
+    "score": 9.5286
+  },
+  "vary_hist_percent_75": {
+    "score": 9.5076
+  }
+}

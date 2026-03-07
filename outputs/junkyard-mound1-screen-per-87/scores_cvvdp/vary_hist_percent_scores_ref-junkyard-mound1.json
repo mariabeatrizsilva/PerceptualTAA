@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "junkyard-mound1",
+    "metric": "ColorVideoVDP",
+    "scene": "junkyard-mound1-screen-per-87"
+  },
+  "vary_hist_percent_100": {
+    "score": 8.5152
+  },
+  "vary_hist_percent_125": {
+    "score": 8.4813
+  },
+  "vary_hist_percent_150": {
+    "score": 8.622
+  },
+  "vary_hist_percent_200": {
+    "score": 8.7366
+  }
+}

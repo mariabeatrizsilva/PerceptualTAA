@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-barzoom",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-barzoom"
+  },
+  "vary_hist_percent_1": {
+    "score": 9.285
+  },
+  "vary_hist_percent_10": {
+    "score": 9.2813
+  },
+  "vary_hist_percent_100": {
+    "score": 9.3672
+  },
+  "vary_hist_percent_125": {
+    "score": 9.3241
+  },
+  "vary_hist_percent_15": {
+    "score": 9.3682
+  },
+  "vary_hist_percent_150": {
+    "score": 9.4348
+  },
+  "vary_hist_percent_200": {
+    "score": 9.3775
+  },
+  "vary_hist_percent_30": {
+    "score": 9.2843
+  },
+  "vary_hist_percent_5": {
+    "score": 9.3682
+  },
+  "vary_hist_percent_50": {
+    "score": 9.3682
+  },
+  "vary_hist_percent_75": {
+    "score": 9.2855
+  }
+}

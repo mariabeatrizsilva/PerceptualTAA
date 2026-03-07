@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "fantasticvillage-open",
+    "metric": "ColorVideoVDP",
+    "scene": "fantasticvillage-open"
+  },
+  "vary_hist_percent_100": {
+    "score": 9.6452
+  },
+  "vary_hist_percent_125": {
+    "score": 9.7014
+  },
+  "vary_hist_percent_150": {
+    "score": 9.7251
+  },
+  "vary_hist_percent_200": {
+    "score": 9.7608
+  }
+}

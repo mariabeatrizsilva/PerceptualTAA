@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-store",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-store"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.2858
+  },
+  "vary_filter_size_0.25": {
+    "score": 9.1704
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.2856
+  },
+  "vary_filter_size_0.7": {
+    "score": 9.1718
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.2877
+  },
+  "vary_filter_size_0.95": {
+    "score": 9.1692
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.2858
+  }
+}
