@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "quarry-rocksonly",
+    "metric": "ColorVideoVDP",
+    "scene": "quarry-rocksonly"
+  },
+  "vary_filter_size_0.1": {
+    "score": 8.7471
+  },
+  "vary_filter_size_0.25": {
+    "score": 8.7755
+  },
+  "vary_filter_size_0.5": {
+    "score": 8.7468
+  },
+  "vary_filter_size_0.7": {
+    "score": 8.7704
+  },
+  "vary_filter_size_0.9": {
+    "score": 8.7469
+  },
+  "vary_filter_size_0.95": {
+    "score": 8.7754
+  },
+  "vary_filter_size_1.0": {
+    "score": 8.7416
+  }
+}

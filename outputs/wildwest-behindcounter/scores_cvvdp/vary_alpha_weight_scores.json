@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-behindcounter",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-behindcounter"
+  },
+  "vary_alpha_weight_0.01": {
+    "score": 9.3297
+  },
+  "vary_alpha_weight_0.02": {
+    "score": 9.4225
+  },
+  "vary_alpha_weight_0.04": {
+    "score": 9.3393
+  },
+  "vary_alpha_weight_0.06": {
+    "score": 9.4483
+  },
+  "vary_alpha_weight_0.1": {
+    "score": 9.3636
+  },
+  "vary_alpha_weight_0.2": {
+    "score": 9.5526
+  },
+  "vary_alpha_weight_0.5": {
+    "score": 9.3985
+  },
+  "vary_alpha_weight_0.6": {
+    "score": 9.6634
+  },
+  "vary_alpha_weight_0.7": {
+    "score": 9.4195
+  },
+  "vary_alpha_weight_0.8": {
+    "score": 9.668
+  },
+  "vary_alpha_weight_0.9": {
+    "score": 9.4056
+  },
+  "vary_alpha_weight_1.0": {
+    "score": 9.6656
+  }
+}

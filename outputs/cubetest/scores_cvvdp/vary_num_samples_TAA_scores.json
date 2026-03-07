@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "cubetest",
+    "metric": "ColorVideoVDP",
+    "scene": "cubetest"
+  },
+  "vary_num_samples_TAA_16": {
+    "score": 9.7615
+  },
+  "vary_num_samples_TAA_32": {
+    "score": 9.7647
+  },
+  "vary_num_samples_TAA_4": {
+    "score": 9.5868
+  },
+  "vary_num_samples_TAA_64": {
+    "score": 9.7745
+  },
+  "vary_num_samples_TAA_8": {
+    "score": 9.7548
+  }
+}

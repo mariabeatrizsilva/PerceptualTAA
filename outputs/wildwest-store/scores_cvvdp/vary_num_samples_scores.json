@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-store",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-store"
+  },
+  "vary_num_samples_16": {
+    "score": 9.1603
+  },
+  "vary_num_samples_32": {
+    "score": 9.3148
+  },
+  "vary_num_samples_4": {
+    "score": 9.1457
+  },
+  "vary_num_samples_64": {
+    "score": 9.1923
+  },
+  "vary_num_samples_8": {
+    "score": 9.2856
+  }
+}

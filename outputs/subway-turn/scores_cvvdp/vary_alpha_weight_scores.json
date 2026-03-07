@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "reference_scene": "subway-turn",
+    "metric": "ColorVideoVDP",
+    "scene": "subway-turn"
+  },
+  "vary_alpha_weight_0.01": {
+    "score": 8.3757
+  },
+  "vary_alpha_weight_0.02": {
+    "score": 8.414
+  },
+  "vary_alpha_weight_0.04": {
+    "score": 8.4764
+  },
+  "vary_alpha_weight_0.06": {
+    "score": 8.5256
+  },
+  "vary_alpha_weight_0.1": {
+    "score": 8.5948
+  },
+  "vary_alpha_weight_0.2": {
+    "score": 8.6925
+  },
+  "vary_alpha_weight_0.5": {
+    "score": 8.7951
+  },
+  "vary_alpha_weight_0.6": {
+    "score": 8.8096
+  },
+  "vary_alpha_weight_0.7": {
+    "score": 8.8201
+  },
+  "vary_alpha_weight_0.8": {
+    "score": 8.8293
+  },
+  "vary_alpha_weight_0.9": {
+    "score": 8.8374
+  },
+  "vary_alpha_weight_1.0": {
+    "score": 8.8454
+  }
+}

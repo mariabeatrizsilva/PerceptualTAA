@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "quarry-rocksonly",
+    "metric": "ColorVideoVDP",
+    "scene": "quarry-rocksonly"
+  },
+  "vary_hist_percent_1": {
+    "score": 8.7756
+  },
+  "vary_hist_percent_10": {
+    "score": 8.7755
+  },
+  "vary_hist_percent_100": {
+    "score": 8.7497
+  },
+  "vary_hist_percent_125": {
+    "score": 8.8419
+  },
+  "vary_hist_percent_15": {
+    "score": 8.7469
+  },
+  "vary_hist_percent_150": {
+    "score": 8.8779
+  },
+  "vary_hist_percent_200": {
+    "score": 9.0164
+  },
+  "vary_hist_percent_30": {
+    "score": 8.7704
+  },
+  "vary_hist_percent_5": {
+    "score": 8.7472
+  },
+  "vary_hist_percent_50": {
+    "score": 8.7463
+  },
+  "vary_hist_percent_75": {
+    "score": 8.7752
+  }
+}

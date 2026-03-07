@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-town",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-town"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.1478
+  },
+  "vary_filter_size_0.25": {
+    "score": 8.7543
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.1475
+  },
+  "vary_filter_size_0.7": {
+    "score": 8.7945
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.148
+  },
+  "vary_filter_size_0.95": {
+    "score": 8.7871
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.1499
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "abandoned",
+    "metric": "ColorVideoVDP",
+    "scene": "abandoned"
+  },
+  "vary_hist_percent_1": {
+    "score": 9.0584
+  },
+  "vary_hist_percent_10": {
+    "score": 9.0488
+  },
+  "vary_hist_percent_100": {
+    "score": 9.0659
+  },
+  "vary_hist_percent_125": {
+    "score": 9.0972
+  },
+  "vary_hist_percent_15": {
+    "score": 9.0653
+  },
+  "vary_hist_percent_150": {
+    "score": 9.1242
+  },
+  "vary_hist_percent_200": {
+    "score": 9.1633
+  },
+  "vary_hist_percent_30": {
+    "score": 9.0506
+  },
+  "vary_hist_percent_5": {
+    "score": 9.068
+  },
+  "vary_hist_percent_50": {
+    "score": 9.0637
+  },
+  "vary_hist_percent_75": {
+    "score": 9.059
+  }
+}
