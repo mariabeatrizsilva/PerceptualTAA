@@ -52,8 +52,8 @@ scifi
     SEQUENCE_PATH = "/Game/Low_Poly_Sci-Fi_Corridor/flythrough"   
 
 quarry-all
-LEVEL_PATH = "/Game/Scene_QuarrySlate/Maps/Quarry_Slate"
-SEQUENCE_PATH = "/Game/Scene_QuarrySlate/Sequences/flythrough1"   
+    LEVEL_PATH = "/Game/Scene_QuarrySlate/Maps/Quarry_Slate"
+    SEQUENCE_PATH = "/Game/Scene_QuarrySlate/Sequences/flythrough1"   
 
 quarry-rocksonly
 

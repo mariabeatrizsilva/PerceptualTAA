@@ -22,10 +22,13 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
-# python compute_metrics.py -m CGVQM --all --scenes oldmine-screen-per-87 subway-lookdown-screen-per-71 subway-lookdown-screen-per-87 subway-turn-screen-per-50 subway-turn-screen-per-71 subway-turn-screen-per-87 oldmine-warm-screen-per-50 oldmine-warm-screen-per-71 oldmine-warm-screen-per-87 abandoned-screen-per-50 abandoned-screen-per-71 abandoned-screen-per-87 junkyard-mound2-screen-per-50 junkyard-mound2-screen-per-71 junkyard-mound2-screen-per-87 --no-err-maps
+# python compute_metrics.py -m CGVQM --all --scenes junkyard-mound1-screen-per-50 junkyard-mound1-screen-per-71 junkyard-mound1-screen-per-87 junkyard-mound2-screen-per-50 junkyard-mound2-screen-per-71 junkyard-mound2-screen-per-87 --no-err-maps
 # python compute_metrics.py -m CGVQM --all --scenes lightfoliage-screen-per-50 lightfoliage-screen-per-71 lightfoliage-screen-per-87 cubetest-screen-per-50 cubetest-screen-per-71 cubetest-screen-per-87 scifi-screen-per-50 scifi-screen-per-71 scifi-screen-per-87 subway-lookdown-screen-per-50   --no-err-maps
+# python compute_metrics.py -m CGVQM --all --scenes lightfoliage-close-screen-per-50 lightfoliage-close-screen-per-71 lightfoliage-close-screen-per-87 abandoned-demo-screen-per-50 abandoned-demo-screen-per-71 abandoned-demo-screen-per-87 abandoned-flipped-screen-per-50 abandoned-flipped-screen-per-71 abandoned-flipped-screen-per-87  --no-err-maps
+
+
 REF_NAME = '16SSAA'
-BASE_MP4 = 'data/'
+BASE_DATA = 'data/'
 FRAMES_SUFFIX = '%04d.png'
 
 MISC_FOLDER = 'misc_params'
@@ -68,7 +71,7 @@ def derive_ref_scene(scene_name: str) -> str:
     return scene_name
 
 def get_base_frames(scene_name):
-    return f'data/{scene_name}/'
+    return f'{BASE_DATA}{scene_name}/'
 
 def get_output_paths(folder_name: str, metric: Metric, scene_name: str):
     """
@@ -95,7 +98,7 @@ def get_output_paths(folder_name: str, metric: Metric, scene_name: str):
 
 def get_reference_paths(scene_name: str):
     """Returns absolute paths to reference video and frames."""
-    ref_video_path = os.path.join(project_root, BASE_MP4, f'{REF_NAME}.mp4')
+    ref_video_path = os.path.join(project_root, BASE_DATA, f'{REF_NAME}.mp4')
     ref_frames_path = os.path.join(project_root, get_base_frames(scene_name=scene_name), REF_NAME, FRAMES_SUFFIX)
     return ref_video_path, ref_frames_path
 
@@ -465,7 +468,7 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
     ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)  # <-- was scene_name
 
     if metric == Metric.CGVQM:
-        ref_frames_folder = os.path.join(project_root, f'data/{ref_scene_name}/', REF_NAME)  # <-- was scene_name
+        ref_frames_folder = os.path.join(project_root, f'{BASE_DATA}{ref_scene_name}/', REF_NAME)  # <-- was scene_name
         if not os.path.exists(ref_frames_folder):
             raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
 
@@ -477,7 +480,7 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
         
     else:  # CVVDP
         ref_path = ref_frames_path
-        ref_folder = os.path.join(project_root, f'data/{scene_name}/', REF_NAME)
+        ref_folder = os.path.join(project_root, f'{BASE_DATA}{scene_name}/', REF_NAME)
         if not os.path.exists(ref_folder):
             raise FileNotFoundError(f"Reference frames folder not found: {ref_folder}")
 
@@ -691,7 +694,7 @@ Examples:
                 ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)
                 
                 if metric == Metric.CGVQM:
-                    ref_frames_folder = os.path.join(project_root, f'data/{ref_scene_name}/', REF_NAME)  # <-- was scene_name
+                    ref_frames_folder = os.path.join(project_root, f'{BASE_DATA}{ref_scene_name}/', REF_NAME)  # <-- was scene_name
                     if not os.path.exists(ref_frames_folder):
                         raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
                     ref_path = ref_frames_folder
