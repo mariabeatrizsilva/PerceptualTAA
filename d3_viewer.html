@@ -711,6 +711,7 @@ function drawSceneComparison() {
       for (const ref of Object.keys(sceneData[pct]).sort()) {
         // Rule 1: skip screen-per refs
         if (ref.includes('screen-per')) continue;
+        if (seriesVisibility[`${pct}|${ref}`] === false) continue;
         const entries = sceneData[pct][ref][activeParam];
         if (!entries?.length) continue;
         series.push({ pct, ref, entries, color: RES_COLORS[+pct] ?? 'var(--accent)' });

@@ -43,9 +43,12 @@ import argparse
 # ============================================================================
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR  = os.path.join(PROJECT_ROOT, 'outputs')
-DATASET_PATH = os.path.join(PROJECT_ROOT, 'dataset.json')
-SCORES_SUBDIR = 'scores_cgvqm'
-METRIC_NAME   = 'CGVQM'
+DATASET_PATH = os.path.join(PROJECT_ROOT, 'dataset_cvvdp.json')
+SCORES_SUBDIR = 'scores_cvvdp'
+METRIC_NAME   = 'CVVDP'
+# DATASET_PATH = os.path.join(PROJECT_ROOT, 'dataset.json')
+# SCORES_SUBDIR = 'scores_cgvqm'
+# METRIC_NAME   = 'CGVQM'
 
 # Parses folder names:
 #   oldmine                  -> base_scene=oldmine,   screen_pct=100
