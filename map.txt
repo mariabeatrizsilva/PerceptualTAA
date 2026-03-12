@@ -16,7 +16,7 @@ junkyard-mound1:
     SEQUENCE_PATH = "/Game/Scene_Junkyard/Sequences/flythrough"   
 junkyard-mound2:
     FILE: Newproj
-    LEVEL_PATH = "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+    LEVEL_PATH = "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
     SEQUENCE_PATH = "/Game/Scene_Junkyard/Sequences/flythrough-above"   
 
 subway-lookdown
@@ -67,11 +67,35 @@ lightfoliage-close
     LEVEL_PATH = "/Game/Light_Foliage/Maps/Showcase"
     SEQUENCE_PATH = "/Game/Light_Foliage/Flythrough-Close"   
 
-resto-close
+wildwest-bar
+    FILE: Wildwest
+    LEVEL_PATH = "/Game/WildWest/Maps/WildWestVillage"
+    SEQUENCE_PATH = "/Game/WildWest/Flythrough-Bar"   
 
-resto-fwd
+OUTPUT_NAME = 'wildwest-barzoom'
+LEVEL_PATH = "/Game/WildWest/Maps/WildWestVillage"
+SEQUENCE_PATH = "/Game/WildWest/Flythrough-BarZoom"   
 
-resto-pan
+OUTPUT_NAME = 'wildwest-behindcounter'
+LEVEL_PATH = "/Game/WildWest/Maps/WildWestVillage"
+SEQUENCE_PATH = "/Game/WildWest/Flythrough-BehindCounter"   
 
+OUTPUT_NAME = 'wildwest-behindcounter'
+LEVEL_PATH = "/Game/WildWest/Maps/WildWestVillage"
+SEQUENCE_PATH = "/Game/WildWest/Flythrough-BehindCounter"   
 
-wildwest...
+OUTPUT_NAME = 'wildwest-town'
+LEVEL_PATH = "/Game/WildWest/Maps/WildWestVillage"
+SEQUENCE_PATH = "/Game/WildWest/Flythrough-Town"   
+
+OUTPUT_NAME = 'resto-close'
+LEVEL_PATH = "/Game/RestaurantScene/Maps/Showcase"
+SEQUENCE_PATH = "/Game/RestaurantScene/Cinematics/Flythrough"   
+
+OUTPUT_NAME = 'resto-pan'
+LEVEL_PATH = "/Game/RestaurantScene/Maps/Showcase"
+SEQUENCE_PATH = "/Game/RestaurantScene/Cinematics/Flythrough1"   
+
+OUTPUT_NAME = 'resto-fwd'
+LEVEL_PATH = "/Game/RestaurantScene/Maps/Showcase"
+SEQUENCE_PATH = "/Game/RestaurantScene/Cinematics/Flythrough2"   
