@@ -1,0 +1,129 @@
+# Mapping of project nicknames to their absolute disk paths
+projects:
+  Newproj: "C:/Users/Bia/Documents/Unreal Projects/Newproj/Newproj.uproject"
+  Cube: "C:/Users/Bia/Documents/Unreal Projects/Cube/Cube.uproject"
+  SubwayTrain: "C:/Users/Bia/Documents/Unreal Projects/SubwayTrain/SubwayTrain.uproject"
+  NatureEnvs: "C:/Users/Bia/Documents/Unreal Projects/NatureEnvs/NatureEnvs.uproject"
+  Wildwest: "C:/Users/Bia/Documents/Unreal Projects/Wildwest/Wildwest.uproject"
+
+# Scene configurations
+scenes:
+  # --- Project: Newproj ---
+  fantasticvillage-open:
+    project: Newproj
+    level: "/Game/Fantastic_Village_Pack/maps/map_village_day"
+    sequence: "/Game/Fantastic_Village_Pack/animations/Cam_LevelSequence"
+  
+  oldmine:
+    project: Newproj
+    level: "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+    sequence: "/Game/Scene_OldMine/Sequences/seq1-reg"
+
+  oldmine-warm:
+    project: Newproj
+    level: "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+    sequence: "/Game/Scene_OldMine/Sequences/seq3"
+
+  junkyard-mound1:
+    project: Newproj
+    level: "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
+    sequence: "/Game/Scene_Junkyard/Sequences/flythrough"
+
+  junkyard-mound2:
+    project: Newproj
+    level: "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
+    sequence: "/Game/Scene_Junkyard/Sequences/flythrough-above"
+
+  # --- Project: SubwayTrain ---
+  subway-lookdown:
+    project: SubwayTrain
+    level: "/Game/SubwayTrain/Maps/Demonstration"
+    sequence: "/Game/SubwayTrain/Flythrough-Close"
+
+  subway-turn:
+    project: SubwayTrain
+    level: "/Game/SubwayTrain/Maps/Demonstration"
+    sequence: "/Game/SubwayTrain/Flythrough"
+
+  # --- Project: Cube ---
+  cubetest:
+    project: Cube
+    level: "/Game/Base"
+    sequence: "/Game/walkthrough"
+
+  abandoned:
+    project: Cube
+    level: "/Game/AbandonedPowerPlant/Maps/PowerPlant"
+    sequence: "/Game/AbandonedPowerPlant/Maps/plantwalk1"
+
+  abandoned-demo:
+    project: Cube
+    level: "/Game/AbandonedPowerPlant/Maps/Showcase"
+    sequence: "/Game/AbandonedPowerPlant/Maps/plantwalk"
+
+  abandoned-flipped:
+    project: Cube
+    level: "/Game/AbandonedPowerPlant/Maps/PowerPlant"
+    sequence: "/Game/AbandonedPowerPlant/plantwalk2"
+
+  scifi:
+    project: Cube
+    level: "/Game/Low_Poly_Sci-Fi_Corridor/Maps/Overview_Map"
+    sequence: "/Game/Low_Poly_Sci-Fi_Corridor/flythrough"
+
+  # --- Project: NatureEnvs ---
+  quarry-all:
+    project: NatureEnvs
+    level: "/Game/Scene_QuarrySlate/Maps/Quarry_Slate"
+    sequence: "/Game/Scene_QuarrySlate/Sequences/flythrough1"
+
+  quarry-rocksonly:
+    project: NatureEnvs
+    level: "/Game/Scene_QuarrySlate/Maps/Quarry_Slate"
+    sequence: "/Game/Scene_QuarrySlate/Sequences/flythrough"
+
+  lightfoliage:
+    project: NatureEnvs
+    level: "/Game/Light_Foliage/Maps/Showcase"
+    sequence: "/Game/Light_Foliage/Flythrough"
+
+  lightfoliage-close:
+    project: NatureEnvs
+    level: "/Game/Light_Foliage/Maps/Showcase"
+    sequence: "/Game/Light_Foliage/Flythrough-Close"
+
+  # --- Project: Wildwest (Includes Restaurant) ---
+  wildwest-bar:
+    project: Wildwest
+    level: "/Game/WildWest/Maps/WildWestVillage"
+    sequence: "/Game/WildWest/Flythrough-Bar"
+
+  wildwest-barzoom:
+    project: Wildwest
+    level: "/Game/WildWest/Maps/WildWestVillage"
+    sequence: "/Game/WildWest/Flythrough-BarZoom"
+
+  wildwest-behindcounter:
+    project: Wildwest
+    level: "/Game/WildWest/Maps/WildWestVillage"
+    sequence: "/Game/WildWest/Flythrough-BehindCounter"
+
+  wildwest-town:
+    project: Wildwest
+    level: "/Game/WildWest/Maps/WildWestVillage"
+    sequence: "/Game/WildWest/Flythrough-Town"
+
+  resto-close:
+    project: Wildwest
+    level: "/Game/RestaurantScene/Maps/Showcase"
+    sequence: "/Game/RestaurantScene/Cinematics/Flythrough"
+
+  resto-pan:
+    project: Wildwest
+    level: "/Game/RestaurantScene/Maps/Showcase"
+    sequence: "/Game/RestaurantScene/Cinematics/Flythrough1"
+
+  resto-fwd:
+    project: Wildwest
+    level: "/Game/RestaurantScene/Maps/Showcase"
+    sequence: "/Game/RestaurantScene/Cinematics/Flythrough2"
