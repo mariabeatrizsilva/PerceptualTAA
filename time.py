@@ -17,7 +17,7 @@ TAA_VALUE      = 0.1
 # Frames to capture. Needs to be larger than your sequence (150 frames) but
 # the CSV profiler starts at level load, not at sequence start, so we pad
 # generously. Frames captured during loading are filtered out in parsing.
-CSV_FRAMES     = 500
+CSV_FRAMES     = 300
 
 # ── Output folder ────────────────────────────────────────────────────────────
 current_dir  = os.path.dirname(os.path.abspath(__file__))
@@ -86,54 +86,99 @@ if not new_csvs:
 csv_path = max(new_csvs, key=os.path.getmtime)  # pick newest if somehow >1
 print(f"CSV found: {csv_path}")
 
+def save_results_to_master(csv_path, metrics):
+    """
+    Takes the output from get_key_metrics and appends it to a master results file.
+    """
+    results_path = os.path.join(os.getcwd(), "results.csv")
+    write_header = not os.path.exists(results_path)
+
+    # We map the function's output dictionary to your desired master CSV columns
+    # We also use .get() to provide a fallback value if a metric is missing
+    new_data = {
+        'scene': SCENE_TO_RUN,
+        'screen_pct': SCREEN_PCT,
+        'taa_value': TAA_VALUE,  # Adding this to track your specific parameter
+        'avg_frame_ms': metrics.get("Avg Frame Time (ms)", 0),
+        'avg_gpu_ms': metrics.get("Avg GPU Time (ms)", 0),
+        'avg_mem_mb': metrics.get("Avg VRAM Usage (MB)", 0),
+        'peak_mem_mb': metrics.get("Peak VRAM Usage (MB)", 0),
+        'frames_analysed': metrics.get("Total Frames", 0),
+        'csv_file': os.path.basename(csv_path)
+    }
+
+    # Convert to DataFrame and append
+    res_df = pd.DataFrame([new_data])
+    res_df.to_csv(results_path, mode='a', index=False, header=write_header)
+
+    print(f"\n✅ Results appended to: {results_path}")
+
+
 # ── Parse the CSV ─────────────────────────────────────────────────────────────
-df = pd.read_csv(csv_path)
-print(f"\nColumns available: {list(df.columns)}")
+def get_key_metrics(csv_path):
+    """
+    Reads the Unreal CSV and returns a dictionary of core performance stats
+    including VRAM, FrameTime, and Thread timings.
+    """
+    try:
+        # The exact column names from the Unreal CSV Profiler list
+        needed = [
+            'FrameTime', 
+            'GameThreadTime', 
+            'RenderThreadTime', 
+            'GPUTime', 
+            'RHIThreadTime', 
+            'GPUMem/LocalUsedMB'
+        ]
+        
+        # Read only the necessary columns to save memory and avoid "too many fields" errors
+        df = pd.read_csv(
+            csv_path, 
+            usecols=lambda x: x in needed,
+            low_memory=False
+        )
+        
+        # 1. Strip metadata rows: Unreal CSVs often have header text rows at the start/end
+        # 2. Convert to numeric: errors='coerce' turns non-numeric junk into NaN
+        # 3. Dropna: Removes those NaN rows so calculations are accurate
+        df = df.apply(pd.to_numeric, errors='coerce').dropna()
 
-# Find the TAA column — UE 5.6 may name it slightly differently.
-# We search case-insensitively for 'temporal' to be safe.
-taa_col = next(
-    (c for c in df.columns if 'temporal' in c.lower()),
-    None
-)
+        # Helper to safely calculate stats even if a column was missing from the CSV
+        def get_stats(col_name):
+            if col_name in df.columns:
+                return {
+                    "avg": round(df[col_name].mean(), 2),
+                    "max": round(df[col_name].max(), 2)
+                }
+            return {"avg": "N/A", "max": "N/A"}
 
-if taa_col is None:
-    print("WARNING: No TemporalAA column found in CSV. Check column names above.")
-    print("The profiler is working but TAA may be named differently in UE 5.6.")
-    exit(1)
+        # Building the final metrics dictionary
+        frame_stats = get_stats('FrameTime')
+        game_stats = get_stats('GameThreadTime')
+        render_stats = get_stats('RenderThreadTime')
+        gpu_stats = get_stats('GPUTime')
+        rhi_stats = get_stats('RHIThreadTime')
+        vram_stats = get_stats('GPUMem/LocalUsedMB')
 
-print(f"TAA column found: '{taa_col}'")
+        metrics = {
+            "Total Frames": len(df),
+            "Avg Frame Time (ms)": frame_stats["avg"],
+            "Max Frame Time (ms)": frame_stats["max"],
+            "Avg Game Thread (ms)": game_stats["avg"],
+            "Avg Render Thread (ms)": render_stats["avg"],
+            "Avg GPU Time (ms)": gpu_stats["avg"],
+            "Avg RHI Thread (ms)": rhi_stats["avg"],
+            "Peak VRAM Usage (MB)": vram_stats["max"],
+            "Avg VRAM Usage (MB)": vram_stats["avg"]
+        }
+        
+        return metrics
 
-# ── Filter out load-time frames ───────────────────────────────────────────────
-# During level load, TAA ms will be 0 or very spiky. We drop the first N rows
-# to exclude loading frames and keep only steady-state sequence frames.
-# Adjust SKIP_FRAMES if your load is faster or slower than expected.
-SKIP_FRAMES = 50   # conservative — increase if you still see spiky values
-taa_values  = df[taa_col].dropna()
-taa_steady  = taa_values.iloc[SKIP_FRAMES:]
+    except Exception as e:
+        return f"Error processing CSV: {e}"
+metrics = get_key_metrics(csv_path=csv_path)
 
-taa_mean = taa_steady.mean()
-taa_std  = taa_steady.std()
-taa_min  = taa_steady.min()
-taa_max  = taa_steady.max()
-
-print(f"\nResults for {SCENE_TO_RUN} | {TAA_CVAR}={TAA_VALUE} | ScreenPct={SCREEN_PCT}")
-print(f"  Frames analysed : {len(taa_steady)}")
-print(f"  TAA mean        : {taa_mean:.4f} ms")
-print(f"  TAA std         : {taa_std:.4f} ms")
-print(f"  TAA min/max     : {taa_min:.4f} / {taa_max:.4f} ms")
-
-# ── Append to master results file ────────────────────────────────────────────
-results_path = os.path.join(current_dir, "results.csv")
-write_header = not os.path.exists(results_path)
-
-with open(results_path, 'a') as f:
-    if write_header:
-        f.write("scene,screen_pct,param_name,param_value,taa_ms_mean,taa_ms_std,taa_ms_min,taa_ms_max,frames_analysed,csv_file\n")
-    f.write(
-        f"{SCENE_TO_RUN},{SCREEN_PCT},{TAA_CVAR},{TAA_VALUE},"
-        f"{taa_mean:.4f},{taa_std:.4f},{taa_min:.4f},{taa_max:.4f},"
-        f"{len(taa_steady)},{os.path.basename(csv_path)}\n"
-    )
-
-print(f"\nAppended to {results_path}")
+if isinstance(metrics, dict):
+    save_results_to_master(csv_path, metrics)
+else:
+    print(metrics) # Print the error message if the function failed
