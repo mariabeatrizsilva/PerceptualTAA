@@ -5,8 +5,6 @@ from enum import Enum
 import argparse
 import glob
 
-
-
 ## Config for CGVQM
 import sys
 import time
@@ -16,7 +14,6 @@ import torch
 from PIL import Image
 from torch.nn.functional import interpolate
 
-
 ## Config for ColorVideoVDP (CVVDP)
 import subprocess
 import shlex
@@ -25,10 +22,13 @@ import re
 # ============================================================================
 # CONFIGURATION - SCENE SETTINGS
 # ============================================================================
+# python compute_metrics.py -m CGVQM --all --scenes junkyard-mound1-screen-per-50 junkyard-mound1-screen-per-71 junkyard-mound1-screen-per-87 junkyard-mound2-screen-per-50 junkyard-mound2-screen-per-71 junkyard-mound2-screen-per-87 --no-err-maps
+# python compute_metrics.py -m CGVQM --all --scenes lightfoliage-screen-per-50 lightfoliage-screen-per-71 lightfoliage-screen-per-87 cubetest-screen-per-50 cubetest-screen-per-71 cubetest-screen-per-87 scifi-screen-per-50 scifi-screen-per-71 scifi-screen-per-87 subway-lookdown-screen-per-50   --no-err-maps
+# python compute_metrics.py -m CGVQM --all --scenes lightfoliage-close-screen-per-50 lightfoliage-close-screen-per-71 lightfoliage-close-screen-per-87 abandoned-demo-screen-per-50 abandoned-demo-screen-per-71 abandoned-demo-screen-per-87 abandoned-flipped-screen-per-50 abandoned-flipped-screen-per-71 abandoned-flipped-screen-per-87  --no-err-maps
 
-# python compute_metrics.py -m CGVQM --all --scenes fantasticvillage-open quarry-all quarry-rocksonly resto-close resto-pan subway-lookdown
+
 REF_NAME = '16SSAA'
-BASE_MP4 = 'data/'
+BASE_DATA = 'data/'
 FRAMES_SUFFIX = '%04d.png'
 
 MISC_FOLDER = 'misc_params'
@@ -59,9 +59,19 @@ CVVDP_EXECUTABLE = 'cvvdp'
 DISPLAY_MODE = 'standard_4k'
 FPS_VALUE = 30
 
+def derive_ref_scene(scene_name: str) -> str:
+    """Derive reference scene by stripping '-screen-per-{number}' suffix.
+    E.g. 'quarry-all-screen-per-30' -> 'quarry-all'
+         'subway-turn-screen-per-50' -> 'subway-turn'
+    Falls back to scene_name unchanged if no suffix matched.
+    """
+    match = re.match(r'^(.+)-screen-per-\d+$', scene_name)
+    if match:
+        return match.group(1)
+    return scene_name
 
 def get_base_frames(scene_name):
-    return f'data/{scene_name}/'
+    return f'{BASE_DATA}{scene_name}/'
 
 def get_output_paths(folder_name: str, metric: Metric, scene_name: str):
     """
@@ -88,7 +98,7 @@ def get_output_paths(folder_name: str, metric: Metric, scene_name: str):
 
 def get_reference_paths(scene_name: str):
     """Returns absolute paths to reference video and frames."""
-    ref_video_path = os.path.join(project_root, BASE_MP4, f'{REF_NAME}.mp4')
+    ref_video_path = os.path.join(project_root, BASE_DATA, f'{REF_NAME}.mp4')
     ref_frames_path = os.path.join(project_root, get_base_frames(scene_name=scene_name), REF_NAME, FRAMES_SUFFIX)
     return ref_video_path, ref_frames_path
 
@@ -329,34 +339,17 @@ def compute_metric_cgvqm(ref_frames_folder: str, dist_frames_folder: str, config
 Minimal changes to fix CVVDP error map generation
 Replace your compute_metric_cvvdp function with this version
 """
-def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str = None):
+def compute_metric_cvvdp(dist_path: str, ref_path: str):
     """
     Compute ColorVideoVDP score for a frame sequence pair.
     
     Args:
-        ref_path: Path pattern to reference frames (e.g., /path/to/ref/%04d.png)
         dist_path: Path pattern to distorted frames (e.g., /path/to/video_name/%04d.png)
-        heatmap_output_dir: Optional directory to save heatmap video
+        ref_path: Path pattern to reference frames (e.g., /path/to/ref/%04d.png)
     
     Returns:
         score (float)
     """
-    
-    # Determine if we need to save heatmap
-    temp_heatmap_video = None
-    if heatmap_output_dir:
-        os.makedirs(heatmap_output_dir, exist_ok=True)
-        
-        # FIXED: Extract video name correctly from the path pattern
-        # dist_path is like: /path/to/folder/video_name/%04d.png
-        # We want: video_name
-        # First remove the frame pattern (%04d.png)
-        dist_folder = os.path.dirname(dist_path)  # Gets /path/to/folder/video_name
-        video_name = os.path.basename(dist_folder)  # Gets video_name
-        
-        temp_heatmap_video = os.path.join(heatmap_output_dir, f'{video_name}_heatmap')
-    
-    # Construct the command
     command = [
         CVVDP_EXECUTABLE,
         '--test', dist_path,
@@ -365,15 +358,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
         '--fps', str(FPS_VALUE)
     ]
     
-    # Add heatmap output if requested
-    if temp_heatmap_video:
-        command.extend([
-            '--heatmap', 'raw',
-            '-o', temp_heatmap_video
-        ])
-    
     try:
-        # Execute the command
         print(f"    Running CVVDP...")
         result = subprocess.run(
             command,
@@ -383,7 +368,6 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
             shell=False
         )
         
-        # Try multiple patterns to extract the score
         score_pattern1 = re.compile(r"cvvdp\s*=\s*(\d+\.?\d*)")
         score_pattern2 = re.compile(r"cvvdp\s*:\s*(\d+\.?\d*)")
         score_pattern3 = re.compile(r"(\d+\.\d+)")
@@ -395,24 +379,11 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
             match = score_pattern3.search(result.stdout)
         
         if match:
-            score = float(match.group(1))
+            return float(match.group(1))
         else:
             print(f"    CVVDP stdout: {result.stdout}")
             print(f"    CVVDP stderr: {result.stderr}")
             raise ValueError("Could not extract score from CVVDP output")
-        
-        # Verify the heatmap was created and is valid
-        if temp_heatmap_video:
-            if os.path.exists(temp_heatmap_video):
-                file_size = os.path.getsize(temp_heatmap_video)
-                print(f"    Heatmap saved: {temp_heatmap_video} ({file_size} bytes)")
-                
-                if file_size < 1000:  # Suspiciously small file
-                    print(f"    WARNING: Heatmap file is very small, may be corrupted")
-            else:
-                print(f"    WARNING: Heatmap file was not created at {temp_heatmap_video}")
-        
-        return score
         
     except subprocess.CalledProcessError as e:
         print(f"    CVVDP stdout: {e.stdout}")
@@ -421,8 +392,7 @@ def compute_metric_cvvdp(ref_path: str, dist_path: str, heatmap_output_dir: str 
     
     except FileNotFoundError:
         raise RuntimeError(f"CVVDP executable '{CVVDP_EXECUTABLE}' not found. "
-                         "Ensure cvvdp is installed and in PATH.")
-    
+                         "Ensure cvvdp is installed and in PATH.")    
 
 """
 Update your compute_score_single function to handle simplified CVVDP return
@@ -439,8 +409,7 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         if not os.path.exists(dist_frames_folder):
             raise FileNotFoundError(f"Frames folder not found: {dist_frames_folder}")
         
-        err_map_name = f"{test_name}_errmap.mp4"
-        err_map_path = os.path.join(err_maps_dir, err_map_name)
+        err_map_path = os.path.join(err_maps_dir, f"{test_name}_errmap.mp4") if err_maps_dir else None
         
         folder_name = os.path.basename(folder_path)
         dist_video_path = os.path.join(
@@ -467,14 +436,20 @@ def compute_score_single(test_name: str, folder_path: str, ref_frames_folder: st
         )
         
         return score, per_frame_errors
+    elif metric == Metric.CVVDP:
+        dist_frames_path_pattern = os.path.join(folder_path, test_name, FRAMES_SUFFIX)
+        score = compute_metric_cvvdp(dist_frames_path_pattern, ref_frames_folder)
+        return score
             
-def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None):
-    ref_scene_name = ref_scene if ref_scene else scene_name  # <-- add this
+def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_scene: str = None, skip_err_maps: bool = False):
+    ref_scene_name = ref_scene if ref_scene else derive_ref_scene(scene_name)  
+    print(f"  Reference scene: {ref_scene_name}")
 
     folder_path, output_scores_path, err_maps_dir = get_paths(
         folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=ref_scene  # <-- add ref_scene
     )
-    
+    if skip_err_maps:
+        err_maps_dir = None
     # Load existing results if they exist (for resuming)
     if os.path.exists(output_scores_path):
         print(f"Found existing results file: {output_scores_path}")
@@ -482,18 +457,18 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
             results = json.load(f)
         print(f"Loaded {len([k for k in results if not k.startswith('_')])} existing results. Will skip already-processed videos.")
     else:
-        results = {
-            "_meta": {
-                "reference_scene": ref_scene_name,
-                "metric": metric.value,
-                "scene": scene_name,
-            }
-        }  # <-- replaces results = {}
+        results = {}
+
+    results["_meta"] = {
+        "reference_scene": ref_scene_name,
+        "metric": metric.value,
+        "scene": scene_name,
+    }
     
     ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)  # <-- was scene_name
 
     if metric == Metric.CGVQM:
-        ref_frames_folder = os.path.join(project_root, f'data/{ref_scene_name}/', REF_NAME)  # <-- was scene_name
+        ref_frames_folder = os.path.join(project_root, f'{BASE_DATA}{ref_scene_name}/', REF_NAME)  # <-- was scene_name
         if not os.path.exists(ref_frames_folder):
             raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
 
@@ -505,7 +480,7 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
         
     else:  # CVVDP
         ref_path = ref_frames_path
-        ref_folder = os.path.join(project_root, f'data/{scene_name}/', REF_NAME)
+        ref_folder = os.path.join(project_root, f'{BASE_DATA}{scene_name}/', REF_NAME)
         if not os.path.exists(ref_folder):
             raise FileNotFoundError(f"Reference frames folder not found: {ref_folder}")
 
@@ -553,8 +528,8 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
                 print(f"    Score: {score:.4f}")
                 print(f"    Per-frame errors: {len(per_frame_errors)} frames")
             else:  # CVVDP
-                score, _ = result
-                results[test_name] = score
+                score = result
+                results[test_name] = {'score': score}
                 print(f"    Score: {score:.4f}")
             
             # Save results immediately after each video
@@ -593,12 +568,7 @@ def compute_score_folder(folder_name: str, metric: Metric, scene_name: str, ref_
             print(f"Average score: {np.mean(scores):.4f}")
             print(f"Score range: [{min(scores):.4f}, {max(scores):.4f}]")
         else:
-            scores = []
-            for v in results.values():
-                if isinstance(v, dict):
-                    scores.append(v['score'])
-                else:
-                    scores.append(v)
+            scores = [v['score'] for v in results.values() if isinstance(v, dict) and 'score' in v]
             
             if scores:
                 print(f"Average score: {np.mean(scores):.4f}")
@@ -659,6 +629,12 @@ Examples:
     )
 
     parser.add_argument(
+        '--no-err-maps',
+        action='store_true',
+        help='Skip error map generation.'
+    )
+    
+    parser.add_argument(
         '--ref-scene',
         type=str,
         default=None,
@@ -714,11 +690,11 @@ Examples:
                 folder_path, output_scores_path, err_maps_dir = get_paths(
                     folder_name=folder_name, metric=metric, scene_name=scene_name
                 )
-                ref_scene_name = args.ref_scene if args.ref_scene else scene_name
+                ref_scene_name = args.ref_scene if args.ref_scene else derive_ref_scene(scene_name)
                 ref_video_path, ref_frames_path = get_reference_paths(ref_scene_name)
                 
                 if metric == Metric.CGVQM:
-                    ref_frames_folder = os.path.join(project_root, f'data/{ref_scene_name}/', REF_NAME)  # <-- was scene_name
+                    ref_frames_folder = os.path.join(project_root, f'{BASE_DATA}{ref_scene_name}/', REF_NAME)  # <-- was scene_name
                     if not os.path.exists(ref_frames_folder):
                         raise FileNotFoundError(f"Reference frames folder not found: {ref_frames_folder}")
                     ref_path = ref_frames_folder
@@ -765,7 +741,8 @@ Examples:
         # Normal mode: Process all videos in folders
         for folder_name in target_folders:
             try:
-                compute_score_folder(folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=args.ref_scene)  # <-- add ref_scene
+                ref_scene_name = args.ref_scene if args.ref_scene else derive_ref_scene(scene_name)
+                compute_score_folder(folder_name=folder_name, metric=metric, scene_name=scene_name, ref_scene=ref_scene_name, skip_err_maps=args.no_err_maps)
             except Exception as e:
                 print(f"\nFailed to process folder '{folder_name}': {e}\n")
                 import traceback

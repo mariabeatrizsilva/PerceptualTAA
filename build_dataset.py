@@ -43,6 +43,9 @@ import argparse
 # ============================================================================
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 OUTPUTS_DIR  = os.path.join(PROJECT_ROOT, 'outputs')
+# DATASET_PATH = os.path.join(PROJECT_ROOT, 'dataset_cvvdp.json')
+# SCORES_SUBDIR = 'scores_cvvdp'
+# METRIC_NAME   = 'CVVDP'
 DATASET_PATH = os.path.join(PROJECT_ROOT, 'dataset.json')
 SCORES_SUBDIR = 'scores_cgvqm'
 METRIC_NAME   = 'CGVQM'
@@ -133,7 +136,7 @@ def entry_exists(dataset: dict, base_scene: str, screen_pct: str,
         return False
 
 
-def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tuple:
+def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False, no_per_frame: bool = False) -> tuple:
     """
     Crawl outputs/ and merge any new data into dataset.
 
@@ -211,9 +214,9 @@ def crawl_outputs(outputs_dir: str, dataset: dict, dry_run: bool = False) -> tup
                     per_frame_errors = []
 
                 new_point = {
-                    "value":            value,
-                    "score":            score,
-                    "per_frame_errors": per_frame_errors,
+                    "value": value,
+                    "score": score,
+                    **({"per_frame_errors": per_frame_errors} if not no_per_frame else {}),
                 }
 
                 if dry_run:
@@ -268,6 +271,8 @@ Examples:
   python build_dataset.py --rebuild              # full rebuild from scratch
   python build_dataset.py --dry-run              # preview without writing
   python build_dataset.py --outputs-dir /path    # custom outputs directory
+  python build_dataset.py --rebuild --no-per-frame
+  python build_dataset.py --no-per-frame
         """
     )
     parser.add_argument('--rebuild',  action='store_true',
@@ -276,6 +281,9 @@ Examples:
                         help='Print what would be added without writing anything.')
     parser.add_argument('--outputs-dir', type=str, default=OUTPUTS_DIR,
                         help=f'Path to outputs directory (default: {OUTPUTS_DIR})')
+    parser.add_argument('--no-per-frame', action='store_true',
+                    help='Exclude per_frame_errors from dataset (smaller file).')
+    
     args = parser.parse_args()
 
     print("── PerceptualTAA Dataset Builder ────────────────────────────────")
@@ -295,8 +303,7 @@ Examples:
         else:
             print("No existing dataset found. Building from scratch...\n")
 
-    dataset, n_added, n_skipped = crawl_outputs(args.outputs_dir, dataset, dry_run=args.dry_run)
-
+    dataset, n_added, n_skipped = crawl_outputs(args.outputs_dir, dataset, dry_run=args.dry_run, no_per_frame=args.no_per_frame)
     print(f"\n── Results ──────────────────────────────────────────────────────")
     print(f"  New entries added : {n_added}")
     print(f"  Entries skipped   : {n_skipped} (already in dataset)")

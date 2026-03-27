@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PerceptualTAA — Quality Explorer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #0d0f14;
+    --surface: #13161e;
+    --border:  #1f2433;
+    --border2: #2a3045;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --accent:  #38bdf8;
+    --good:    #34d399;
+    --warn:    #fbbf24;
+    --bad:     #f87171;
+    --c0: #38bdf8;
+    --c1: #818cf8;
+    --c2: #f472b6;
+    --c3: #fb923c;
+    --c4: #34d399;
+    --c5: #fbbf24;
+    /* resolution colours */
+    --r50:  #e74c3c;
+    --r71:  #e67e22;
+    --r87:  #3498db;
+    --r100: #2ecc71;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+
+  /* ── Header ─────────────────────────────────────────────── */
+  header {
+    padding: 18px 32px 14px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 16px;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 18px; letter-spacing: -0.02em;
+  }
+  header span { color: var(--muted); font-size: 11px; }
+
+  .metric-btn {
+    background: none; border: none; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 6px 14px; cursor: pointer; transition: background 0.15s, color 0.15s;
+  }
+ .metric-btn:hover  { color: var(--text); }
+ .metric-btn.active { background: var(--accent); color: #0d0f14; }
+
+  /* ── Top-level tabs ─────────────────────────────────────── */
+  .top-tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    background: var(--surface);
+  }
+  .top-tab-btn {
+    background: none; border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--muted); font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; padding: 12px 20px 10px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .top-tab-btn:hover  { color: var(--text); }
+  .top-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .top-panel          { display: none; flex: 1; overflow: hidden; }
+  .top-panel.active   { display: flex; }
+
+  /* ── Layout (shared) ────────────────────────────────────── */
+  .layout { display: flex; flex: 1; overflow: hidden; width: 100%; }
+
+  aside {
+    width: 270px; min-width: 270px;
+    border-right: 1px solid var(--border);
+    padding: 20px 16px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 22px;
+  }
+  .control-group label {
+    display: block; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  select {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border2); color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    padding: 7px 10px; border-radius: 4px;
+    outline: none; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px;
+  }
+  select:focus { border-color: var(--accent); }
+
+  /* ── Legend ─────────────────────────────────────────────── */
+  .legend { display: flex; flex-direction: column; gap: 5px; }
+  .legend-item {
+    display: flex; align-items: flex-start; gap: 8px; cursor: pointer;
+    padding: 6px 8px; border-radius: 4px; border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s; user-select: none;
+  }
+  .legend-item:hover   { background: var(--surface); border-color: var(--border2); }
+  .legend-item.inactive { opacity: 0.3; }
+  .legend-swatch { width: 20px; height: 3px; border-radius: 2px; flex-shrink: 0; margin-top: 6px; }
+  .legend-text   { display: flex; flex-direction: column; gap: 1px; }
+  .legend-label    { font-size: 11px; color: var(--text); }
+  .legend-sublabel { font-size: 9px;  color: var(--muted); }
+  .legend-divider  { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ── Main content area ──────────────────────────────────── */
+  main {
+    flex: 1; padding: 24px 32px;
+    display: flex; flex-direction: column; gap: 20px; overflow: auto;
+  }
+  .chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+  .chart-subtitle { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* ── Inner tabs (scene-by-scene) ────────────────────────── */
+  .tabs {
+    display: flex; gap: 2px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 6px 14px 8px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover  { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel         { display: none; }
+  .tab-panel.active  { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Chart ───────────────────────────────────────────────── */
+  #chart-wrap { position: relative; min-height: 360px; height: 400px; }
+  svg { overflow: visible; }
+  .axis path, .axis line { stroke: var(--border2); }
+  .axis text { fill: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .axis-label { fill: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .grid line { stroke: var(--border); stroke-dasharray: 3,4; }
+  .grid path { display: none; }
+  .series-line { fill: none; stroke-width: 2; }
+  .series-dot  { stroke: var(--bg); stroke-width: 2; cursor: crosshair; }
+
+  /* ── Best-value cards ────────────────────────────────────── */
+  .best-cards { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+  .best-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 8px 12px;
+    display: flex; flex-direction: column; gap: 3px; min-width: 140px;
+  }
+  .best-card-header {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: var(--muted);
+  }
+  .best-card-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .best-card-value { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); }
+  .best-card-sub { font-size: 9px; color: var(--muted); }
+
+  /* ── Tables ──────────────────────────────────────────────── */
+  .table-section { display: flex; flex-direction: column; gap: 10px; }
+  .table-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .table-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .table-controls label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .table-controls select { width: auto; font-size: 11px; }
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 11px; }
+  thead th {
+    text-align: right; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted); padding: 7px 11px;
+    border-bottom: 1px solid var(--border2); white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  tbody td { padding: 7px 11px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tbody td:first-child { text-align: left; }
+  tr.footer-row td { border-top: 1px solid var(--border2); color: var(--muted); font-size: 10px; }
+  td.hi  { color: var(--good);  font-weight: 600; }
+  td.lo  { color: var(--bad); }
+  td.range-hi { color: var(--warn); font-weight: 600; }
+  tr.pct-header th {
+    background: var(--surface); color: var(--accent);
+    font-size: 10px; letter-spacing: 0.06em; text-align: center;
+    padding: 5px 11px; border-bottom: 1px solid var(--border2);
+  }
+  tr.pct-header th:first-child { text-align: left; }
+
+  /* ── Overall page styles ─────────────────────────────────── */
+  .overall-main {
+    flex: 1; padding: 24px 32px;
+    display: flex; flex-direction: column; gap: 24px; overflow: auto;
+  }
+  .overall-tabs {
+    display: flex; gap: 2px; border-bottom: 1px solid var(--border);
+  }
+  .overall-tab-btn {
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 6px 14px 8px;
+    cursor: pointer; transition: color 0.15s, border-color 0.15s;
+  }
+  .overall-tab-btn:hover  { color: var(--text); }
+  .overall-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .overall-tab-panel         { display: none; }
+  .overall-tab-panel.active  { display: flex; flex-direction: column; gap: 24px; }
+
+  /* grid of small charts */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 24px;
+  }
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .chart-card-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+    color: var(--text);
+  }
+  .chart-card-sub { font-size: 10px; color: var(--muted); }
+  .chart-card-wrap { position: relative; height: 240px; }
+
+  /* expanded card spans full grid width */
+  .chart-card.expanded {
+    grid-column: 1 / -1;
+    border-color: var(--accent);
+  }
+  .chart-card.expanded .chart-card-wrap { height: 420px; }
+  .chart-card { cursor: pointer; transition: border-color 0.15s; }
+  .chart-card:hover { border-color: var(--border2); }
+  .chart-card.expanded:hover { border-color: var(--accent); }
+  .expand-hint {
+    font-size: 9px; color: var(--muted); letter-spacing: 0.06em;
+    text-transform: uppercase; margin-left: auto;
+  }
+  .chart-card-header { display: flex; align-items: baseline; gap: 8px; }
+
+  /* heatmap grid */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 24px;
+  }
+  .heatmap-card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .heatmap-card-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+  }
+  .heatmap-wrap { overflow-x: auto; }
+
+  /* heatmap table */
+  .hm-table { border-collapse: collapse; font-size: 10px; width: 100%; }
+  .hm-table th {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+    padding: 5px 8px; text-align: center;
+    border-bottom: 1px solid var(--border2);
+  }
+  .hm-table th:first-child { text-align: left; }
+  .hm-table td {
+    padding: 6px 10px; text-align: center;
+    font-variant-numeric: tabular-nums; font-size: 10px;
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.1s;
+  }
+  .hm-table td:first-child { text-align: left; color: var(--muted); font-size: 10px; }
+  .hm-table tr:last-child td { border-bottom: none; }
+  .hm-table tr:hover td { opacity: 0.85; }
+
+  /* section headings */
+  .section-heading {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .section-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Tooltip ─────────────────────────────────────────────── */
+  #tooltip {
+    position: fixed; background: var(--surface);
+    border: 1px solid var(--border2); border-radius: 6px;
+    padding: 10px 13px; pointer-events: none;
+    font-size: 11px; line-height: 1.8; z-index: 100;
+    opacity: 0; transition: opacity 0.1s; max-width: 230px;
+  }
+  #tooltip.visible { opacity: 1; }
+  .tt-score { font-size: 15px; font-weight: 600; color: var(--accent); font-family: 'Syne', sans-serif; }
+  .tt-label { color: var(--muted); font-size: 10px; }
+
+  /* ── Empty / status ──────────────────────────────────────── */
+  .empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 200px; color: var(--muted); font-size: 12px;
+    border: 1px dashed var(--border2); border-radius: 6px;
+  }
+  .status { font-size: 10px; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--border); }
+  .status .ok   { color: var(--good); }
+  .status .warn { color: var(--warn); }
+  * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PerceptualTAA</h1>
+  <span>quality explorer · choose your metric</span>
+    <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border2);border-radius:4px;overflow:hidden;">
+    <button class="metric-btn active" data-metric="CGVQM">CGVQM</button>
+    <button class="metric-btn" data-metric="CVVDP">CVVDP</button>
+  </div>
+
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TOP-LEVEL TABS
+═══════════════════════════════════════════════════════════ -->
+<div class="top-tabs">
+  <button class="top-tab-btn active" data-top="overall">Overall</button>
+  <button class="top-tab-btn" data-top="scene">Scene Explorer</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     OVERALL PANEL
+═══════════════════════════════════════════════════════════ -->
+<div class="top-panel active" id="top-overall">
+  <aside id="overall-sidebar">
+    <div class="control-group">
+      <label>Scenes</label>
+      <div class="legend" id="scene-toggles"></div>
+    </div>
+  </aside>
+  <div class="overall-main">    <div>
+      <div class="section-heading">Overall Analysis</div>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+        This page shows overall trends that have been  <span style="color:var(--accent);font-weight:600;"> aggregated over all scenes</span> (i.e. scores per each parameter have been averaged over all scenes). 
+        <br> The bar to the left lets you <span style="color:var(--accent);font-weight:600;">select which scenes you'd like to have considered </span> in the plots below.
+        <br> Use the  <span style="color:var(--accent);font-weight:600;">Scene Explorer tab</span> to look at statistics for individual scenes.</div>
+    </div>
+
+    <div class="overall-tabs">
+      <button class="overall-tab-btn active" data-otab="curves">Score Curves</button>
+      <button class="overall-tab-btn" data-otab="heatmaps">Sensitivity Heatmaps</button>
+      <button class="overall-tab-btn" data-otab="comparison">Metric Comparison</button>
+    </div>
+
+    <!-- Score curves tab -->
+    <div class="overall-tab-panel active" id="otab-curves">
+      <div class="section-sub">
+        <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+        <span style="color:var(--accent);font-weight:600;">Percentage change from baseline </span> — For each parameter, we test a range of values (e.g. alpha_weight = 0.01, 0.02, …). The <span style="color:var(--accent);">baseline</span> is the average score across all those tested values. Each point on the graphs below shows how much better or worse each parameter value performs vs. the baseline, as a <span style="color:var(--accent);font-weight:600;">% difference</span>. 
+
+        <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
+          A value of <span style="color:var(--good);">+2%</span> means that setting outperforms the average; <span style="color:var(--bad);">−2%</span> means it underperforms.
+          <!-- <div style="margin-top:6px;">For each resolution, the % change values are computed per scene first, then averaged across all selected scenes — so each scene contributes equally regardless of its absolute score level.</div> -->
+          <div style="margin-top:6px;color:var(--muted);font-size:10px;"> These values are averaged over all the scenes to obtain general trends. Toggle scenes that contribute to the average in the sidebar</div>
+          </div>
+        </div>
+      </div>
+    <div class="chart-grid" id="curves-grid"></div>
+    </div>
+
+    <!-- Heatmaps tab -->
+    <div class="overall-tab-panel" id="otab-heatmaps">
+    <div class="section-sub">
+    <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+      <span style="color:var(--accent);font-weight:600;">Effect size</span> — max score − min score across all tested values of a parameter, per scene per resolution.
+      <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
+        For example, an effect size of <span style="color:var(--text);font-weight:600;">36.43</span> for <em>alpha weight</em> at 50% resolution means the score varied by 36.43 points depending on which value was used.
+        <div style="margin-top:6px;color:var(--muted);font-size:10px;">Larger values mean that parameter has more influence on quality at that resolution.</div>
+      </div>
+    </div>
+  </div>   
+    <div class="heatmap-grid" id="heatmaps-grid"></div>
+    </div>
+    <!-- Compare Two Metrics tab -->
+<div class="overall-tab-panel" id="otab-comparison">
+  <div class="section-sub">
+    <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+      <span style="color:var(--accent);font-weight:600;">Side-by-side comparison</span> — same parameter, both metrics, averaged over selected scenes. Left = CGVQM, Right = CVVDP.
+    </div>
+  </div>
+  <div class="chart-grid" id="comparison-grid"></div>
+</div>
+    <div class="status" id="status-overall"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCENE EXPLORER PANEL
+═══════════════════════════════════════════════════════════ -->
+<div class="top-panel" id="top-scene">
+  <aside>
+    <div class="control-group">
+      <label>Scene</label>
+      <select id="sel-scene"></select>
+    </div>
+    <div class="control-group">
+      <label>Parameter</label>
+      <select id="sel-param"></select>
+    </div>
+    <div class="control-group">
+      <label>Series</label>
+      <div class="legend" id="legend"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+      Select a <span style="color:var(--text);">scene</span> and <span style="color:var(--text);">parameter</span> from the sidebar, then explore the tabs below.
+      Use the <span style="color:var(--text);">Series</span> toggles to show or hide individual re% solutions.<br>
+    </div>
+
+    <div>
+      <div class="chart-title" id="chart-title">—</div>
+      <div class="chart-subtitle" id="chart-subtitle">Select a scene and parameter</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="chart">Chart</button>
+      <button class="tab-btn" data-tab="metriccomp">Metric Comparison</button>
+      <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
+      <button class="tab-btn" data-tab="deepdive">Parameter deep-dive</button>
+      <button class="tab-btn" data-tab="crossparam">Cross-parameter summary</button>
+    </div>
+
+    <!-- Chart tab -->
+    <div class="tab-panel active" id="tab-chart">
+       <div style="font-size:11px;color:var(--muted);line-height:1.8;">
+        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how CGVQM or CVVDP score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
+        <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
+           The cards below summarise the best value per resolution.
+          <div style="margin-top:6px;color:var(--muted);font-size:10px;">Drag to zoom into a region · Double-click to reset · Toggle resolutions in the sidebar</div>
+        </div>
+      </div>
+      <div id="chart-wrap"></div>
+      
+      <div class="best-cards" id="best-cards"></div>
+    </div>
+
+    <div class="tab-panel" id="tab-metriccomp">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+        <span style="color:var(--accent);font-weight:600;">Metric comparison</span> — CGVQM vs CVVDP for the current scene and parameter. Each line is a resolution.
+      </div>
+      <div style="display:flex;gap:16px;" id="scene-comparison-wrap"></div>
+    </div>
+
+    <!-- Sensitivity bar chart tab -->
+    <div class="tab-panel" id="tab-sensitivity">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+        <span style="color:var(--accent);font-weight:600;">Effect size</span> = max score − min score across all tested values of a parameter, at a given resolution at a given resolution, for the <span style="color:var(--text);">currently selected scene</span>.
+        A taller bar means that parameter has a stronger influence on quality at that resolution.
+        Bars are grouped by parameter; colours indicate resolution.
+      </div>
+      <div id="sensitivity-wrap" style="position:relative;min-height:360px;height:400px;"></div>
+    </div>
+
+    <!-- Deep-dive tab -->
+    <div class="tab-panel" id="tab-deepdive">
+      <div class="table-section">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+          Rows = tested parameter values. Columns = resolutions.
+          <span style="color:var(--good);font-weight:600;">Green</span> = best score in that resolution,
+          <span style="color:var(--bad);font-weight:600;">red</span> = worst.
+          Footer shows the best and worst value and the total score range per resolution.
+        </div>
+        <div class="table-controls">
+          <label>Reference:</label>
+          <select id="sel-ref-deepdive"></select>
+        </div>
+        <div class="table-scroll" id="deepdive-wrap"></div>
+      </div>
+    </div>
+
+    <!-- Cross-param tab -->
+    <div class="tab-panel" id="tab-crossparam">
+      <div class="table-section">
+      <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
+          Each row is a parameter. Columns show min, max, and range of scores across all tested values, per resolution.
+          The <span style="color:var(--warn);font-weight:600;">highlighted cell</span> is the largest range in the whole table — the most influential parameter at that resolution.
+        </div>
+        <div class="table-controls">
+          <label>Reference:</label>
+          <select id="sel-ref-crossparam"></select>
+        </div>
+        <div class="table-scroll" id="crossparam-wrap"></div>
+      </div>
+    </div>
+
+    <div class="status" id="status"></div>
+  </main>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════════
+const DATASETS = {
+  CGVQM: 'dataset.json',
+  CVVDP: 'dataset_cvvdp.json'
+};
+let activeMetric = 'CGVQM';
+const COLOR_VARS   = ['--c0','--c1','--c2','--c3','--c4','--c5'];
+const PARAMS       = ['alpha_weight', 'filter_size', 'hist_percent', 'num_samples'];
+const RESOLUTIONS  = [50, 71, 87, 100];
+const HIST_MIN_VAL = 100;
+const RES_COLORS   = { 50: '#e74c3c', 71: '#e67e22', 87: '#3498db', 100: '#2ecc71' };
+
+// ── State ─────────────────────────────────────────────────────────
+let dataset          = {};
+let datasets         = {}
+let activeScene      = null;
+let activeParam      = null;
+let seriesVisibility = {};
+let activeScenes = new Set(); // populated after load
+let expandedParam = null;
+// ═══════════════════════════════════════════════════════════════════
+// LOAD
+// ═══════════════════════════════════════════════════════════════════
+async function loadData() {
+  setStatus('loading dataset.json…', false, 'status');
+  setStatus('loading dataset.json…', false, 'status-overall');
+  try {
+    const [resCG, resCVVDP] = await Promise.all([
+      fetch(DATASETS.CGVQM),
+      fetch(DATASETS.CVVDP)
+    ]);
+    datasets.CGVQM  = await resCG.json();
+    datasets.CVVDP  = await resCVVDP.json();
+    dataset = datasets[activeMetric];
+    const n = Object.keys(dataset).length;
+    setStatus(`dataset loaded · ${n} scenes`, true, 'status');
+    setStatus(`dataset loaded · ${n} scenes`, true, 'status-overall');
+    init();
+    drawOverall();
+  } catch(e) {
+    setStatus(`ERROR: ${e.message} — serve via python -m http.server`, false, 'status');
+    setStatus(`ERROR: ${e.message}`, false, 'status-overall');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SCENE EXPLORER — init + state
+// ═══════════════════════════════════════════════════════════════════
+function init() {
+  const scenes   = Object.keys(dataset).filter(s => Object.keys(dataset[s]).length > 2).sort();
+  const selScene = document.getElementById('sel-scene');
+  selScene.innerHTML = scenes.map(s => `<option value="${s}">${s}</option>`).join('');
+  selScene.addEventListener('change', () => {
+    activeScene = selScene.value;
+    seriesVisibility = {};
+    updateParams();
+  });
+  activeScene = scenes[0];
+  updateParams();
+}
+
+function updateParams() {
+  const sceneData = dataset[activeScene] ?? {};
+  const paramSet  = new Set();
+  for (const [key, pctBlock] of Object.entries(sceneData)) {
+    if (key === 'metric') continue;
+    for (const refBlock of Object.values(pctBlock))
+      for (const k of Object.keys(refBlock))
+        if (Array.isArray(refBlock[k])) paramSet.add(k);
+  }
+  const params = [...paramSet].sort();
+  const old    = document.getElementById('sel-param');
+  const newSel = old.cloneNode(false);
+  old.replaceWith(newSel);
+  newSel.innerHTML = params.map(p => `<option value="${p}">${p.replace(/_/g,' ')}</option>`).join('');
+  newSel.addEventListener('change', () => {
+    activeParam = newSel.value;
+    buildLegend();
+    renderAll();
+  });
+  activeParam = params[0] ?? null;
+  buildLegend();
+  renderAll();
+}
+
+function getSeries() {
+  if (!activeScene || !activeParam) return [];
+  const sceneData = dataset[activeScene] ?? {};
+  const series    = [];
+  const pcts      = Object.keys(sceneData).filter(k => k !== 'metric').sort((a,b) => +b - +a);
+  let ci = 0;
+  for (const pct of pcts) {
+    for (const ref of Object.keys(sceneData[pct]).sort()) {
+      const block   = sceneData[pct][ref];
+      const entries = block[activeParam];
+      if (!entries?.length) continue;
+      series.push({
+        id: `${pct}|${ref}`, pct, ref,
+        refScene: ref.replace(/^ref-/, ''),
+        color: `var(${COLOR_VARS[ci % COLOR_VARS.length]})`,
+        entries, label: `${pct}%`,
+      });
+      ci++;
+    }
+  }
+  return series;
+}
+
+function getAllRefs() {
+  const sceneData = dataset[activeScene] ?? {};
+  const refSet = new Set();
+  for (const [key, pctBlock] of Object.entries(sceneData)) {
+    if (key === 'metric') continue;
+    for (const ref of Object.keys(pctBlock)) refSet.add(ref);
+  }
+  return [...refSet].sort();
+}
+
+function getAllParams() {
+  const sceneData = dataset[activeScene] ?? {};
+  const paramSet  = new Set();
+  for (const [key, pctBlock] of Object.entries(sceneData)) {
+    if (key === 'metric') continue;
+    for (const refBlock of Object.values(pctBlock))
+      for (const k of Object.keys(refBlock))
+        if (Array.isArray(refBlock[k])) paramSet.add(k);
+  }
+  return [...paramSet].sort();
+}
+
+function getPctsForRef(ref, param) {
+  const sceneData = dataset[activeScene] ?? {};
+  return Object.keys(sceneData)
+    .filter(pct => pct !== 'metric' && sceneData[pct][ref]?.[param]?.length)
+    .sort((a,b) => +b - +a);
+}
+
+function buildLegend() {
+  const allSeries = getSeries();
+  const legend    = document.getElementById('legend');
+  for (const s of allSeries)
+    if (seriesVisibility[s.id] === undefined) seriesVisibility[s.id] = true;
+  legend.innerHTML = '';
+  const byPct = {};
+  for (const s of allSeries) (byPct[s.pct] = byPct[s.pct] ?? []).push(s);
+  Object.keys(byPct).sort((a,b) => +b-+a).forEach((pct, i) => {
+    if (i > 0) { const d = document.createElement('div'); d.className = 'legend-divider'; legend.appendChild(d); }
+    for (const s of byPct[pct]) {
+      const cv   = getComputedColor(s.color);
+      const item = document.createElement('div');
+      item.className = 'legend-item' + (seriesVisibility[s.id] ? '' : ' inactive');
+      item.innerHTML = `
+        <div class="legend-swatch" style="background:${cv}"></div>
+        <div class="legend-text">
+          <span class="legend-label">${s.label}</span>
+          <span class="legend-sublabel">ref: ${s.refScene}</span>
+        </div>`;
+      item.addEventListener('click', () => {
+        seriesVisibility[s.id] = !seriesVisibility[s.id];
+        item.classList.toggle('inactive');
+        renderAll();
+      });
+      legend.appendChild(item);
+    }
+  });
+  document.getElementById('chart-title').textContent = activeParam ? activeParam.replace(/_/g,' ') : '—';
+  document.getElementById('chart-subtitle').textContent = activeScene ? `scene: ${activeScene}` : '';
+  syncRefSelectors();
+}
+
+function syncRefSelectors() {
+  const refs = getAllRefs();
+  ['sel-ref-deepdive','sel-ref-crossparam'].forEach(id => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = refs.map(r => `<option value="${r}">${r}</option>`).join('');
+    if (refs.includes(cur)) el.value = cur;
+  });
+}
+
+function drawSceneComparison() {
+  const wrap = document.getElementById('scene-comparison-wrap');
+  wrap.innerHTML = '';
+  if (!activeScene || !activeParam) return;
+
+  const seriesByMetric = {};
+  for (const metricKey of ['CGVQM', 'CVVDP']) {
+    const sceneData = datasets[metricKey]?.[activeScene];
+    if (!sceneData) { seriesByMetric[metricKey] = []; continue; }
+    const series = [];
+    const pcts = Object.keys(sceneData).filter(k => k !== 'metric').sort((a, b) => +b - +a);
+    for (const pct of pcts) {
+      for (const ref of Object.keys(sceneData[pct]).sort()) {
+        // Rule 1: skip screen-per refs
+        if (ref.includes('screen-per')) continue;
+        if (seriesVisibility[`${pct}|${ref}`] === false) continue;
+        const entries = sceneData[pct][ref][activeParam];
+        if (!entries?.length) continue;
+        series.push({ pct, ref, entries, color: RES_COLORS[+pct] ?? 'var(--accent)' });
+      }
+    }
+    seriesByMetric[metricKey] = series;
+  }
+
+// Rule 2: only keep pct values present in BOTH metrics
+const cgvqmPcts = new Set(seriesByMetric['CGVQM'].map(s => s.pct));
+const cvvdpPcts = new Set(seriesByMetric['CVVDP'].map(s => s.pct));
+const sharedPcts = new Set([...cgvqmPcts].filter(p => cvvdpPcts.has(p)));
+for (const metricKey of ['CGVQM', 'CVVDP']) {
+  seriesByMetric[metricKey] = seriesByMetric[metricKey].filter(s => sharedPcts.has(s.pct));
+}
+
+  // Single SVG, two panels side by side
+  const GAP    = 48;  // gap between the two charts
+  const W      = wrap.clientWidth || 900;
+  const H      = 340;
+  const margin = { top: 20, right: 20, bottom: 52, left: 56 };
+  const panelW = (W - GAP) / 2;
+  const iW     = panelW - margin.left - margin.right;
+  const iH     = H - margin.top - margin.bottom;
+
+  const svg = d3.select(wrap).append('svg')
+    .attr('width', W)
+    .attr('height', H);
+
+  const tooltip = document.getElementById('tooltip');
+  const metrics = ['CGVQM', 'CVVDP'];
+
+  metrics.forEach((metricKey, mi) => {
+    const series  = seriesByMetric[metricKey];
+    const offsetX = mi * (panelW + GAP);
+    const allPts  = series.flatMap(s => s.entries);
+
+    const clipId = `clip-sbs-${mi}`;
+    svg.append('defs').append('clipPath').attr('id', clipId)
+      .append('rect').attr('width', iW).attr('height', iH);
+
+    const g  = svg.append('g').attr('transform', `translate(${offsetX + margin.left},${margin.top})`);
+    const ca = g.append('g').attr('clip-path', `url(#${clipId})`);
+
+    if (!allPts.length) {
+      g.append('text').attr('x', iW / 2).attr('y', iH / 2)
+        .attr('text-anchor', 'middle').attr('fill', 'var(--muted)').attr('font-size', 12)
+        .text('No data');
+      return;
+    }
+
+    const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
+    const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
+    const yScale = d3.scaleLinear()
+      .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
+      .nice().range([iH, 0]);
+
+    // Grid
+    ca.append('g').attr('class', 'grid')
+      .call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+
+    // Axes
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
+      .call(d3.axisBottom(xScale).ticks(6));
+    g.append('g').attr('class', 'axis')
+      .call(d3.axisLeft(yScale).ticks(6));
+
+    // Axis labels
+    g.append('text').attr('class', 'axis-label')
+      .attr('x', iW / 2).attr('y', iH + 42)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(activeParam.replace(/_/g, ' '));
+    g.append('text').attr('class', 'axis-label')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -iH / 2).attr('y', -44)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(`${metricKey} score`);
+
+    // Metric label at top
+    g.append('text')
+      .attr('x', iW / 2).attr('y', -6)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Syne, sans-serif').attr('font-weight', 700).attr('font-size', 12)
+      .attr('fill', 'var(--muted)').attr('letter-spacing', '0.08em')
+      .text(metricKey);
+
+    const line = d3.line()
+      .x(d => xScale(d.value)).y(d => yScale(d.score))
+      .curve(d3.curveMonotoneX);
+
+    for (const s of series) {
+      ca.append('path').datum(s.entries)
+        .attr('class', 'series-line')
+        .attr('stroke', s.color).attr('stroke-width', 2)
+        .attr('d', line);
+
+      ca.selectAll(null).data(s.entries).join('circle')
+        .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
+        .attr('r', 4).attr('fill', s.color)
+        .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
+        .on('mousemove', (event, d) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${metricKey} · ${activeParam.replace(/_/g, ' ')}</div>
+            <div class="tt-score">${d.score.toFixed(4)}</div>
+            <div class="tt-label">value: <b>${d.value}</b></div>
+            <div class="tt-label">resolution: <b style="color:${s.color}">${s.pct}%</b></div>`;
+          tooltip.classList.add('visible');
+          positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+
+    // Legend
+    const legG = g.append('g').attr('transform', `translate(8, 8)`);
+    series.forEach((s, i) => {
+      legG.append('rect').attr('x', 0).attr('y', i * 16).attr('width', 10).attr('height', 10).attr('fill', s.color);
+      legG.append('text').attr('x', 14).attr('y', i * 16 + 9)
+        .attr('fill', 'var(--muted)').attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+        .text(`${s.pct}%`);
+    });
+  });
+}
+
+function renderAll() {
+  draw();
+  if (document.getElementById('tab-metriccomp').classList.contains('active')) {
+    drawSceneComparison();
+  }
+  drawSensitivity();
+  drawDeepDive();
+  drawCrossParam();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAW: line chart
+// ═══════════════════════════════════════════════════════════════════
+function draw() {
+  const wrap          = document.getElementById('chart-wrap');
+  const cardsEl       = document.getElementById('best-cards');
+  const visibleSeries = getSeries().filter(s => seriesVisibility[s.id] !== false);
+  wrap.innerHTML = ''; cardsEl.innerHTML = '';
+  if (!visibleSeries.length) { wrap.innerHTML = '<div class="empty">No data for this selection</div>'; return; }
+
+  const W = wrap.clientWidth || 800, H = Math.max(wrap.clientHeight || 400, 360);
+  const margin = { top:18, right:28, bottom:50, left:56 };
+  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+  const pts = visibleSeries.flatMap(s => s.entries);
+  const xScale = d3.scaleLinear().domain(d3.extent(pts, d=>d.value)).nice().range([0,iW]);
+  const yPad   = (d3.max(pts,d=>d.score) - d3.min(pts,d=>d.score)) * 0.12 || 1;
+  const yScale = d3.scaleLinear().domain([d3.min(pts,d=>d.score)-yPad, d3.max(pts,d=>d.score)+yPad]).nice().range([iH,0]);
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+  svg.append('defs').append('clipPath').attr('id','chart-clip').append('rect').attr('width',iW).attr('height',iH);
+  const g = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
+  const chartArea = g.append('g').attr('clip-path','url(#chart-clip)');
+
+  chartArea.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+  chartArea.append('g').attr('class','grid x-grid').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+  g.append('g').attr('class','axis x-axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(8));
+  g.append('g').attr('class','axis y-axis').call(d3.axisLeft(yScale).ticks(6));
+  g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+40).attr('text-anchor','middle').text(activeParam?.replace(/_/g,' ') ?? '');
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text(`${activeMetric} score`);
+
+  const line    = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
+  const tooltip = document.getElementById('tooltip');
+
+  for (const s of visibleSeries) {
+    const cv = getComputedColor(s.color);
+    chartArea.append('path').datum(s.entries).attr('class','series-line').attr('stroke',cv).attr('d',line);
+    chartArea.selectAll(null).data(s.entries).join('circle')
+      .attr('class','series-dot').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
+      .attr('r',5).attr('fill',cv)
+      .on('mousemove', (event,d) => {
+        tooltip.innerHTML = `
+          <div class="tt-label">${activeParam?.replace(/_/g,' ')}</div>
+          <div class="tt-score">${d.score.toFixed(4)}</div>
+          <div class="tt-label">value: <b style="color:var(--text)">${d.value}</b></div>
+          <div class="tt-label">pct: <b style="color:${cv}">${s.pct}%</b></div>
+          <div class="tt-label">ref: ${s.refScene}</div>`;
+        tooltip.classList.add('visible'); positionTooltip(event);
+      })
+      .on('mouseleave', () => tooltip.classList.remove('visible'));
+
+    const scores  = s.entries.map(e => e.score);
+    const bestIdx = scores.indexOf(Math.max(...scores));
+    const best    = s.entries[bestIdx];
+    const card    = document.createElement('div'); card.className = 'best-card';
+    card.innerHTML = `
+      <div class="best-card-header"><div class="best-card-swatch" style="background:${cv}"></div>${s.pct}% · ref: ${s.refScene}</div>
+      <div class="best-card-value">${best.value}</div>
+      <div class="best-card-sub">best ${activeParam?.replace(/_/g,' ')} → score ${best.score.toFixed(3)}</div>`;
+    cardsEl.appendChild(card);
+  }
+
+  const brush = d3.brush().extent([[0,0],[iW,iH]]).on('end', (event) => {
+    if (!event.selection) return;
+    const [[x0,y0],[x1,y1]] = event.selection;
+    xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
+    yScale.domain([yScale.invert(y1), yScale.invert(y0)]);
+    g.select('.x-axis').call(d3.axisBottom(xScale).ticks(8));
+    g.select('.x-grid').call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+    g.select('.y-axis').call(d3.axisLeft(yScale).ticks(6));
+    chartArea.selectAll('.series-line').attr('d', line);
+    chartArea.selectAll('.series-dot').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
+    chartArea.select('.brush').call(brush.move, null);
+  });
+  chartArea.append('g').attr('class','brush').call(brush);
+  svg.on('dblclick', () => {
+    xScale.domain(d3.extent(pts, d=>d.value));
+    yScale.domain([d3.min(pts,d=>d.score)-yPad, d3.max(pts,d=>d.score)+yPad]);
+    g.select('.x-axis').call(d3.axisBottom(xScale).ticks(8));
+    g.select('.x-grid').call(d3.axisBottom(xScale).tickSize(-iH).tickFormat(''));
+    g.select('.y-axis').call(d3.axisLeft(yScale).ticks(6));
+    chartArea.selectAll('.series-line').attr('d', line);
+    chartArea.selectAll('.series-dot').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
+  });
+  document.addEventListener('mousemove', positionTooltip);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAW: sensitivity bar chart (scene-by-scene tab)
+// ═══════════════════════════════════════════════════════════════════
+function drawSensitivity() {
+  const wrap = document.getElementById('sensitivity-wrap');
+  wrap.innerHTML = '';
+  if (!activeScene) return;
+
+  const sceneData = dataset[activeScene] ?? {};
+  const params    = PARAMS.filter(p => p !== 'num_samples_TAA');
+
+  // For each param × resolution, compute effect size using cross-scene ref
+  // (or self-ref for 100)
+  function getEffectSize(param, res) {
+    const resStr  = String(res);
+    const pctData = sceneData[resStr];
+    if (!pctData) return 0;
+    // find a ref key that doesn't contain screen-per
+    const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+    if (!refKey) return 0;
+    let entries = pctData[refKey][param] ?? [];
+    if (param === 'hist_percent') entries = entries.filter(e => e.value >= HIST_MIN_VAL);
+    if (entries.length < 2) return 0;
+    const scores = entries.map(e => e.score);
+    return Math.max(...scores) - Math.min(...scores);
+  }
+
+  const W = wrap.clientWidth || 700, H = Math.max(wrap.clientHeight || 400, 360);
+  const margin = { top: 24, right: 28, bottom: 60, left: 56 };
+  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+
+  const x0    = d3.scaleBand().domain(params).range([0, iW]).padding(0.25);
+  const x1    = d3.scaleBand().domain(RESOLUTIONS.map(String)).range([0, x0.bandwidth()]).padding(0.08);
+  const allES = RESOLUTIONS.flatMap(res => params.map(p => getEffectSize(p, res)));
+  const yMax  = d3.max(allES) * 1.15 || 1;
+  const yScale = d3.scaleLinear().domain([0, yMax]).range([iH, 0]);
+
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
+  const g   = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+  const tooltip = document.getElementById('tooltip');
+
+  g.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+  g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(x0).tickFormat(d => d.replace(/_/g,' ')));
+  g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(6));
+  g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+50).attr('text-anchor','middle').text('Parameter');
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-44).attr('text-anchor','middle').text('Effect size (max − min)');
+
+  for (const param of params) {
+    const paramG = g.append('g').attr('transform', `translate(${x0(param)},0)`);
+    for (const res of RESOLUTIONS) {
+      const es = getEffectSize(param, res);
+      const color = RES_COLORS[res];
+      paramG.append('rect')
+        .attr('x', x1(String(res))).attr('y', yScale(es))
+        .attr('width', x1.bandwidth()).attr('height', iH - yScale(es))
+        .attr('fill', color).attr('opacity', 0.85)
+        .on('mousemove', (event) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${param.replace(/_/g,' ')}</div>
+            <div class="tt-score">${es.toFixed(3)}</div>
+            <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>`;
+          tooltip.classList.add('visible'); positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+  }
+
+  // Legend
+  const legG = svg.append('g').attr('transform', `translate(${margin.left + iW - 140}, ${margin.top})`);
+  RESOLUTIONS.forEach((res, i) => {
+    legG.append('rect').attr('x', 0).attr('y', i * 18).attr('width', 12).attr('height', 12).attr('fill', RES_COLORS[res]);
+    legG.append('text').attr('x', 18).attr('y', i * 18 + 10).attr('fill', 'var(--muted)').attr('font-size', 10).attr('font-family', 'JetBrains Mono').text(`${res}%`);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAW: deep-dive table
+// ═══════════════════════════════════════════════════════════════════
+function drawDeepDive() {
+  const wrap = document.getElementById('deepdive-wrap');
+  const ref  = document.getElementById('sel-ref-deepdive').value;
+  if (!ref || !activeScene || !activeParam) { wrap.innerHTML = '<div class="empty">No data</div>'; return; }
+  const sceneData = dataset[activeScene] ?? {};
+  const pcts      = getPctsForRef(ref, activeParam);
+  if (!pcts.length) { wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return; }
+  const entriesByPct = {};
+  for (const pct of pcts) entriesByPct[pct] = sceneData[pct]?.[ref]?.[activeParam] ?? [];
+  const allValues = [...new Set(pcts.flatMap(pct => entriesByPct[pct].map(e => e.value)))].sort((a,b) => a-b);
+  const scoreLookup = {};
+  for (const pct of pcts) {
+    scoreLookup[pct] = {};
+    for (const e of entriesByPct[pct]) scoreLookup[pct][e.value] = e.score;
+  }
+  const colStats = {};
+  for (const pct of pcts) {
+    const scores = allValues.map(v => scoreLookup[pct][v]).filter(s => s != null);
+    colStats[pct] = { max: Math.max(...scores), min: Math.min(...scores), range: Math.max(...scores)-Math.min(...scores), bestVal: allValues[scores.indexOf(Math.max(...scores))], worstVal: allValues[scores.indexOf(Math.min(...scores))] };
+  }
+  const maxRange = Math.max(...pcts.map(p => colStats[p].range));
+  let html = `<table><thead><tr><th>${activeParam?.replace(/_/g,' ')}</th>${pcts.map(p => `<th>pct ${p}%</th>`).join('')}</tr></thead><tbody>`;
+  for (const v of allValues) {
+    html += `<tr><td>${v}</td>`;
+    for (const pct of pcts) {
+      const score = scoreLookup[pct][v];
+      if (score == null) { html += `<td style="color:var(--muted)">—</td>`; continue; }
+      const isHi = Math.abs(score - colStats[pct].max) < 1e-9, isLo = Math.abs(score - colStats[pct].min) < 1e-9;
+      html += `<td class="${isHi ? 'hi' : isLo ? 'lo' : ''}">${score.toFixed(3)}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += `<tr class="footer-row"><td>↑ best value</td>${pcts.map(p => `<td class="hi">${colStats[p].bestVal}</td>`).join('')}</tr>`;
+  html += `<tr class="footer-row"><td>↓ worst value</td>${pcts.map(p => `<td class="lo">${colStats[p].worstVal}</td>`).join('')}</tr>`;
+  html += `<tr class="footer-row"><td>range</td>${pcts.map(p => { const isMax = Math.abs(colStats[p].range - maxRange) < 1e-9; return `<td class="${isMax ? 'range-hi' : ''}">${colStats[p].range.toFixed(3)}</td>`; }).join('')}</tr>`;
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAW: cross-param table
+// ═══════════════════════════════════════════════════════════════════
+function drawCrossParam() {
+  const wrap = document.getElementById('crossparam-wrap');
+  const ref  = document.getElementById('sel-ref-crossparam').value;
+  if (!ref || !activeScene) { wrap.innerHTML = '<div class="empty">No data</div>'; return; }
+  const sceneData = dataset[activeScene] ?? {};
+  const params    = getAllParams();
+  const pcts      = Object.keys(sceneData).filter(pct => pct !== 'metric' && Object.keys(sceneData[pct][ref] ?? {}).some(k => Array.isArray(sceneData[pct][ref][k]))).sort((a,b) => +b - +a);
+  if (!pcts.length) { wrap.innerHTML = '<div class="empty">No data for this reference</div>'; return; }
+  const stats = {};
+  for (const param of params) {
+    stats[param] = {};
+    for (const pct of pcts) {
+      const entries = sceneData[pct]?.[ref]?.[param] ?? [];
+      if (!entries.length) { stats[param][pct] = null; continue; }
+      const scores = entries.map(e => e.score);
+      const mn = Math.min(...scores), mx = Math.max(...scores);
+      stats[param][pct] = { min: mn, max: mx, range: mx - mn };
+    }
+  }
+  let globalMaxRange = 0;
+  for (const param of params) for (const pct of pcts) if (stats[param][pct]) globalMaxRange = Math.max(globalMaxRange, stats[param][pct].range);
+  let html = `<table><thead><tr class="pct-header"><th>Parameter</th>${pcts.map(p => `<th colspan="3">pct ${p}%</th>`).join('')}</tr><tr><th></th>${pcts.map(() => `<th>min</th><th>max</th><th>range</th>`).join('')}</tr></thead><tbody>`;
+  for (const param of params) {
+    html += `<tr><td>${param.replace(/_/g,' ')}</td>`;
+    for (const pct of pcts) {
+      const s = stats[param][pct];
+      if (!s) { html += `<td>—</td><td>—</td><td>—</td>`; continue; }
+      const isMaxRange = Math.abs(s.range - globalMaxRange) < 1e-9;
+      html += `<td>${s.min.toFixed(3)}</td><td>${s.max.toFixed(3)}</td><td class="${isMaxRange ? 'range-hi' : ''}">${s.range.toFixed(3)}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// OVERALL: score curves + heatmaps
+// ═══════════════════════════════════════════════════════════════════
+
+// Extract scores across all scenes: {scene: {res: {param: [(value, score)]}}}
+function extractAllScores() {
+  const result = {};
+  for (const [scene, sceneData] of Object.entries(dataset)) {
+    if (sceneData.metric === undefined && typeof sceneData !== 'object') continue;
+    const sceneScores = {};
+    let valid = true;
+    for (const res of RESOLUTIONS) {
+      const resStr  = String(res);
+      const pctData = sceneData[resStr];
+      if (!pctData) { valid = false; break; }
+      // find ref without screen-per
+      const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+      if (!refKey) { valid = false; break; }
+      sceneScores[res] = {};
+      for (const param of PARAMS) {
+        let entries = pctData[refKey][param] ?? [];
+        if (param === 'hist_percent') entries = entries.filter(e => e.value >= HIST_MIN_VAL);
+        sceneScores[res][param] = entries.map(e => ({ value: e.value, score: e.score }));
+      }
+    }
+    if (valid) result[scene] = sceneScores;
+  }
+  return result;
+}
+
+function effectSize(entries) {
+  if (!entries || entries.length < 2) return 0;
+  const scores = entries.map(e => e.score);
+  return Math.max(...scores) - Math.min(...scores);
+}
+
+function drawOverall() {
+  const allScores = extractAllScores();
+  const scenes    = Object.keys(allScores).sort();
+
+  // populate toggles once (or re-populate if scenes changed)
+  const togglesEl = document.getElementById('scene-toggles');
+  togglesEl.innerHTML = '';
+    activeScenes = new Set(scenes); // all on by default
+    togglesEl.innerHTML = '';
+    for (const scene of scenes) {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `
+        <div class="legend-swatch" style="background:var(--accent)"></div>
+        <div class="legend-text">
+          <span class="legend-label">${scene}</span>
+        </div>`;
+      item.addEventListener('click', () => {
+        if (activeScenes.has(scene)) {
+          activeScenes.delete(scene);
+          item.classList.add('inactive');
+        } else {
+          activeScenes.add(scene);
+          item.classList.remove('inactive');
+        }
+        drawScoreCurves(); // only rerender curves
+      });
+      togglesEl.appendChild(item);
+    }
+
+
+  drawScoreCurves();
+  drawHeatmaps();
+  drawComparison();
+  
+}
+
+// ── Score curves ─────────────────────────────────────────────────
+function renderCurveInto(wrap, param, allScores, expanded) {
+  wrap.innerHTML = '';
+  const scenes = Object.keys(allScores).filter(s => activeScenes.has(s));  // <-- add this filter
+  const W = wrap.clientWidth || 400;
+  const H = expanded ? 420 : 240;
+  const margin = { top:12, right:16, bottom:44, left:48 };
+  const iW = W - margin.left - margin.right, iH = H - margin.top - margin.bottom;
+
+  const avgByRes = {};
+  for (const res of RESOLUTIONS) {
+    const allVals = [...new Set(scenes.flatMap(s => (allScores[s][res][param] ?? []).map(e => e.value)))].sort((a,b) => a-b);
+    avgByRes[res] = allVals.map(val => {
+      const pctChanges = scenes.flatMap(s => {
+        const entries = allScores[s][res][param] ?? [];
+        if (!entries.length) return [];
+        const baseline = entries.reduce((a,b) => a + b.score, 0) / entries.length;
+        if (baseline === 0) return [];
+        const match = entries.find(e => Math.abs(e.value - val) < 1e-9);
+        return match ? [(match.score - baseline) / baseline * 100] : [];
+      });
+      return pctChanges.length ? { value: val, score: pctChanges.reduce((a,b) => a+b,0)/pctChanges.length } : null;
+    }).filter(Boolean);
+  }
+
+  const allPts = Object.values(avgByRes).flat();
+  if (!allPts.length) return;
+
+  const xScale = d3.scaleLinear().domain(d3.extent(allPts, d=>d.value)).nice().range([0,iW]);
+  const yPad   = (d3.max(allPts,d=>d.score) - d3.min(allPts,d=>d.score)) * 0.15 || 1;
+  const yScale = d3.scaleLinear().domain([d3.min(allPts,d=>d.score)-yPad, d3.max(allPts,d=>d.score)+yPad]).nice().range([iH,0]);
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+  svg.append('defs').append('clipPath').attr('id',`clip-${param}`).append('rect').attr('width',iW).attr('height',iH);
+  const g  = svg.append('g').attr('transform',`translate(${margin.left},${margin.top})`);
+  const ca = g.append('g').attr('clip-path',`url(#clip-${param})`);
+
+  ca.append('g').attr('class','grid').call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+  g.append('g').attr('class','axis').attr('transform',`translate(0,${iH})`).call(d3.axisBottom(xScale).ticks(expanded ? 8 : 5));
+  g.append('g').attr('class','axis').call(d3.axisLeft(yScale).ticks(expanded ? 6 : 4));
+  g.append('text').attr('class','axis-label').attr('x',iW/2).attr('y',iH+36).attr('text-anchor','middle').attr('font-size', expanded ? 11 : 9).text(param.replace(/_/g,' '));
+  g.append('text').attr('class','axis-label').attr('transform','rotate(-90)').attr('x',-iH/2).attr('y',-38).attr('text-anchor','middle').attr('font-size', expanded ? 11 : 9).text('% change from scene mean');
+
+  const line    = d3.line().x(d=>xScale(d.value)).y(d=>yScale(d.score)).curve(d3.curveMonotoneX);
+  const tooltip = document.getElementById('tooltip');
+  const dotR    = expanded ? 5 : 3;
+  const sw      = expanded ? 2 : 1.5;
+
+  for (const res of RESOLUTIONS) {
+    const pts = avgByRes[res];
+    if (!pts.length) continue;
+    const color = RES_COLORS[res];
+    ca.append('path').datum(pts).attr('class','series-line').attr('stroke',color).attr('stroke-width',sw).attr('d',line);
+    ca.selectAll(null).data(pts).join('circle')
+      .attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score))
+      .attr('r',dotR).attr('fill',color).attr('stroke','var(--bg)').attr('stroke-width',1.5)
+      .on('mousemove', (event,d) => {
+        tooltip.innerHTML = `
+          <div class="tt-label">${param.replace(/_/g,' ')}</div>
+          <div class="tt-score">${d.score.toFixed(3)}</div>
+          <div class="tt-label">value: <b>${d.value}</b></div>
+          <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>`;
+        tooltip.classList.add('visible'); positionTooltip(event);
+      })
+      .on('mouseleave', () => tooltip.classList.remove('visible'));
+  }
+
+  // legend — larger when expanded
+  const legG = svg.append('g').attr('transform',`translate(${margin.left + 8},${margin.top + 8})`);
+  const ls = expanded ? 14 : 8, lg = expanded ? 20 : 14, lf = expanded ? 10 : 8;
+  RESOLUTIONS.forEach((res,i) => {
+    legG.append('rect').attr('x',0).attr('y',i*lg).attr('width',ls).attr('height',ls).attr('fill',RES_COLORS[res]);
+    legG.append('text').attr('x',ls+4).attr('y',i*lg+ls-1).attr('fill','var(--muted)').attr('font-size',lf).attr('font-family','JetBrains Mono').text(`${res}%`);
+  });
+
+  // ── Brush to zoom ────────────────────────────────────────────
+  const brush = d3.brush()
+    .extent([[0,0],[iW,iH]])
+    .on('end', (event) => {
+      if (!event.selection) return;
+      const [[x0,y0],[x1,y1]] = event.selection;
+      xScale.domain([xScale.invert(x0), xScale.invert(x1)]);
+      yScale.domain([yScale.invert(y1), yScale.invert(y0)]);
+      g.select('.axis').call(d3.axisBottom(xScale).ticks(expanded ? 8 : 5));
+      ca.selectAll('.series-line').attr('d', line);
+      ca.selectAll('circle').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
+      requestAnimationFrame(() => ca.select('.brush').call(brush.move, null));
+    });
+
+  ca.append('g').attr('class','brush').call(brush);
+
+  // double-click to reset
+  svg.on('dblclick', () => {
+    xScale.domain(d3.extent(allPts, d=>d.value));
+    yScale.domain([d3.min(allPts,d=>d.score)-yPad, d3.max(allPts,d=>d.score)+yPad]);
+    g.select('.axis').call(d3.axisBottom(xScale).ticks(expanded ? 8 : 5));
+    ca.selectAll('.series-line').attr('d', line);
+    ca.selectAll('circle').attr('cx', d=>xScale(d.value)).attr('cy', d=>yScale(d.score));
+  });
+}
+
+function drawScoreCurves() {
+  const grid = document.getElementById('curves-grid');
+  // save which card is currently expanded before wiping
+  const currentlyExpanded = grid.querySelector('.chart-card.expanded');
+  if (currentlyExpanded) expandedParam = currentlyExpanded.dataset.param;
+  grid.innerHTML = '';
+  const allScores = extractAllScores();
+  const scenes    = Object.keys(allScores);
+  if (!scenes.length) return;
+
+  for (const param of PARAMS) {
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.dataset.param = param;
+    card.innerHTML = `
+      <div class="chart-card-header">
+        <div class="chart-card-title">${param.replace(/_/g,' ')}</div>
+        <span class="expand-hint">click to expand</span>
+      </div>
+      <div class="chart-card-wrap" id="curve-${param}"></div>`;
+    grid.appendChild(card);
+
+    // click to expand/collapse
+card.addEventListener('click', () => {
+      const isExpanded = card.classList.contains('expanded');
+      grid.querySelectorAll('.chart-card.expanded').forEach(c => {
+        c.classList.remove('expanded');
+        c.querySelector('.expand-hint').textContent = 'click to expand';
+        const w = c.querySelector('.chart-card-wrap');
+        requestAnimationFrame(() => renderCurveInto(w, c.dataset.param, allScores, false));
+      });
+      if (!isExpanded) {
+        expandedParam = param;   // <-- add this
+        card.classList.add('expanded');
+        card.querySelector('.expand-hint').textContent = 'click to collapse';
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const wrap = card.querySelector('.chart-card-wrap');
+        requestAnimationFrame(() => renderCurveInto(wrap, param, allScores, true));
+      } else {
+        expandedParam = null;    // <-- add this
+      }
+    });
+
+    // restore expanded state if this param was expanded before
+    requestAnimationFrame(() => {
+      const wrap = document.getElementById(`curve-${param}`);
+      if (wrap) {
+        const isExpanded = expandedParam === param;
+        if (isExpanded) {
+          card.classList.add('expanded');
+          card.querySelector('.expand-hint').textContent = 'click to collapse';
+          renderCurveInto(wrap, param, allScores, true);
+        } else {
+          renderCurveInto(wrap, param, allScores, false);
+        }
+      }
+    });
+  }
+}
+
+// ── Heatmaps ──────────────────────────────────────────────────────
+function drawHeatmaps() {
+  const grid = document.getElementById('heatmaps-grid');
+  grid.innerHTML = '';
+  const allScores = extractAllScores();
+  const scenes    = Object.keys(allScores).sort();
+  if (!scenes.length) return;
+
+  for (const param of PARAMS) {
+    // compute effect sizes: scenes × resolutions
+    const data = scenes.map(scene =>
+      RESOLUTIONS.map(res => effectSize(allScores[scene][res][param]))
+    );
+    const allES  = data.flat();
+    const maxES  = Math.max(...allES) || 1;
+
+    const card = document.createElement('div'); card.className = 'heatmap-card';
+    card.innerHTML = `<div class="heatmap-card-title">${param.replace(/_/g,' ')}</div><div class="heatmap-wrap" id="hm-${param}"></div>`;
+    grid.appendChild(card);
+
+    // build colour scale: white → accent blue
+    const colorScale = d3.scaleSequential()
+      .domain([0, maxES])
+      .interpolator(d3.interpolate('#1f2433', '#38bdf8'));
+
+    let html = `<table class="hm-table"><thead><tr>
+      <th>Scene</th>
+      ${RESOLUTIONS.map(r => `<th>${r}%</th>`).join('')}
+    </tr></thead><tbody>`;
+
+    scenes.forEach((scene, si) => {
+      html += `<tr><td>${scene}</td>`;
+      RESOLUTIONS.forEach((res, ri) => {
+        const es    = data[si][ri];
+        const bg    = colorScale(es);
+        const light = es > maxES * 0.5;
+        html += `<td style="background:${bg};color:${light ? '#0d0f14' : 'var(--text)'}">${es.toFixed(2)}</td>`;
+      });
+      html += '</tr>';
+    });
+
+    // average row
+    html += `<tr style="border-top:1px solid var(--border2)"><td style="color:var(--accent);font-weight:600">avg</td>`;
+    RESOLUTIONS.forEach((res, ri) => {
+      const avg = d3.mean(scenes.map((_,si) => data[si][ri]));
+      const bg  = colorScale(avg);
+      const light = avg > maxES * 0.5;
+      html += `<td style="background:${bg};color:${light ? '#0d0f14' : 'var(--text)'};font-weight:600">${avg.toFixed(2)}</td>`;
+    });
+    html += '</tr></tbody></table>';
+
+    document.getElementById(`hm-${param}`).innerHTML = html;
+  }
+}
+
+// ── Comparison ──────────────────────────────────────────────────────
+
+let expandedComparisonParam = null;
+
+function drawComparison() {
+  const grid = document.getElementById('comparison-grid');
+  grid.innerHTML = '';
+
+  // Find scenes common to both datasets
+  const cgScenes  = new Set(Object.keys(datasets.CGVQM).filter(s => Object.keys(datasets.CGVQM[s]).length > 2));
+  const cvScenes  = new Set(Object.keys(datasets.CVVDP).filter(s => Object.keys(datasets.CVVDP[s]).length > 2));
+  const commonScenes = [...cgScenes].filter(s => cvScenes.has(s));
+
+  // Update sidebar to reflect which scenes are valid for comparison
+  const onComparisonTab = document.getElementById('otab-comparison')?.classList.contains('active');
+  if (onComparisonTab) {
+    updateComparisonSceneToggles(commonScenes);
+  }
+
+  if (!commonScenes.length) {
+    grid.innerHTML = '<div class="empty">No scenes in common between both metrics</div>';
+    return;
+  }
+
+  for (const param of PARAMS) {
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.dataset.param = param;
+    card.innerHTML = `
+      <div class="chart-card-header">
+        <div class="chart-card-title">${param.replace(/_/g, ' ')}</div>
+        <span class="expand-hint">click to expand</span>
+      </div>
+      <div id="comparison-${param}" style="width:100%;"></div>`;
+    grid.appendChild(card);
+
+    card.addEventListener('click', () => {
+      const isExpanded = card.classList.contains('expanded');
+      // collapse all
+      grid.querySelectorAll('.chart-card.expanded').forEach(c => {
+        c.classList.remove('expanded');
+        c.querySelector('.expand-hint').textContent = 'click to expand';
+        const w = c.querySelector(`#comparison-${c.dataset.param}`);
+        if (w) renderOverallComparisonPair(w, c.dataset.param, commonScenes, false);
+      });
+      if (!isExpanded) {
+        expandedComparisonParam = param;
+        card.classList.add('expanded');
+        card.querySelector('.expand-hint').textContent = 'click to collapse';
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const w = card.querySelector(`#comparison-${param}`);
+        if (w) renderOverallComparisonPair(w, param, commonScenes, true);
+      } else {
+        expandedComparisonParam = null;
+      }
+    });
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const wrap = document.getElementById(`comparison-${param}`);
+        if (!wrap) return;
+        const isExpanded = expandedComparisonParam === param;
+        if (isExpanded) {
+          card.classList.add('expanded');
+          card.querySelector('.expand-hint').textContent = 'click to collapse';
+        }
+        renderOverallComparisonPair(wrap, param, commonScenes, isExpanded);
+      });
+    });
+  }
+}
+
+function updateComparisonSceneToggles(commonScenes) {
+  // only run this when we're on the comparison tab
+  const togglesEl = document.getElementById('scene-toggles');
+  // mark items that aren't in commonScenes as disabled
+  togglesEl.querySelectorAll('.legend-item').forEach(item => {
+    const scene = item.querySelector('.legend-label').textContent;
+    if (!commonScenes.includes(scene)) {
+      item.classList.add('inactive');
+      item.style.opacity = '0.2';
+      item.style.pointerEvents = 'none';
+      item.title = 'Not available in both metrics';
+    } else {
+      item.style.pointerEvents = '';
+      item.title = '';
+      // restore opacity based on activeScenes
+      item.style.opacity = '';
+      item.classList.toggle('inactive', !activeScenes.has(scene));
+    }
+  });
+}
+
+function renderOverallComparisonPair(wrap, param, commonScenes, expanded = false) {
+  wrap.innerHTML = '';
+
+  // filter to only actively selected scenes that are in commonScenes
+  const scenes = commonScenes.filter(s => activeScenes.has(s));
+
+  if (!scenes.length) {
+    wrap.innerHTML = '<div class="empty">No scenes selected</div>';
+    return;
+  }
+
+  // Build averaged % change series for each metric
+  const seriesByMetric = {};
+  for (const metricKey of ['CGVQM', 'CVVDP']) {
+    const avgByRes = {};
+    for (const res of RESOLUTIONS) {
+      const allVals = [...new Set(
+        scenes.flatMap(s => {
+          const pctData = datasets[metricKey][s]?.[String(res)];
+          if (!pctData) return [];
+          const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+          if (!refKey) return [];
+          return (pctData[refKey][param] ?? []).map(e => e.value);
+        })
+      )].sort((a, b) => a - b);
+
+      avgByRes[res] = allVals.map(val => {
+        const pctChanges = scenes.flatMap(s => {
+          const pctData = datasets[metricKey][s]?.[String(res)];
+          if (!pctData) return [];
+          const refKey = Object.keys(pctData).find(r => !r.includes('screen-per'));
+          if (!refKey) return [];
+          const entries = pctData[refKey][param] ?? [];
+          if (!entries.length) return [];
+          const baseline = entries.reduce((a, b) => a + b.score, 0) / entries.length;
+          if (baseline === 0) return [];
+          const match = entries.find(e => Math.abs(e.value - val) < 1e-9);
+          return match ? [(match.score - baseline) / baseline * 100] : [];
+        });
+        return pctChanges.length
+          ? { value: val, score: pctChanges.reduce((a, b) => a + b, 0) / pctChanges.length }
+          : null;
+      }).filter(Boolean);
+    }
+    seriesByMetric[metricKey] = avgByRes;
+  }
+
+  const GAP    = 48;
+  const W      = wrap.clientWidth || 900;
+  const H      = expanded ? 420 : 280;
+  const margin = { top: 20, right: 20, bottom: 52, left: 56 };
+  const panelW = (W - GAP) / 2;
+  const iW     = panelW - margin.left - margin.right;
+  const iH     = H - margin.top - margin.bottom;
+
+  const svg     = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
+  const tooltip = document.getElementById('tooltip');
+
+  ['CGVQM', 'CVVDP'].forEach((metricKey, mi) => {
+    const avgByRes = seriesByMetric[metricKey];
+    const offsetX  = mi * (panelW + GAP);
+    const allPts   = Object.values(avgByRes).flat();
+
+    const clipId = `clip-overall-comp-${param}-${mi}-${expanded}`;
+    svg.append('defs').append('clipPath').attr('id', clipId)
+      .append('rect').attr('width', iW).attr('height', iH);
+
+    const g  = svg.append('g').attr('transform', `translate(${offsetX + margin.left},${margin.top})`);
+    const ca = g.append('g').attr('clip-path', `url(#${clipId})`);
+
+    if (!allPts.length) {
+      g.append('text').attr('x', iW / 2).attr('y', iH / 2)
+        .attr('text-anchor', 'middle').attr('fill', 'var(--muted)').attr('font-size', 12)
+        .text('No data');
+      return;
+    }
+
+    const xScale = d3.scaleLinear().domain(d3.extent(allPts, d => d.value)).nice().range([0, iW]);
+    const yPad   = (d3.max(allPts, d => d.score) - d3.min(allPts, d => d.score)) * 0.15 || 1;
+    const yScale = d3.scaleLinear()
+      .domain([d3.min(allPts, d => d.score) - yPad, d3.max(allPts, d => d.score) + yPad])
+      .nice().range([iH, 0]);
+
+    // zero line
+    ca.append('line')
+      .attr('x1', 0).attr('x2', iW)
+      .attr('y1', yScale(0)).attr('y2', yScale(0))
+      .attr('stroke', 'var(--border2)').attr('stroke-width', 1).attr('stroke-dasharray', '4,3');
+
+    ca.append('g').attr('class', 'grid')
+      .call(d3.axisLeft(yScale).tickSize(-iW).tickFormat(''));
+
+    g.append('g').attr('class', 'axis').attr('transform', `translate(0,${iH})`)
+      .call(d3.axisBottom(xScale).ticks(expanded ? 8 : 6));
+    g.append('g').attr('class', 'axis')
+      .call(d3.axisLeft(yScale).ticks(expanded ? 8 : 5));
+
+    g.append('text').attr('class', 'axis-label')
+      .attr('x', iW / 2).attr('y', iH + 42)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text(param.replace(/_/g, ' '));
+    g.append('text').attr('class', 'axis-label')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -iH / 2).attr('y', -44)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .text('% change from mean');
+
+    g.append('text')
+      .attr('x', iW / 2).attr('y', -6)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Syne, sans-serif').attr('font-weight', 700).attr('font-size', 12)
+      .attr('fill', 'var(--muted)').attr('letter-spacing', '0.08em')
+      .text(metricKey);
+
+    const line = d3.line()
+      .x(d => xScale(d.value)).y(d => yScale(d.score))
+      .curve(d3.curveMonotoneX);
+
+    for (const res of RESOLUTIONS) {
+      const pts = avgByRes[res];
+      if (!pts?.length) continue;
+      const color = RES_COLORS[res];
+
+      ca.append('path').datum(pts)
+        .attr('class', 'series-line')
+        .attr('stroke', color).attr('stroke-width', expanded ? 2.5 : 2)
+        .attr('d', line);
+
+      ca.selectAll(null).data(pts).join('circle')
+        .attr('cx', d => xScale(d.value)).attr('cy', d => yScale(d.score))
+        .attr('r', expanded ? 5 : 3.5).attr('fill', color)
+        .attr('stroke', 'var(--bg)').attr('stroke-width', 2)
+        .on('mousemove', (event, d) => {
+          tooltip.innerHTML = `
+            <div class="tt-label">${metricKey} · ${param.replace(/_/g, ' ')}</div>
+            <div class="tt-score">${d.score.toFixed(3)}%</div>
+            <div class="tt-label">value: <b>${d.value}</b></div>
+            <div class="tt-label">resolution: <b style="color:${color}">${res}%</b></div>
+            <div class="tt-label">avg over <b>${scenes.length}</b> scenes</div>`;
+          tooltip.classList.add('visible');
+          positionTooltip(event);
+        })
+        .on('mouseleave', () => tooltip.classList.remove('visible'));
+    }
+
+    // Legend
+    const legG = g.append('g').attr('transform', 'translate(8, 8)');
+    RESOLUTIONS.forEach((res, i) => {
+      legG.append('rect').attr('x', 0).attr('y', i * 16).attr('width', 10).attr('height', 10).attr('fill', RES_COLORS[res]);
+      legG.append('text').attr('x', 14).attr('y', i * 16 + 9)
+        .attr('fill', 'var(--muted)').attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+        .text(`${res}%`);
+    });
+  });
+}
+// ═══════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════════
+
+// Top-level tabs
+document.querySelectorAll('.top-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.top-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.top-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`top-${btn.dataset.top}`).classList.add('active');
+  });
+});
+
+// Overall inner tabs
+document.querySelectorAll('.overall-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.overall-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.overall-tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`otab-${btn.dataset.otab}`).classList.add('active');
+    if (btn.dataset.otab === 'comparison') {
+      drawComparison();
+    } else {
+      // restore all scene toggles when leaving comparison tab
+      const togglesEl = document.getElementById('scene-toggles');
+      togglesEl.querySelectorAll('.legend-item').forEach(item => {
+        const scene = item.querySelector('.legend-label').textContent;
+        item.style.pointerEvents = '';
+        item.style.opacity = '';
+        item.style.title = '';
+        item.classList.toggle('inactive', !activeScenes.has(scene));
+      });
+    }
+  });
+});
+
+// Scene inner tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    if (btn.dataset.tab === 'chart')       draw();
+    if (btn.dataset.tab === 'metriccomp')  drawSceneComparison();
+    if (btn.dataset.tab === 'sensitivity') drawSensitivity();
+    if (btn.dataset.tab === 'deepdive')    drawDeepDive();
+    if (btn.dataset.tab === 'crossparam')  drawCrossParam();
+  });
+});
+
+document.querySelectorAll('.metric-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.metric-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeMetric = btn.dataset.metric;
+    dataset = datasets[activeMetric];
+    // update subtitle
+    document.querySelector('header span').textContent = `quality explorer · ${activeMetric.toLowerCase()}`;
+    // re-render everything
+    init();
+    drawOverall();
+  });
+});
+
+document.getElementById('sel-ref-deepdive').addEventListener('change', drawDeepDive);
+document.getElementById('sel-ref-crossparam').addEventListener('change', drawCrossParam);
+
+// ═══════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════
+function positionTooltip(event) {
+  const tt = document.getElementById('tooltip'), pad = 14;
+  let x = event.clientX + pad, y = event.clientY + pad;
+  if (x + 240 > window.innerWidth)  x = event.clientX - 240 - pad;
+  if (y + 170 > window.innerHeight) y = event.clientY - 170 - pad;
+  tt.style.left = x + 'px'; tt.style.top = y + 'px';
+}
+
+function getComputedColor(val) {
+  if (!val.startsWith('var(')) return val;
+  const name = val.match(/var\((.+)\)/)?.[1];
+  return name ? getComputedStyle(document.documentElement).getPropertyValue(name).trim() : val;
+}
+
+function setStatus(msg, ok, id = 'status') {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<span class="${ok?'ok':'warn'}">${msg}</span>`;
+}
+
+const ro = new ResizeObserver(() => {
+  const onSceneTab = document.getElementById('top-scene')?.classList.contains('active');
+  if (onSceneTab) renderAll();
+});
+ro.observe(document.getElementById('chart-wrap'));
+
+loadData();
+
+const roComparison = new ResizeObserver(() => {
+  const onComparisonTab = document.getElementById('otab-comparison')?.classList.contains('active');
+  if (onComparisonTab) drawComparison();
+});
+roComparison.observe(document.getElementById('comparison-grid'));
+
+const roCurves = new ResizeObserver(() => {
+  const onCurvesTab = document.getElementById('otab-curves')?.classList.contains('active');
+  if (onCurvesTab) drawScoreCurves();
+});
+roCurves.observe(document.getElementById('curves-grid'));
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "abandoned-demo",
+    "metric": "ColorVideoVDP",
+    "scene": "abandoned-demo-screen-per-71"
+  },
+  "vary_num_samples_16": {
+    "score": 9.4346
+  },
+  "vary_num_samples_32": {
+    "score": 9.4342
+  },
+  "vary_num_samples_4": {
+    "score": 9.4362
+  },
+  "vary_num_samples_64": {
+    "score": 9.4396
+  },
+  "vary_num_samples_8": {
+    "score": 9.4343
+  }
+}

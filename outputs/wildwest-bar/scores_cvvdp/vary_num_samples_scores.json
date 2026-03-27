@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-bar",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-bar"
+  },
+  "vary_num_samples_16": {
+    "score": 9.1702
+  },
+  "vary_num_samples_32": {
+    "score": 9.3066
+  },
+  "vary_num_samples_4": {
+    "score": 9.1784
+  },
+  "vary_num_samples_64": {
+    "score": 9.2145
+  },
+  "vary_num_samples_8": {
+    "score": 9.277
+  }
+}

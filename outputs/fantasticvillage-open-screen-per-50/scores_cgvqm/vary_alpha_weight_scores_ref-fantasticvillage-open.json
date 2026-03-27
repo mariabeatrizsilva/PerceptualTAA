@@ -2,7 +2,7 @@
   "_meta": {
     "reference_scene": "fantasticvillage-open",
     "metric": "CGVQM",
-    "scene": "village-screen-per-50"
+    "scene": "fantasticvillage-open-screen-per-50"
   },
   "vary_alpha_weight_0.01": {
     "score": 93.79674530029297,

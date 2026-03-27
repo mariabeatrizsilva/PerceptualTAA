@@ -1,7 +1,37 @@
 {
-  "vary_hist_percent_100": 9.7206,
-  "vary_hist_percent_125": 9.7202,
-  "vary_hist_percent_150": 9.7461,
-  "vary_hist_percent_50": 9.7208,
-  "vary_hist_percent_75": 9.7092
+  "_meta": {
+    "reference_scene": "cubetest",
+    "metric": "ColorVideoVDP",
+    "scene": "cubetest"
+  },
+  "vary_hist_percent_1": {
+    "score": 9.726
+  },
+  "vary_hist_percent_10": {
+    "score": 9.7209
+  },
+  "vary_hist_percent_100": {
+    "score": 9.7206
+  },
+  "vary_hist_percent_125": {
+    "score": 9.7202
+  },
+  "vary_hist_percent_15": {
+    "score": 9.7205
+  },
+  "vary_hist_percent_150": {
+    "score": 9.7461
+  },
+  "vary_hist_percent_30": {
+    "score": 9.7131
+  },
+  "vary_hist_percent_5": {
+    "score": 9.7208
+  },
+  "vary_hist_percent_50": {
+    "score": 9.7208
+  },
+  "vary_hist_percent_75": {
+    "score": 9.7092
+  }
 }

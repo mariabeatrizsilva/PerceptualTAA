@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-behindcounter",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-behindcounter"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.4377
+  },
+  "vary_filter_size_0.25": {
+    "score": 9.3418
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.4333
+  },
+  "vary_filter_size_0.7": {
+    "score": 9.3394
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.4364
+  },
+  "vary_filter_size_0.95": {
+    "score": 9.3321
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.4366
+  }
+}

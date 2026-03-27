@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "reference_scene": "lightfoliage",
+    "metric": "ColorVideoVDP",
+    "scene": "lightfoliage-screen-per-87"
+  },
+  "vary_hist_percent_100": {
+    "score": 9.2743
+  },
+  "vary_hist_percent_125": {
+    "score": 9.307
+  },
+  "vary_hist_percent_150": {
+    "score": 9.3277
+  },
+  "vary_hist_percent_200": {
+    "score": 9.3649
+  }
+}

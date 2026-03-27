@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "reference_scene": "lightfoliage",
+    "metric": "ColorVideoVDP",
+    "scene": "lightfoliage-screen-per-87"
+  },
+  "vary_alpha_weight_0.01": {
+    "score": 9.2585
+  },
+  "vary_alpha_weight_0.02": {
+    "score": 9.2658
+  },
+  "vary_alpha_weight_0.04": {
+    "score": 9.2596
+  },
+  "vary_alpha_weight_0.06": {
+    "score": 9.2875
+  },
+  "vary_alpha_weight_0.1": {
+    "score": 9.3062
+  },
+  "vary_alpha_weight_0.2": {
+    "score": 9.3517
+  },
+  "vary_alpha_weight_0.5": {
+    "score": 9.4123
+  },
+  "vary_alpha_weight_0.6": {
+    "score": 9.4226
+  },
+  "vary_alpha_weight_0.7": {
+    "score": 9.4216
+  },
+  "vary_alpha_weight_0.8": {
+    "score": 9.4227
+  },
+  "vary_alpha_weight_0.9": {
+    "score": 9.4154
+  },
+  "vary_alpha_weight_1.0": {
+    "score": 9.4106
+  }
+}

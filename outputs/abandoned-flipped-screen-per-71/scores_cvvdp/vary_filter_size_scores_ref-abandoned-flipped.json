@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "abandoned-flipped",
+    "metric": "ColorVideoVDP",
+    "scene": "abandoned-flipped-screen-per-71"
+  },
+  "vary_filter_size_0.1": {
+    "score": 8.8631
+  },
+  "vary_filter_size_0.25": {
+    "score": 8.873
+  },
+  "vary_filter_size_0.5": {
+    "score": 8.8773
+  },
+  "vary_filter_size_0.7": {
+    "score": 8.8719
+  },
+  "vary_filter_size_0.9": {
+    "score": 8.8622
+  },
+  "vary_filter_size_0.95": {
+    "score": 8.8808
+  },
+  "vary_filter_size_1.0": {
+    "score": 8.8775
+  }
+}

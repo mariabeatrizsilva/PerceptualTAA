@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-barzoom",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-barzoom"
+  },
+  "vary_filter_size_0.1": {
+    "score": 9.3685
+  },
+  "vary_filter_size_0.25": {
+    "score": 9.2842
+  },
+  "vary_filter_size_0.5": {
+    "score": 9.3682
+  },
+  "vary_filter_size_0.7": {
+    "score": 9.2813
+  },
+  "vary_filter_size_0.9": {
+    "score": 9.3684
+  },
+  "vary_filter_size_0.95": {
+    "score": 9.2815
+  },
+  "vary_filter_size_1.0": {
+    "score": 9.3681
+  }
+}

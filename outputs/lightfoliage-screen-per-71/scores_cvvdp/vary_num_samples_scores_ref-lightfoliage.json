@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "reference_scene": "lightfoliage",
+    "metric": "ColorVideoVDP",
+    "scene": "lightfoliage-screen-per-71"
+  },
+  "vary_num_samples_16": {
+    "score": 9.1506
+  },
+  "vary_num_samples_32": {
+    "score": 9.1496
+  },
+  "vary_num_samples_4": {
+    "score": 9.1504
+  },
+  "vary_num_samples_64": {
+    "score": 9.152
+  },
+  "vary_num_samples_8": {
+    "score": 9.1582
+  }
+}

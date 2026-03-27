@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-bar",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-bar"
+  },
+  "vary_hist_percent_1": {
+    "score": 9.1654
+  },
+  "vary_hist_percent_10": {
+    "score": 9.1813
+  },
+  "vary_hist_percent_100": {
+    "score": 9.2766
+  },
+  "vary_hist_percent_125": {
+    "score": 9.2306
+  },
+  "vary_hist_percent_15": {
+    "score": 9.2778
+  },
+  "vary_hist_percent_150": {
+    "score": 9.3612
+  },
+  "vary_hist_percent_200": {
+    "score": 9.3074
+  },
+  "vary_hist_percent_30": {
+    "score": 9.1907
+  },
+  "vary_hist_percent_5": {
+    "score": 9.2786
+  },
+  "vary_hist_percent_50": {
+    "score": 9.2781
+  },
+  "vary_hist_percent_75": {
+    "score": 9.1637
+  }
+}

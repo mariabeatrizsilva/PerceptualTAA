@@ -3,20 +3,36 @@ import subprocess
 import sys
 
 # --- Configuration ---
-SCENE_NAMES = [
-    # "abandoned",
-#    "abandoned-demo",
-#    "abandoned-flipped",
-#    "cubetest", "fantasticvillage-open", "lightfoliage", "lightfoliage-close", "oldmine", "oldmine-close", 
-#    "oldmine-warm", "quarry-all", "quarry-rocksonly", "resto-close", "resto-fwd", "resto-pan", "scifi", "subway-lookdown", 
-#    "subway-turn", "wildwest-bar", "wildwest-barzoom", "wildwest-behindcounter", "wildwest-store", "wildwest-town",
-#    "oldmine-speed-9","oldmine-speed-18", "oldmine-speed-35", "oldmine-speed-75"
-"oldmine-screen-per-25", "oldmine-screen-per-50", "oldmine-screen-per-75", "village-screen-per-25", "village-screen-per-50", "village-screen-per-75"
-    ]
+
+# Define the base names of your videos
+BASE_SCENES = [
+    # "oldmine",
+    # "junkyard-mound2",
+    # "fantasticvillage-open",
+    "abandoned",
+    # "quarry-all",
+    # "scifi",
+]
+
+# Define the screen-per values you want to sync
+SCREEN_PER_VALUES = [
+    "50",
+    "71",
+    "87"
+]
+
+# Dynamically generate the scene names: {base name}-screen-per-{value}
+SCENE_NAMES = []
+for base in BASE_SCENES:
+    # 1. Add the original base scene
+    SCENE_NAMES.append(base)
+    # 2. Add all the screen-per variations
+    for val in SCREEN_PER_VALUES:
+        SCENE_NAMES.append(f"{base}-screen-per-{val}")
 
 # Source machine (where videos are)
 SOURCE_USER = "bia"
-SOURCE_HOST = "10.0.0.100"
+SOURCE_HOST = "10.0.0.110"
 SOURCE_BASE_PATH = "/home/bia/PTAA/outputs"
 
 # Local destination path (your current machine)

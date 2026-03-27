@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "reference_scene": "wildwest-town",
+    "metric": "ColorVideoVDP",
+    "scene": "wildwest-town"
+  },
+  "vary_hist_percent_1": {
+    "score": 8.7245
+  },
+  "vary_hist_percent_10": {
+    "score": 8.7684
+  },
+  "vary_hist_percent_100": {
+    "score": 9.1494
+  },
+  "vary_hist_percent_125": {
+    "score": 8.801
+  },
+  "vary_hist_percent_15": {
+    "score": 9.1495
+  },
+  "vary_hist_percent_150": {
+    "score": 9.2641
+  },
+  "vary_hist_percent_200": {
+    "score": 8.9018
+  },
+  "vary_hist_percent_30": {
+    "score": 8.7439
+  },
+  "vary_hist_percent_5": {
+    "score": 9.1489
+  },
+  "vary_hist_percent_50": {
+    "score": 9.1465
+  },
+  "vary_hist_percent_75": {
+    "score": 8.7551
+  }
+}
