@@ -32,6 +32,9 @@ scene_info   = config['scenes'][SCENE_TO_RUN]
 project_path = config['projects'][scene_info['project']]
 level_path   = scene_info['level']
 
+# Derive CSV directory from project path — UE always saves to Saved/Profiling/CSV
+csv_dir = os.path.join(os.path.dirname(project_path), "Saved", "Profiling", "CSV")
+
 # ── Build ExecCmds ────────────────────────────────────────────────────────────
 # Note: csvprofile start is here, NOT in the Level Blueprint.
 # The Level Blueprint only handles Begin Play → Play sequence.
@@ -65,14 +68,15 @@ cmd = [
 # ── Launch UE ─────────────────────────────────────────────────────────────────
 print(f"Launching {SCENE_TO_RUN} | {TAA_CVAR}={TAA_VALUE} | ScreenPct={SCREEN_PCT}")
 print(f"Command: {' '.join(cmd)}\n")
+print(f"CSV will be read from: {csv_dir}\n")
 
 # Record which CSVs exist before launch so we can find the new one after
-existing_csvs = set(glob.glob(os.path.join(runtime_dir, "*.csv")))
+existing_csvs = set(glob.glob(os.path.join(csv_dir, "*.csv")))
 
 subprocess.run(cmd)   # blocks until UE exits
 
 # ── Find the new CSV ──────────────────────────────────────────────────────────
-all_csvs    = set(glob.glob(os.path.join(runtime_dir, "*.csv")))
+all_csvs    = set(glob.glob(os.path.join(csv_dir, "*.csv")))
 new_csvs    = all_csvs - existing_csvs
 
 if not new_csvs:
