@@ -113,6 +113,11 @@ scenes:
     level: "/Game/WildWest/Maps/WildWestVillage"
     sequence: "/Game/WildWest/Flythrough-Town"
 
+  wildwest-store:
+    project: Wildwest
+    level: "/Game/WildWest/Maps/WildWestVillage"
+    sequence: "/Game/WildWest/Flythrough-Store"
+
   resto-close:
     project: Wildwest
     level: "/Game/RestaurantScene/Maps/Showcase"
