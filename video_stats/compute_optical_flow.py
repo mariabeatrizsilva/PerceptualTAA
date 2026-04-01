@@ -64,8 +64,8 @@ def compute_flow_for_video(video_path, max_frames=None):
     H, W = frames_gray[0].shape
     motion_vid = np.zeros((T, 2, H, W), dtype=np.float32) # one entry per frame, 2 components (dx,dy), pixel spatial grid
 
-    for fid in tqdm(range(1, T), desc=video_path.stem, leave=False, unit="frame"):
-        flow = cv2.calcOpticalFlowFarneback(frames_gray[fid-1], frames_gray[fid], None, 0.5, 3, 15, 3, 5, 1.2, 0)
+    for fid in tqdm(range(1, T), desc=video_path.stem, leave=False, unit="frame"): 
+        flow = cv2.calcOpticalFlowFarneback(frames_gray[fid-1], frames_gray[fid], None, 0.5, 3, 15, 3, 5, 1.2, 0) % https://docs.opencv.org/3.4/d4/dee/tutorial_optical_flow.html
         motion_vid[fid, 0, :, :] = flow[:, :, 0]  # dx
         motion_vid[fid, 1, :, :] = flow[:, :, 1]  # dy
 
