@@ -139,21 +139,23 @@ def process_profile(csv_path, scene_name):
     # Save raw frames
     df.to_parquet(parquet_path, index=False)
 
+    # Only use second and third run for analysis 
+    df_analysis = df.iloc[150:]
     # Compute summary
     row = dict(meta)
-    row['frames_analysed'] = len(df)
+    row['frames_analysed'] = len(df_analysis)
     for col in METRICS:
-        if col in df.columns:
-            row[f'avg_{col}'] = round(df[col].mean(), 4)
-            row[f'p95_{col}'] = round(df[col].quantile(0.95), 4)
-            row[f'max_{col}'] = round(df[col].max(), 4)
+        if col in df_analysis.columns:
+            row[f'avg_{col}'] = round(df_analysis[col].mean(), 4)
+            row[f'p95_{col}'] = round(df_analysis[col].quantile(0.95), 4)
+            row[f'max_{col}'] = round(df_analysis[col].max(), 4)
 
     # Append to results.csv
     results_path = os.path.join(current_dir, 'results.csv')
     write_header = not os.path.exists(results_path)
     pd.DataFrame([row]).to_csv(results_path, mode='a', index=False, header=write_header)
 
-    print(f"  ✅ Processed: {len(df)} frames | {meta.get('cvar_name')}={meta.get('cvar_value')} @ {meta.get('screen_pct')}%")
+    print(f"  ✅ Processed: {len(df)} frames |  ✅ Analyzed: {len(df_analysis)} frames |{meta.get('cvar_name')}={meta.get('cvar_value')} @ {meta.get('screen_pct')}%")
 
 
 # ── The Master Loop ──────────────────────────────────────────────────────────
