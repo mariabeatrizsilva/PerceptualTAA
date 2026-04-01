@@ -9,3 +9,6 @@ legacy
 *.html
 *.csv
 *.exr
+video_parameterization/video_parameterization.py
+*.npy
+datasets_old

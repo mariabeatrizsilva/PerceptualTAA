@@ -19,20 +19,20 @@ scenes:
     level: "/Game/Scene_OldMine/Maps/Industrial_OldMine"
     sequence: "/Game/Scene_OldMine/Sequences/seq1-reg"
 
-  oldmine-warm:
-    project: Newproj
-    level: "/Game/Scene_OldMine/Maps/Industrial_OldMine"
-    sequence: "/Game/Scene_OldMine/Sequences/seq3"
+  # oldmine-warm:
+  #   project: Newproj
+  #   level: "/Game/Scene_OldMine/Maps/Industrial_OldMine"
+  #   sequence: "/Game/Scene_OldMine/Sequences/seq3"
 
-  junkyard-mound1:
-    project: Newproj
-    level: "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
-    sequence: "/Game/Scene_Junkyard/Sequences/flythrough"
+  # junkyard-mound1:
+  #   project: Newproj
+  #   level: "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
+  #   sequence: "/Game/Scene_Junkyard/Sequences/flythrough"
 
-  junkyard-mound2:
-    project: Newproj
-    level: "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
-    sequence: "/Game/Scene_Junkyard/Sequences/flythrough-above"
+  # junkyard-mound2:
+  #   project: Newproj
+  #   level: "/Game/Scene_Junkyard/Maps/Industrial_Junkyard_Vol1"
+  #   sequence: "/Game/Scene_Junkyard/Sequences/flythrough-above"
 
   # --- Project: SubwayTrain ---
   subway-lookdown:
@@ -98,10 +98,10 @@ scenes:
     level: "/Game/WildWest/Maps/WildWestVillage"
     sequence: "/Game/WildWest/Flythrough-Bar"
 
-  wildwest-barzoom:
-    project: Wildwest
-    level: "/Game/WildWest/Maps/WildWestVillage"
-    sequence: "/Game/WildWest/Flythrough-BarZoom"
+  # wildwest-barzoom:
+  #   project: Wildwest
+  #   level: "/Game/WildWest/Maps/WildWestVillage"
+  #   sequence: "/Game/WildWest/Flythrough-BarZoom"
 
   wildwest-behindcounter:
     project: Wildwest
