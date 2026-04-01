@@ -118,11 +118,7 @@ def parse_profile(csv_path, scene_name):
 
 
 # ── Process a single profile and append to results.csv ───────────────────────
-def process_profile(csv_path, scene_name):
-    """
-    Parses a profile, saves raw frames to parquet, appends summary to results.csv.
-    Skips if already processed (parquet already exists).
-    """
+def process_profile(csv_path, scene_name, screen_pct, cvar_name, cvar_value):
     parquet_name = os.path.splitext(os.path.basename(csv_path))[0] + '.parquet'
     parquet_path = os.path.join(raw_dir, parquet_name)
 
@@ -136,27 +132,29 @@ def process_profile(csv_path, scene_name):
         print(f"  ⚠️  No data extracted from {os.path.basename(csv_path)}, skipping.")
         return
 
-    # Save raw frames
     df.to_parquet(parquet_path, index=False)
 
-    # Only use second and third run for analysis 
     df_analysis = df.iloc[150:]
-    # Compute summary
-    row = dict(meta)
-    row['frames_analysed'] = len(df_analysis)
+
+    row = {
+        'scene':           scene_name,
+        'screen_pct':      screen_pct,
+        'cvar_name':       cvar_name,
+        'cvar_value':      cvar_value,
+        'frames_analysed': len(df_analysis),
+        'csv_file':        os.path.basename(csv_path),
+    }
     for col in METRICS:
         if col in df_analysis.columns:
             row[f'avg_{col}'] = round(df_analysis[col].mean(), 4)
             row[f'p95_{col}'] = round(df_analysis[col].quantile(0.95), 4)
             row[f'max_{col}'] = round(df_analysis[col].max(), 4)
 
-    # Append to results.csv
     results_path = os.path.join(current_dir, 'results.csv')
     write_header = not os.path.exists(results_path)
     pd.DataFrame([row]).to_csv(results_path, mode='a', index=False, header=write_header)
 
-    print(f"  ✅ Processed: {len(df)} frames |  ✅ Analyzed: {len(df_analysis)} frames |{meta.get('cvar_name')}={meta.get('cvar_value')} @ {meta.get('screen_pct')}%")
-
+    print(f"  ✅ Processed: {len(df)} frames | Analyzed: {len(df_analysis)} frames | {cvar_name}={cvar_value} @ {screen_pct}%")
 
 # ── The Master Loop ──────────────────────────────────────────────────────────
 for screen_pct in RESOLUTIONS:
@@ -196,8 +194,8 @@ for screen_pct in RESOLUTIONS:
                 csv_path = max(new_csvs, key=os.path.getmtime)
                 print(f"  📄 CSV captured: {os.path.basename(csv_path)}")
 
-                if PROCESS_PROFILES:
-                    process_profile(csv_path, SCENE_TO_RUN)
+            if PROCESS_PROFILES:
+                process_profile(csv_path, SCENE_TO_RUN, screen_pct, cvar_name, val)
             else:
                 print(f"  ❌ ERROR: No CSV generated for {cvar_name}={val}")
 
