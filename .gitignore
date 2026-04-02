@@ -10,3 +10,6 @@ legacy
 *.csv
 *.exr
 *.parquet 
+video_parameterization/video_parameterization.py
+*.npy
+datasets_old

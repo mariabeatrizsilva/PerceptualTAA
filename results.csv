@@ -1,5 +1,4 @@
-scene,screen_pct,taa_value,avg_frame_ms,avg_gpu_ms,avg_mem_mb,peak_mem_mb,frames_analysed,csv_file
-cubetest,100,0.1,33.24,11.33,2617.06,2874.31,300,Profile(20260327_184918).csv
+scene,screen_pct,cvar_name,cvar_value,avg_frame_ms,avg_gpu_ms,avg_game_ms,avg_render_ms,avg_rhi_ms,avg_mem_mb,peak_mem_mb,frames_analysed,csv_file
 cubetest,100,r.TemporalAACurrentFrameWeight,0.01,33.2381,7.5677,2.8731,4.3896,2.7634,2616.9646,2874.0312,300,Profile(20260327_185928).csv
 cubetest,100,r.TemporalAACurrentFrameWeight,0.02,33.2375,11.3297,2.9946,4.8029,2.8687,2627.158,2875.0625,300,Profile(20260327_185947).csv
 cubetest,100,r.TemporalAACurrentFrameWeight,0.04,33.238,11.0416,3.0386,4.975,3.0182,2618.1606,2875.0625,300,Profile(20260327_190006).csv
