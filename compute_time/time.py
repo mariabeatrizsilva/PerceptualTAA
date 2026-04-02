@@ -168,19 +168,37 @@ for screen_pct in RESOLUTIONS:
             print(f"{'='*70}")
 
             exec_cmds = ",".join([
-                "t.MaxFPS 30",
+                "r.FixedFrameRate 30",          # Lock simulation delta time 
+                "t.MaxFPS 0",                   # Remove real-time throttle
                 "r.VSync 0",
                 f"r.ScreenPercentage {screen_pct}",
                 f"{cvar_name} {val}",
                 "r.gpuCsvStatsEnabled 1",
-                f"csvprofile frames={CSV_FRAMES}",
+                "Sleep 5",                      # Crucial: let TAA history buffers "warm up"
+                f"csvprofile frames={CSV_FRAMES}", #  can i put delay=1 after {CSV_FRAMES}
                 "csvprofile start",
             ])
+
+            # exec_cmds = ",".join([
+            #     "t.MaxFPS 30",
+            #     "r.VSync 0",
+            #     f"r.ScreenPercentage {screen_pct}",
+            #     f"{cvar_name} {val}",
+            #     "r.gpuCsvStatsEnabled 1",
+            #     f"csvprofile frames={CSV_FRAMES}",
+            #     "csvprofile start",
+            # ])
 
             cmd = [
                 UE_EXE, project_path, level_path,
                 "-game", "-windowed", "-ResX=1920", "-ResY=1080",
                 "-nosplash", "-novsync", "-log",
+                # ADDED THESE
+                "-Benching",              # Forces deterministic frame stepping
+                "-NoTextureStreaming",     # Prevents IO spikes during the test
+                "-NoSound",                # Disables audio thread noise
+                "-NoVerifyGC",             # Disables expensive GC checks
+                # END OF WHAT I ADDED
                 f"-csvdir={runtime_dir}",
                 f"-ExecCmds={exec_cmds}",
                 "-ExitAfterCsvProfiling",
