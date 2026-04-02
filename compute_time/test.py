@@ -15,12 +15,14 @@ TEST_SCENES = [
 for scene in TEST_SCENES:
     print(f"\n🎬 TESTING SEQUENCE: {scene['name']}")
     
+    play_seq_cmd = f"LevelSequence.Play {scene['seq']}"
+
     exec_cmds = ",".join([
         "r.FixedFrameRate 30",
         "t.MaxFPS 0",
-        "r.gpuCsvStatsEnabled 1",
-        "Wait 60",                        # Warm up for 60 frames
-        "csvprofile start frames=100",    # Short capture for testing
+        play_seq_cmd,                 # <--- Force play via console command
+        "Wait 60",
+        "csvprofile start frames=100",
     ])
 
     cmd = [
@@ -28,11 +30,9 @@ for scene in TEST_SCENES:
         "-game", "-windowed", "-ResX=1280", "-ResY=720",
         "-nosplash", "-log",
         "-Benching",
-        f"-LevelSequence={scene['seq']}", # <--- THIS IS THE MAGIC KEY
-        f"-ExecCmds={exec_cmds}",
+        f"-ExecCmds={exec_cmds}",     # Use this instead of the -LevelSequence flag
         "-ExitAfterCsvProfiling",
     ]
-
     subprocess.run(cmd)
 
 print("\n✅ Test sequence run complete.")
