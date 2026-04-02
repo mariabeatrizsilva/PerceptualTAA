@@ -6,9 +6,10 @@ import glob
 import pandas as pd
 import re
 
+# things i can automate now: abandoned, scifi, subway-turn || oldmine, fantasticvillage-open
 # ── Configuration ────────────────────────────────────────────────────────────
 YAML_FILE      = '../scenes.yaml'
-SCENE_TO_RUN   = 'cubetest'
+SCENE_TO_RUN   = 'subway-lookdown'
 UE_EXE         = r"C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe"
 RESOLUTIONS    = [100, 87, 71, 50]
 CSV_FRAMES     = 450
