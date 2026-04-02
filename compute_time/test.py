@@ -5,21 +5,23 @@ import time
 # -- Test Configuration --
 #### -- before do this turn off blueprint for both!!
 UE_EXE = r"C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe"
-PROJECT_DIR = r"C:\Users\YourUser\Documents\Unreal Projects\SubwayTrain\SubwayTrain.uproject"
+# PROJECT_DIR = r"C:\Users\YourUser\Documents\Unreal Projects\SubwayTrain\SubwayTrain.uproject"
+PROJECT_DIR = r"C:/Users/Bia/Documents/Unreal Projects/SubwayTrain/SubwayTrain/SubwayTrain.uproject"
 RUNTIME_DIR = os.path.join(os.getcwd(), "test_runtimes")
 CSV_FRAMES = 450
 
 test_scenes = {
     "subway-lookdown": {
         "level": "/Game/SubwayTrain/Maps/Demonstration",
-        "sequence": "/Game/SubwayTrain/Flythrough-Close"
+        "sequence": "/Game/SubwayTrain/Flythrough-Close.Flythrough"
     },
     "subway-turn": {
         "level": "/Game/SubwayTrain/Maps/Demonstration",
-        "sequence": "/Game/SubwayTrain/Flythrough"
+        "sequence": "/Script/LevelSequence.LevelSequence'/Game/SubwayTrain/Flythrough.Flythrough'"
     }
 }
 
+# /Script/LevelSequence.LevelSequence'/Game/SubwayTrain/Flythrough.Flythrough'
 for name, info in test_scenes.items():
     print(f"\n>>> TESTING SCENE: {name}")
     
@@ -32,7 +34,7 @@ for name, info in test_scenes.items():
         "Sleep 5", # Warm up shaders/textures
         f"csvprofile frames={CSV_FRAMES}",
         "csvprofile start",
-        f"LevelSequencePlayer.CreateLevelSequencePlayer {info['sequence']} Play Looping",
+        f"LevelSequencePlayer.CreateLevelSequencePlayer {info['sequence']} Play",
     ])
 
     cmd = [
@@ -48,4 +50,4 @@ for name, info in test_scenes.items():
 
     subprocess.run(cmd)
     print(f">>> Finished {name}. Waiting for engine cleanup...")
-    time.sleep(5)
+    time.sleep(2)
