@@ -77,7 +77,9 @@ def plot_with_stabilisation(parquet_path, loop_length=150, window=10, threshold=
 
 os.makedirs('stable_plots', exist_ok=True)
 
-for path in sorted(glob.glob('raw/*.parquet')):
+parkets = ['raw/Profile(20260402_200253).parquet', 'raw/Profile(20260402_200211).parquet', 'raw/Profile(20260402_200242).parquet', 'raw/Profile(20260402_200232).parquet', 'raw/Profile(20260402_200222).parquet']
+
+for path in parkets:#sorted(glob.glob('raw/*.parquet')):
     name = os.path.splitext(os.path.basename(path))[0]
     fig,stable = plot_with_stabilisation(path, loop_length=150)
     fig.savefig(f'stable_plots/{name}.png', dpi=150)
