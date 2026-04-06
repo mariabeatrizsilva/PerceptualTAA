@@ -13,3 +13,4 @@ legacy
 video_parameterization/video_parameterization.py
 *.npy
 datasets_old
+*.svg
