@@ -6,13 +6,13 @@ import glob
 import pandas as pd
 import re
 
-# things i can automate now: abandoned, scifi, subway-turn || oldmine, fantasticvillage-open
+# things i can automate now: resto-flythrough 1,
 # ── Configuration ────────────────────────────────────────────────────────────
 YAML_FILE      = '../scenes.yaml'
-SCENE_TO_RUN   = 'scifi'
+SCENE_TO_RUN   = 'quarry-rocksonly'
 UE_EXE         = r"C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe"
-RESOLUTIONS    = [100, 87, 71, 50]
-CSV_FRAMES     = 600
+RESOLUTIONS    = [100, 87, 71, 50] #100, 87,
+CSV_FRAMES     = 150*10
 PROCESS_PROFILES = True  # set to False to skip parsing/saving
 
 METRICS = ['FrameTime', 'GameThreadTime', 'RenderThreadTime', 'GPUTime', 'RHIThreadTime', 'GPUMem/LocalUsedMB', 'GPU/TAA']
@@ -154,7 +154,7 @@ def process_profile(csv_path, scene_name, screen_pct, cvar_name, cvar_value):
             row[f'std_{col}'] = round(df_analysis[col].std(), 4)
             row[f'var_{col}'] = round(df_analysis[col].var(), 4)
 
-    results_path = os.path.join(current_dir, 'results-10reps.csv')
+    results_path = os.path.join(current_dir, 'results.csv')
     write_header = not os.path.exists(results_path)
     pd.DataFrame([row]).to_csv(results_path, mode='a', index=False, header=write_header)
 
@@ -221,6 +221,6 @@ for screen_pct in RESOLUTIONS:
             else:
                 print(f"  ❌ ERROR: No CSV generated for {cvar_name}={val}")
 
-            time.sleep(2)
+            time.sleep(4)
 
 print("\n🚀 ALL VARIATIONS COMPLETE.")
