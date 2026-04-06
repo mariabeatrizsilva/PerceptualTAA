@@ -9,7 +9,7 @@ import re
 # things i can automate now: resto-flythrough 1,
 # ── Configuration ────────────────────────────────────────────────────────────
 YAML_FILE      = '../scenes.yaml'
-SCENE_TO_RUN   = 'quarry-rocksonly'
+SCENE_TO_RUN   = 'subway-lookdown'
 UE_EXE         = r"C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe"
 RESOLUTIONS    = [100, 87, 71, 50] #100, 87,
 CSV_FRAMES     = 150*10
@@ -221,6 +221,6 @@ for screen_pct in RESOLUTIONS:
             else:
                 print(f"  ❌ ERROR: No CSV generated for {cvar_name}={val}")
 
-            time.sleep(4)
+            time.sleep(2)
 
 print("\n🚀 ALL VARIATIONS COMPLETE.")
