@@ -16,7 +16,7 @@ import pandas as pd
 # ── Constants ────────────────────────────────────────────────────────────────
 
 RESOLUTIONS = ['100', '87', '71','50']
-PARAMS = ['alpha_weight', 'filter_size', 'hist_percent', 'num_samples']
+PARAMS = ['alpha_weight', 'hist_percent', 'filter_size', 'num_samples']
 
 EXCLUDE_SCENES = [
     'junkyard-mound1', 'junkyard-mound2',
@@ -191,7 +191,7 @@ def load_perframe_pervalue(json_path: str, warmup_frames: int = 10, cooldown_fra
                 (df_frames['frame'] < total - cooldown_frames)
             ]
 
-            p5  = df_frames['error'].quantile(0.5)
+            p5  = df_frames['error'].quantile(0.05)
             p95 = df_frames['error'].quantile(0.95)
 
             records.append({

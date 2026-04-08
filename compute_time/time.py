@@ -175,6 +175,7 @@ for screen_pct in RESOLUTIONS:
                 "t.MaxFPS 0",                   # Remove real-time throttle
                 "r.VSync 0",
                 f"r.ScreenPercentage {screen_pct}",
+                "r.AntiAliasingMethod 2", #just added, let's see if difference
                 f"{cvar_name} {val}",
                 "r.gpuCsvStatsEnabled 1",
                 "Sleep 5",                      # Crucial: let TAA history buffers "warm up"
