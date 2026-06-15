@@ -79,7 +79,7 @@ FACTORIAL_PARAMS = {
     "alpha_weight": {
         "cvar":   "r.TemporalAACurrentFrameWeight",
         "short":  "aw",
-        "values": [0.04, 0.1, 0.5],
+        "values": [0.04, 0.5, 1],
     },
     "num_samples": {
         "cvar":   "r.TemporalAASamples",
