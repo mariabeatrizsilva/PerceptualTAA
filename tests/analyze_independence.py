@@ -83,6 +83,21 @@ def build_formula(terms):
     return "score ~ " + " + ".join(terms)
 
 
+VALID_SCORE_MIN = 0.0
+VALID_SCORE_MAX = 100.0
+
+
+def filter_outliers(df, out_lines):
+    """Remove scores outside the valid CGVQM range and report what was dropped."""
+    invalid = df[(df["score"] < VALID_SCORE_MIN) | (df["score"] > VALID_SCORE_MAX)]
+    if len(invalid) > 0:
+        out_lines.append(f"\nWARNING: {len(invalid)} outlier(s) excluded (score outside [{VALID_SCORE_MIN}, {VALID_SCORE_MAX}]):")
+        for _, row in invalid.iterrows():
+            out_lines.append(f"  combo={row['combo']}  score={row['score']:.4f}")
+        out_lines.append("")
+    return df[(df["score"] >= VALID_SCORE_MIN) & (df["score"] <= VALID_SCORE_MAX)].copy()
+
+
 def analyze(df, label, out_lines):
     """Run the independence analysis on a DataFrame, append report to out_lines."""
 
@@ -92,7 +107,11 @@ def analyze(df, label, out_lines):
         out_lines.append("="*70)
 
     h(f"INDEPENDENCE ANALYSIS — {label}")
-    out_lines.append(f"N observations: {len(df)}")
+    out_lines.append(f"N observations (before filtering): {len(df)}")
+
+    df = filter_outliers(df, out_lines)
+
+    out_lines.append(f"N observations (after filtering):  {len(df)}")
     out_lines.append(f"Score mean: {df['score'].mean():.4f}  std: {df['score'].std():.4f}")
 
     # Rename columns to short aliases so statsmodels formula parser is happy
@@ -134,9 +153,10 @@ def analyze(df, label, out_lines):
     # F-test: does adding interactions significantly improve fit?
     # -----------------------------------------------------------------------
     h("F-TEST: Main Effects Only (A) vs + Interactions (B)")
-    f_result = model_A.compare_f_test(model_B)
+    # Call on the full model (B), comparing against restricted model (A)
+    f_result = model_B.compare_f_test(model_A)
     F_stat, p_val, df_diff = f_result
-    out_lines.append(f"F({int(df_diff)}, {int(model_B.df_resid)}) = {F_stat:.4f},  p = {p_val:.4f}")
+    out_lines.append(f"F({int(abs(df_diff))}, {int(model_B.df_resid)}) = {F_stat:.4f},  p = {p_val:.4f}")
     out_lines.append(f"R² (main effects only):   {model_A.rsquared:.4f}")
     out_lines.append(f"R² (+ interactions):      {model_B.rsquared:.4f}")
     out_lines.append(f"ΔR²:                      {model_B.rsquared - model_A.rsquared:.4f}")

@@ -46,7 +46,7 @@ OUTPUT_ROOT = os.path.expanduser("~/Documents/PerceptualTAA/tests")
 FACTORIAL_PARAMS = {
     "alpha_weight": {
         "cvar": "r.TemporalAACurrentFrameWeight",
-        "values": [0.04, 0.1, 0.5],
+        "values": [0.04, 0.5, 1],
         "short": "aw",
     },
     "num_samples": {
