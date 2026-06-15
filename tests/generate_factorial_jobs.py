@@ -30,9 +30,9 @@ import itertools
 # SCENE CONFIGURATION — fill in your scene details here
 # ============================================================================
 SCENE_CONFIG = {
-    "scene_name": "quarry-rocksonly",          # used for folder naming
-    "level_path": "/Game/Scene_QuarrySlate/Maps/Quarry_Slate",
-    "sequence_path": "/Game/Scene_QuarrySlate/Sequences/flythrough",
+    "scene_name": "fantasticvillage",          # used for folder naming
+    "level_path": "/Game/Fantastic_Village_Pack/maps/map_village_day",
+    "sequence_path":  "/Game/Fantastic_Village_Pack/animations/Cam_LevelSequence",
     "screen_percentage": 87,
 }
 
