@@ -12,9 +12,9 @@ USAGE:
 
 OUTPUT (saved to tests/{scene}/plots/):
   01_main_effects.png       — score vs each parameter (averaged over others)
-  02_interaction_aw_hp.png  — key interaction: aw × hp lines
+  02_all_interactions.png   — all 6 pairwise interaction plots in one figure
   03_eta_sq_bar.png         — effect sizes for all ANOVA terms
-  04_heatmap_aw_hp.png      — 2D heatmap of aw vs hp (averaged over ns, fs)
+  04_all_heatmaps.png       — all 6 pairwise heatmaps in one figure
 
   If --pool: also saved to tests/plots_pooled/
 """
@@ -109,45 +109,45 @@ def plot_main_effects(df, plots_dir, label):
 
 
 # ---------------------------------------------------------------------------
-# PLOT 2: KEY INTERACTION — aw × hp
+# PLOT 2: ALL 6 PAIRWISE INTERACTION PLOTS
 # ---------------------------------------------------------------------------
 
-def plot_interaction_aw_hp(df, plots_dir, label):
-    fig, ax = plt.subplots(figsize=(6, 4.5))
+def plot_all_interactions(df, plots_dir, label):
+    """One subplot per parameter pair — 2 rows x 3 cols."""
+    import itertools
+    pairs = list(itertools.combinations(PARAM_COLS, 2))  # 6 pairs
 
-    hp_levels = sorted(df["hist_percent"].unique())
-    aw_levels = sorted(df["alpha_weight"].unique())
+    fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+    fig.suptitle(f"Pairwise Interactions — {label}", fontsize=13, fontweight="bold", y=1.01)
+    axes = axes.flatten()
 
-    for i, hp in enumerate(hp_levels):
-        sub = df[df["hist_percent"] == hp]
-        means = sub.groupby("alpha_weight")["score"].agg(["mean", "sem"]).reset_index()
-        ax.errorbar(
-            means["alpha_weight"], means["mean"],
-            yerr=means["sem"] * 1.96,
-            fmt="o-", color=PALETTE[i],
-            capsize=4, linewidth=2, markersize=6,
-            label=f"hp = {int(hp)}%",
-        )
+    for ax, (p1, p2) in zip(axes, pairs):
+        levels_p2 = sorted(df[p2].unique())
+        x_vals    = sorted(df[p1].unique())
 
-    ax.set_xlabel("Alpha Weight (aw)", fontsize=11)
-    ax.set_ylabel("CGVQM Score", fontsize=11)
-    ax.set_title(f"aw × hp Interaction — {label}", fontsize=12, fontweight="bold")
-    ax.set_xticks(aw_levels)
-    ax.xaxis.set_major_formatter(ticker.FormatStrFormatter('%g'))
-    ax.legend(title="History %", fontsize=9, title_fontsize=9)
-    sns.despine(ax=ax)
+        for i, lv in enumerate(levels_p2):
+            sub   = df[df[p2] == lv]
+            means = sub.groupby(p1)["score"].agg(["mean", "sem"]).reset_index()
+            ax.errorbar(
+                means[p1], means["mean"],
+                yerr=means["sem"] * 1.96,
+                fmt="o-", color=PALETTE[i % len(PALETTE)],
+                capsize=3, linewidth=1.8, markersize=5,
+                label=f"{PARAM_LABELS[p2].split(' (')[1].rstrip(')')}={lv}",
+            )
 
-    # Annotate: non-parallel lines = interaction
-    ax.text(
-        0.98, 0.04,
-        "Non-parallel lines\nindicate interaction",
-        transform=ax.transAxes,
-        ha="right", va="bottom",
-        fontsize=8, color="gray", style="italic",
-    )
+        ax.set_xlabel(PARAM_LABELS[p1], fontsize=9)
+        ax.set_ylabel("CGVQM Score", fontsize=9)
+        short1 = PARAM_LABELS[p1].split(" (")[1].rstrip(")")
+        short2 = PARAM_LABELS[p2].split(" (")[1].rstrip(")")
+        ax.set_title(f"{short1} × {short2}", fontsize=10, fontweight="bold")
+        ax.set_xticks(x_vals)
+        ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%g"))
+        ax.legend(fontsize=7, title_fontsize=7)
+        sns.despine(ax=ax)
 
     plt.tight_layout()
-    path = os.path.join(plots_dir, "02_interaction_aw_hp.png")
+    path = os.path.join(plots_dir, "02_all_interactions.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"  Saved: {path}")
@@ -214,29 +214,42 @@ def plot_eta_sq(df, plots_dir, label):
 
 
 # ---------------------------------------------------------------------------
-# PLOT 4: HEATMAP aw × hp
+# PLOT 4: ALL 6 PAIRWISE HEATMAPS
 # ---------------------------------------------------------------------------
 
-def plot_heatmap_aw_hp(df, plots_dir, label):
-    pivot = df.groupby(["alpha_weight", "hist_percent"])["score"].mean().unstack()
+def plot_all_heatmaps(df, plots_dir, label):
+    import itertools
+    pairs = list(itertools.combinations(PARAM_COLS, 2))  # 6 pairs
 
-    fig, ax = plt.subplots(figsize=(5, 4))
-    sns.heatmap(
-        pivot,
-        ax=ax,
-        annot=True, fmt=".2f",
-        cmap="RdYlGn",
-        vmin=max(VALID_SCORE_MIN, df["score"].min()),
-        vmax=df["score"].max(),
-        linewidths=0.5,
-        cbar_kws={"label": "CGVQM Score"},
-    )
-    ax.set_xlabel("History % (hp)", fontsize=11)
-    ax.set_ylabel("Alpha Weight (aw)", fontsize=11)
-    ax.set_title(f"aw × hp Mean Score — {label}", fontsize=12, fontweight="bold")
+    fig, axes = plt.subplots(2, 3, figsize=(16, 9))
+    fig.suptitle(f"Pairwise Mean Score Heatmaps — {label}", fontsize=13, fontweight="bold", y=1.01)
+    axes = axes.flatten()
+
+    vmin = max(VALID_SCORE_MIN, df["score"].min())
+    vmax = df["score"].max()
+
+    for ax, (p1, p2) in zip(axes, pairs):
+        pivot = df.groupby([p1, p2])["score"].mean().unstack()
+        sns.heatmap(
+            pivot,
+            ax=ax,
+            annot=True, fmt=".1f",
+            cmap="RdYlGn",
+            vmin=vmin, vmax=vmax,
+            linewidths=0.4,
+            cbar_kws={"label": "CGVQM"},
+            annot_kws={"size": 8},
+        )
+        short1 = PARAM_LABELS[p1].split(" (")[1].rstrip(")")
+        short2 = PARAM_LABELS[p2].split(" (")[1].rstrip(")")
+        ax.set_xlabel(PARAM_LABELS[p2], fontsize=9)
+        ax.set_ylabel(PARAM_LABELS[p1], fontsize=9)
+        ax.set_title(f"{short1} × {short2}", fontsize=10, fontweight="bold")
+        ax.tick_params(axis="x", labelsize=8)
+        ax.tick_params(axis="y", labelsize=8)
 
     plt.tight_layout()
-    path = os.path.join(plots_dir, "04_heatmap_aw_hp.png")
+    path = os.path.join(plots_dir, "04_all_heatmaps.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"  Saved: {path}")
@@ -255,9 +268,9 @@ def run_scene(scene_name):
     plots_dir = ensure_plots_dir(scene_name)
 
     plot_main_effects(df, plots_dir, label=scene_name)
-    plot_interaction_aw_hp(df, plots_dir, label=scene_name)
+    plot_all_interactions(df, plots_dir, label=scene_name)
     plot_eta_sq(df, plots_dir, label=scene_name)
-    plot_heatmap_aw_hp(df, plots_dir, label=scene_name)
+    plot_all_heatmaps(df, plots_dir, label=scene_name)
 
     print(f"  All plots saved to: {plots_dir}")
     return df
@@ -298,9 +311,9 @@ def main():
         label      = "Pooled (" + ", ".join(dfs.keys()) + ")"
 
         plot_main_effects(pooled, plots_dir, label=label)
-        plot_interaction_aw_hp(pooled, plots_dir, label=label)
+        plot_all_interactions(pooled, plots_dir, label=label)
         plot_eta_sq(pooled, plots_dir, label=label)
-        plot_heatmap_aw_hp(pooled, plots_dir, label=label)
+        plot_all_heatmaps(pooled, plots_dir, label=label)
         print(f"  Pooled plots saved to: {plots_dir}")
 
     print("\nDone.")
