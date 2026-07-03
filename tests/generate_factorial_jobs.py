@@ -30,9 +30,9 @@ import itertools
 # SCENE CONFIGURATION — fill in your scene details here
 # ============================================================================
 SCENE_CONFIG = {
-    "scene_name": "fantasticvillage",          # used for folder naming
-    "level_path": "/Game/Fantastic_Village_Pack/maps/map_village_day",
-    "sequence_path":  "/Game/Fantastic_Village_Pack/animations/Cam_LevelSequence",
+    "scene_name": "resto-fwd",          # used for folder naming
+    "level_path":  "/Game/RestaurantScene/Maps/Showcase", 
+    "sequence_path":   "/Game/RestaurantScene/Cinematics/Flythrough2",
     "screen_percentage": 87,
 }
 
