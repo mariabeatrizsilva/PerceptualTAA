@@ -55,7 +55,7 @@ SRC_DIR = os.path.join(PROJECT_DIR, "src")
 sys.path.append(SRC_DIR)
 sys.path.append(os.path.join(SRC_DIR, "cgvqm"))
 
-from cgvqm.cgvqm import CGVQM, CGVQM_TYPE, preprocess
+from src.cgvqm.cgvqm import CGVQM, CGVQM_TYPE, preprocess
 from torchvision.models.video import resnet
 
 # ============================================================================
