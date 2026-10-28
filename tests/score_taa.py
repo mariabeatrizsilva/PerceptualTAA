@@ -21,7 +21,13 @@ What's different from compute_metrics.py (on purpose):
 
 OUTPUT
   {root}/{scene}/scores/cgvqm.json          per render: score, per-frame errors, params, flags
-  {root}/{scene}/scores/cgvqm_emaps/*.npz   per render: error grid (T, 9, 16), float16
+  {root}/{scene}/scores/cgvqm_emaps/*.npz   per render:
+        patch_quality (clips, 4, 4): CGVQM quality of each patch x 30-frame clip
+                                     (the units the overall score averages) -> content analysis
+            patch_quality[c, r, w] covers frames c*clip_frames .. +clip_frames-1,
+            pixel rows r*patch_h .. +patch_h-1, pixel cols w*patch_w .. +patch_w-1
+            (patch_h, patch_w, clip_frames are stored in the same file; at 1080p: 270, 480, 30)
+        grid (T, 9, 16): coarse per-frame error map, float16
   {root}/{scene}/scores/cvvdp.json          (if --metrics cvvdp)
   {root}/scores_all.csv                     one tidy row per (scene, render, reference, metric)
 
@@ -157,6 +163,12 @@ class CGVQMScorer:
                         emap[i:i + clip, h:h + ps[0], w:w + ps[1]] = em.squeeze().cpu()
                         errs.append(q)
         emap = emap[:T, :H, :W]
+        # Per-patch quality, shape (clips, rows, cols) = e.g. (5, 4, 4) for 150 frames at 1080p.
+        # Loop order above is clip -> row -> col, so a plain reshape is correct.
+        n_c = D.shape[2] // clip
+        n_r = D.shape[3] // ps[0]
+        n_w = D.shape[4] // ps[1]
+        patch_q = (100 - torch.stack([e.reshape(()) for e in errs]).float().cpu()).reshape(n_c, n_r, n_w).numpy()
         if CGVQM_CONFIG["patch_pool"] == "max":
             q = 100 - max(errs)
         else:
@@ -165,7 +177,11 @@ class CGVQMScorer:
         grid = torch.nn.functional.adaptive_avg_pool2d(emap.unsqueeze(1), EMAP_GRID).squeeze(1).numpy()
         if self.device.startswith("cuda"):
             torch.cuda.empty_cache()
-        return float(q), per_frame, grid
+        # patch geometry so patch_quality[c, r, w] can be located afterwards:
+        # frames c*clip .. c*clip+clip-1, rows r*ps[0] .., cols w*ps[1] ..
+        self.last_geometry = {"patch_h": int(ps[0]), "patch_w": int(ps[1]), "clip_frames": int(clip),
+                              "frame_h": int(H), "frame_w": int(W), "n_frames": int(T)}
+        return float(q), per_frame, grid, patch_q
 
 
 class CVVDPScorer:
@@ -175,7 +191,7 @@ class CVVDPScorer:
 
     def score(self, dist, ref, ref_key, fps):
         jod, _ = self.metric.predict(dist, ref, dim_order="FHWC", frames_per_second=fps)
-        return float(jod), None, None
+        return float(jod), None, None, None
 
 
 # ============================================================================
@@ -241,7 +257,7 @@ def run_scene(scene_dir, scorers, overwrite):
                     problems.append(f"{key}: shape {dist.shape} != reference {ref.shape} -- NOT scored, re-render")
                     continue
                 try:
-                    score, per_frame, grid = scorer.score(dist, ref, ref_cfg, fps)
+                    score, per_frame, grid, patch_q = scorer.score(dist, ref, ref_cfg, fps)
                 except Exception as e:
                     problems.append(f"{key}: scoring failed: {e}")
                     continue
@@ -258,7 +274,9 @@ def run_scene(scene_dir, scorers, overwrite):
                 if grid is not None:
                     os.makedirs(emap_dir, exist_ok=True)
                     np.savez_compressed(os.path.join(emap_dir, f"{job['kind']}__{job['config']}__{ref_cfg}.npz"),
-                                        grid=grid.astype(np.float16))
+                                        grid=grid.astype(np.float16),
+                                        patch_quality=patch_q.astype(np.float32),
+                                        **{k: np.int32(v) for k, v in scorer.last_geometry.items()})
                 results[key] = entry
                 with open(jpath, "w") as f:          # save after every render -> resumable
                     json.dump(results, f, indent=1)
