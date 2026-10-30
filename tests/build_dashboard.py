@@ -200,6 +200,40 @@ def patch_correlations(patches):
     return rows
 
 
+def frame_payload(root):
+    """Per-frame whole-frame content (content_frames.csv) and CGVQM per-frame errors (cgvqm.json)."""
+    frames, pf = [], {}
+    for p in sorted(glob.glob(os.path.join(root, "*", "features", "content_frames.csv"))):
+        df = pd.read_csv(p)
+        if len(df):
+            frames.append({"scene": df["scene"].iloc[0],
+                           **{k: [_clean(x) for x in df[k].tolist()] for k in
+                              ("motion_mean", "detail_hf", "disocc_frac", "temporal_change") if k in df}})
+    for p in sorted(glob.glob(os.path.join(root, "*", "scores", "cgvqm.json"))):
+        try:
+            d = json.load(open(p))
+        except Exception:
+            continue
+        for e in d.values():
+            if e.get("kind") == "taa" and e.get("ref") == MAIN_REF and e.get("per_frame_errors"):
+                pf.setdefault(e["scene"], {})[e["config"]] = [round(float(x), 3) for x in e["per_frame_errors"]]
+    return frames, pf
+
+
+def patch_check(rt, patches):
+    """With mean pooling, a render's CGVQM score = mean of its patch scores. Max |difference| per scene."""
+    out = {}
+    if rt.empty or patches.empty or "cgvqm_patch_quality" not in patches or "cgvqm" not in rt:
+        return out
+    pm = (patches[patches["kind"] == "taa"].groupby(["scene", "config"])["cgvqm_patch_quality"]
+          .mean().reset_index(name="patch_mean"))
+    m = rt.merge(pm, on=["scene", "config"]).dropna(subset=["patch_mean", "cgvqm"])
+    for sc, g in m.groupby("scene"):
+        d = (g["patch_mean"] - g["cgvqm"]).abs()
+        out[sc] = {"max_diff": float(d.max()), "n": int(len(g))}
+    return out
+
+
 def curve_payload(patches):
     """Compact per-patch alpha curves for the interaction plots.
     content: one entry per (scene, clip, row, col) with its content features.
@@ -266,6 +300,8 @@ def build(root, out, old_scores_args):
 
     cells = cell_table(patches)
     curve_aws, content_cells, curves = curve_payload(patches)
+    frames, per_frame = frame_payload(root)
+    checks = patch_check(rt, patches)
     metrics = [m for m in ("cgvqm", "cvvdp") if m in rt]
     scenes = sorted(set(rt["scene"]) if not rt.empty else set()
                     | (set(patches["scene"]) if not patches.empty else set()))
@@ -284,6 +320,8 @@ def build(root, out, old_scores_args):
             "outliers": int(g["outlier"].sum()) if "outlier" in g else 0,
             "has_cvvdp": bool("cvvdp" in g and g["cvvdp"].notna().any()),
             "patch_cells": int(len(c)),
+            "patch_check": checks.get(sc, {}).get("max_diff"),
+            "patch_check_n": checks.get(sc, {}).get("n", 0),
         })
 
     data = {
@@ -302,6 +340,8 @@ def build(root, out, old_scores_args):
         "curve_aws": curve_aws,
         "content": content_cells,
         "curves": curves,
+        "frames": frames,
+        "per_frame": per_frame,
     }
 
     try:

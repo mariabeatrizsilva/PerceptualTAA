@@ -30,6 +30,7 @@ ARTIFACTS (render D vs. reference R, luma 0-255, error e_t = D_t - R_t)
 
 OUTPUT  ({root}/{scene}/features/)
   content.csv        one row per cell
+  content_frames.csv one row per frame: whole-frame motion, detail, newly visible, change
   artifacts.csv      one row per (render, cell)
   patch_table.csv    analysis-ready: artifacts + content + CGVQM patch_quality
                      (if score_taa.py has run) -- one row per (render, cell)
@@ -206,10 +207,12 @@ class Reference:
 
         acc = {k: g.new_acc() for k in CONTENT_KEYS}
         acc_hp_energy = g.new_acc()           # sum of highpass^2 -> denominator of hf_ratio
+        self.frames = {k: np.full(T, np.nan) for k in ("motion_mean", "detail_hf", "disocc_frac", "temporal_change")}
         u8 = [np.clip(f, 0, 255).astype(np.uint8) for f in Y]
 
         for t in range(T):
             hp = highpass(Y[t])
+            self.frames["detail_hf"][t] = float((hp ** 2).mean())
             g.add(acc["detail_hf"], t, hp ** 2)
             g.add(acc_hp_energy, t, hp ** 2)
             gxs = cv2.Sobel(Y[t], cv2.CV_32F, 1, 0, ksize=3)
@@ -220,6 +223,7 @@ class Reference:
             if t == 0:
                 continue
             g.add(acc["temporal_change"], t, np.abs(Y[t] - Y[t - 1]))
+            self.frames["temporal_change"][t] = float(np.abs(Y[t] - Y[t - 1]).mean())
 
             fb = dis.calc(u8[t], u8[t - 1], None)        # t-grid -> position in t-1
             ff = dis.calc(u8[t - 1], u8[t], None)        # (t-1)-grid -> position in t
@@ -234,6 +238,8 @@ class Reference:
             self.flow_b[t] = fb
             self.disocc[t] = occ
             g.add(acc["motion_mean"], t, np.sqrt((fb ** 2).sum(-1)))
+            self.frames["motion_mean"][t] = float(np.sqrt((fb ** 2).sum(-1)).mean())
+            self.frames["disocc_frac"][t] = float(occ.mean())
             g.add(acc["disocc_frac"], t, occ.astype(np.float32))
 
         self.content = {k: Grid.mean(a) for k, a in acc.items()}
@@ -308,12 +314,13 @@ def run_scene(scene_dir, preset, overwrite, limit=None):
     problems = []
 
     ref = None
-    if todo or overwrite or not os.path.exists(content_cache):
+    stale = (not os.path.exists(content_cache)) or ("frame_motion_mean" not in np.load(content_cache).files)
+    if todo or overwrite or stale:             # stale = cache from before per-frame series were added
         t0 = time.time()
         Y = load_luma(scene_dir, ref_job)
         print(f"  reference: {Y.shape[0]} frames {Y.shape[2]}x{Y.shape[1]} -- computing optical flow ...")
         ref = Reference(Y, fps, preset)
-        np.savez_compressed(content_cache, **ref.content,
+        np.savez_compressed(content_cache, **ref.content, **{"frame_" + k: v for k, v in ref.frames.items()},
                             geometry=np.array([ref.grid.T, ref.grid.H, ref.grid.W, fps]))
         print(f"  reference done ({time.time() - t0:.0f}s)")
 
@@ -342,6 +349,9 @@ def run_scene(scene_dir, preset, overwrite, limit=None):
     for c, r, w, base in grid.cells():
         content_rows.append({"scene": name, **base, **{k: _r(content[k][c, r, w]) for k in CONTENT_KEYS}})
     write_csv(os.path.join(out_dir, "content.csv"), content_rows)
+    frame_rows = [{"scene": name, "frame": t, **{k: _r(cz["frame_" + k][t]) for k in
+                   ("motion_mean", "detail_hf", "disocc_frac", "temporal_change")}} for t in range(T)]
+    write_csv(os.path.join(out_dir, "content_frames.csv"), frame_rows)
 
     art_rows, table_rows, n_with_q = [], [], 0
     qdir = os.path.join(scene_dir, "scores", "cgvqm_emaps")

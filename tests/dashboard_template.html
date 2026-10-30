@@ -175,12 +175,15 @@ function sel(id, label, options, value) {
 
 // ---------------------------------------------------------------- state
 const S = { scene: "__all__", metric: DATA.metrics[0] || "cgvqm", tab: "overview",
-  hpA: DATA.default.hp, spC: null, hpC: DATA.default.hp, featC: DATA.content_keys[0] || null, yC: "best_aw" };
+  hpA: DATA.default.hp, spC: null, hpC: DATA.default.hp, featC: DATA.content_keys[0] || null, yC: "best_aw",
+  dk: "aw", dA1: DATA.default.aw, dA2: null, dH1: null, dH2: null, dAt: DATA.default.aw };
 const R = DATA.renders;
 const SPS = uniq(R.map(r => r.sp)).reverse();
 const HPS = uniq(R.map(r => r.hp));
 const AWS = uniq(R.map(r => r.aw));
 S.spC = SPS[SPS.length - 1] ?? null;
+{ const ca = DATA.curve_aws || []; S.dA2 = ca.find(a => a >= 0.3) ?? ca[ca.length - 1] ?? null; S.dH1 = HPS[0] ?? null; S.dH2 = HPS[HPS.length - 1] ?? null;
+  if (ca.length && !ca.some(a => Math.abs(a - S.dAt) < 1e-9)) S.dAt = ca[0]; if (ca.length && !ca.some(a => Math.abs(a - S.dA1) < 1e-9)) S.dA1 = ca[0]; }
 const metricName = (m) => ({ cgvqm: "CGVQM", cvvdp: "CVVDP (JOD)" }[m] || m);
 const scenesSel = () => S.scene === "__all__" ? DATA.scenes : [S.scene];
 
@@ -238,12 +241,14 @@ function rOverview() {
   const tiles = [["Scenes", ov.length], ["Renders scored", tot("renders")], ["Patch cells", tot("patch_cells")],
     ["Flagged (out of range)", tot("flagged")], ["Possible outliers", tot("outliers")]];
   let h = `<div class="tiles">${tiles.map(([l, v]) => `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("")}</div>`;
-  h += card("Per scene", "CGVQM score range per scene. <b>Flagged</b> = outside 0–100 (broken render or reference). <b>Possible outliers</b> = far from their alpha-neighbours on the same curve; open the render and check it.",
+  h += card("Per scene", "CGVQM score range per scene. <b>Flagged</b> = outside 0–100 (broken render or reference). <b>Possible outliers</b> = far from their alpha-neighbours on the same curve; open the render and check it. <b>Patch ↔ score</b> = whether each render's score equals the average of its 80 patch scores, as it must with mean pooling; ⚠ means the patch data (used by Trade-offs, Content, Interactions) doesn't belong to these scores (e.g. old <code>.npz</code> files) and those tabs can't be trusted for that scene until it's re-scored.",
     table([{ h: "Scene", k: "scene", l: 1 }, { h: "Renders", k: "renders" },
       { h: "CGVQM min", f: r => fmt(r.cgvqm_min) }, { h: "median", f: r => fmt(r.cgvqm_median) }, { h: "max", f: r => fmt(r.cgvqm_max) },
       { h: "Flagged", f: r => r.flagged ? `⚠ ${r.flagged}` : "0", cls: r => r.flagged ? "warn" : "" },
       { h: "Possible outliers", f: r => r.outliers ? `⚠ ${r.outliers}` : "0", cls: r => r.outliers ? "warn" : "" },
-      { h: "CVVDP", f: r => r.has_cvvdp ? "yes" : "–" }, { h: "Patch cells", k: "patch_cells" }], ov));
+      { h: "CVVDP", f: r => r.has_cvvdp ? "yes" : "–" }, { h: "Patch cells", k: "patch_cells" },
+      { h: "Patch ↔ score", f: r => r.patch_check === null || r.patch_check === undefined ? "–" : (r.patch_check > 0.1 ? `⚠ off by ${fmt(r.patch_check)}` : "✓ match"),
+        cls: r => r.patch_check > 0.1 ? "warn" : (r.patch_check !== null && r.patch_check !== undefined ? "ok" : "") }], ov));
   const bad = R.filter(r => scenesSel().includes(r.scene) && (r.outlier || r.flag));
   if (bad.length) h += card("Renders to check", "Sorted by how far they sit from their neighbours. Re-render any that look wrong; the generator re-queues deleted renders.",
     table([{ h: "Scene", k: "scene", l: 1 }, { h: "Config", k: "config", l: 1 }, { h: "CGVQM", f: r => fmt(r.cgvqm) },
@@ -412,6 +417,12 @@ function rContent() {
       `Each point = one patch (¼ × ¼ of the frame) over one 30-frame clip. Line = median per fifth of the x-range. Spearman ρ = <b>${fmt(rho)}</b> (n = ${cells.length}). ` +
       (S.yC === "best_aw" ? "Points are spread slightly up/down so equal values don't hide each other. A rising or falling median means the best alpha depends on this content property." : ""),
       `<div id="c-sc" class="chart" style="height:400px"></div>`) +
+    card("What does changing one setting do, by content?",
+      `Each point = one patch: x = its ${(FEAT[S.featC] || S.featC).toLowerCase()}, y = how much its CGVQM patch score changes when you make the change below (above 0 = better). Line = median per fifth; Spearman ρ = <b><span id="d-rho">–</span></b>. A sloped line means the change helps some content more than other content.`,
+      `<div class="local">${sel("d-kind", "Change", [{ v: "aw", t: "alpha" }, { v: "hp", t: "history buffer" }], S.dk)}
+        ${S.dk === "aw" ? sel("d-from", "from α", (DATA.curve_aws || []).map(a => ({ v: a, t: awLabel(a) })), S.dA1) + sel("d-to", "to α", (DATA.curve_aws || []).map(a => ({ v: a, t: awLabel(a) })), S.dA2) + `<span class="meta">at the history % chosen above</span>`
+          : sel("d-from", "from", hps.map(h => ({ v: h, t: h + "%" })), S.dH1) + sel("d-to", "to", hps.map(h => ({ v: h, t: h + "%" })), S.dH2) + sel("d-at", "at α", (DATA.curve_aws || []).map(a => ({ v: a, t: awLabel(a) })), S.dAt)}</div>
+      <div id="c-delta" class="chart" style="height:400px"></div>`) +
     card("Which alpha wins, patch by patch", "How many patches each alpha value scored best on. One tall bar = one alpha suits everything; a spread = the best alpha varies with content.",
       `<div id="c-hist" class="chart" style="height:260px"></div>`);
   ["c-sp", "c-hp", "c-feat", "c-y"].forEach(id => $(id).onchange = (e) => {
@@ -441,6 +452,43 @@ function rContent() {
   plot($("c-sc"), traces, layout({ xaxis: ax(FEAT[S.featC] || S.featC),
     yaxis: S.yC === "best_aw" ? logAlphaAxis(AWS, "Best alpha") : ax(YC[S.yC]), legend: { orientation: "h", y: -0.18, x: 0 } }));
 
+  // ---- quality change from one setting change, vs content
+  [["d-kind", v => S.dk = v], ["d-from", v => S.dk === "aw" ? S.dA1 = +v : S.dH1 = +v], ["d-to", v => S.dk === "aw" ? S.dA2 = +v : S.dH2 = +v], ["d-at", v => S.dAt = +v]]
+    .forEach(([id, f]) => { const e = $(id); if (e) e.onchange = (ev) => { f(ev.target.value); rContent(); }; });
+  if (DATA.curves && DATA.curves.length) {
+    const A2 = DATA.curve_aws, idx = (a) => A2.findIndex(x => Math.abs(x - a) < 1e-9);
+    const byIdC = {}; DATA.content.forEach(c => byIdC[c.id] = c);
+    const cs = DATA.curves.filter(k => sc.includes(byIdC[k.c].scene) && k.sp === S.spC);
+    let pts = [];
+    if (S.dk === "aw") {
+      const i1 = idx(S.dA1), i2 = idx(S.dA2);
+      cs.filter(k => k.hp === S.hpC).forEach(k => { if (k.q[i1] !== null && k.q[i2] !== null) pts.push({ c: byIdC[k.c], d: k.q[i2] - k.q[i1] }); });
+    } else {
+      const ia = idx(S.dAt), m = {};
+      cs.forEach(k => { (m[k.c] = m[k.c] || {})[k.hp] = k; });
+      Object.values(m).forEach(g => { if (g[S.dH1] && g[S.dH2] && g[S.dH1].q[ia] !== null && g[S.dH2].q[ia] !== null)
+        pts.push({ c: byIdC[g[S.dH1].c], d: g[S.dH2].q[ia] - g[S.dH1].q[ia] }); });
+    }
+    pts = pts.filter(p => p.c[S.featC] !== null && p.c[S.featC] !== undefined);
+    $("d-rho").textContent = fmt(spearman(pts.map(p => p.c[S.featC]), pts.map(p => p.d)));
+    const xsD = pts.map(p => p.c[S.featC]).sort((a, b) => a - b), binsD = [];
+    if (xsD.length) { const qd = [0, 0.2, 0.4, 0.6, 0.8, 1].map(q => xsD[Math.min(xsD.length - 1, Math.floor(q * (xsD.length - 1)))]);
+      for (let i = 0; i < 5; i++) { const inb = pts.filter(p => p.c[S.featC] >= qd[i] && (i === 4 ? p.c[S.featC] <= qd[i + 1] : p.c[S.featC] < qd[i + 1]));
+        if (inb.length) binsD.push({ x: median(inb.map(p => p.c[S.featC])), y: median(inb.map(p => p.d)), n: inb.length }); } }
+    const lab = S.dk === "aw" ? `α ${awLabel(S.dA1)} → ${awLabel(S.dA2)} (history ${S.hpC}%)` : `history ${S.dH1}% → ${S.dH2}% (α ${awLabel(S.dAt)})`;
+    const multiD = sc.length > 1 && sc.length <= 3, CD = cats();
+    const tD = (multiD ? sc : ["all"]).map((s, k) => { const pp = pts.filter(p => s === "all" || p.c.scene === s);
+      return { x: pp.map(p => p.c[S.featC]), y: pp.map(p => p.d), mode: "markers", name: s === "all" ? "patches" : s, showlegend: multiD,
+        marker: { size: 8, color: multiD ? CD[k] : css("--s1"), opacity: 0.55, line: { color: css("--surface"), width: 1 } },
+        customdata: pp.map(p => [p.c.scene, p.c.clip, p.c.row, p.c.col]),
+        hovertemplate: `%{customdata[0]} · clip %{customdata[1]}, row %{customdata[2]}, col %{customdata[3]}<br>x %{x:.3f}<br>change %{y:+.3f}<extra>${lab}</extra>` }; });
+    const xmax = xsD.length ? xsD[xsD.length - 1] : 1;
+    tD.push({ x: [xsD[0] ?? 0, xmax], y: [0, 0], mode: "lines", hoverinfo: "skip", showlegend: false, line: { color: css("--axis"), width: 1.5 } });
+    tD.push({ x: binsD.map(b => b.x), y: binsD.map(b => b.y), mode: "lines+markers", name: "median per fifth", line: { color: css("--ink"), width: 2 },
+      marker: { size: 9, color: css("--ink"), line: { color: css("--surface"), width: 2 } }, customdata: binsD.map(b => b.n),
+      hovertemplate: "median change %{y:+.3f}<br>n = %{customdata}<extra></extra>" });
+    plot($("c-delta"), tD, layout({ xaxis: ax(FEAT[S.featC] || S.featC), yaxis: ax(`Change in patch score: ${lab}`), legend: { orientation: "h", y: -0.18, x: 0 } }));
+  } else if ($("c-delta")) { $("c-delta").outerHTML = empty("Needs patch-level curves (score_taa.py, then compute_features.py)."); }
   const counts = AWS.map(a => cells.filter(c => Math.abs(c.best_aw - a) < 1e-9).length);
   plot($("c-hist"), [{ type: "bar", x: AWS.map(awLabel), y: counts, marker: { color: css("--s1") }, width: 0.6,
     hovertemplate: "α %{x}: best for %{y} patches<extra></extra>" }],
@@ -615,7 +663,7 @@ function rInter() {
 }
 
 // ---------------------------------------------------------------- scenes (content coverage)
-const SCN = { x: "motion_mean", y: "detail_hf" };
+const SCN = { x: "motion_mean", y: "detail_hf", sp: null, hp: null, a1: null, a2: null };
 function rScenes() {
   const el = $("t-scenes");
   if (!DATA.content || !DATA.content.length) { el.innerHTML = empty("No content features yet. Run <code>compute_features.py</code> (needs only the reference videos), then rebuild."); return; }
@@ -629,6 +677,13 @@ function rScenes() {
   el.innerHTML =
     card("How the scenes differ in content", "One box per scene: the spread of patch values (box = middle half, line = median, whiskers = typical range). Shows how much of the content range the scene set covers, the representativeness question R2 raised. Pick a scene in the filter to highlight it.",
       `<div id="s-box" class="chart" style="height:${Math.max(260, 26 * scenes.length + 90) * (narrow() ? top.length : 1)}px"></div>`) +
+    card("Content over time", "Whole-frame values for every frame (one line per scene; dotted lines = 30-frame clip boundaries): <b>Motion</b> in px/frame, <b>Detail</b> = high-frequency energy (log scale), <b>New px %</b> = share of newly visible pixels" + (pick ? ", <b>Error</b> = CGVQM per-frame error (lower is better)" : "") + ". Separate charts because the scales differ. " +
+      (pick ? "The last chart is CGVQM's per-frame error for two settings of this scene, so you can see whether error rises when motion or newly visible area does." : "Pick a single scene in the filter to add CGVQM's per-frame error for two settings."),
+      (pick ? `<div class="local">${sel("t-sp", "Resolution", SPS.map(x => ({ v: x, t: spLabel(x) })), SCN.sp ?? SPS[SPS.length - 1])}
+        ${sel("t-hp", "History", HPS.map(x => ({ v: x, t: x + "%" })), SCN.hp ?? DATA.default.hp)}
+        ${sel("t-a1", "α (A)", AWS.map(x => ({ v: x, t: awLabel(x) })), SCN.a1 ?? DATA.default.aw)}
+        ${sel("t-a2", "α (B)", AWS.map(x => ({ v: x, t: awLabel(x) })), SCN.a2 ?? (AWS.find(a => a >= 0.3) ?? AWS[AWS.length - 1]))}</div>` : "") +
+      `<div id="s-time" class="chart" style="height:${pick ? 560 : 440}px"></div>`) +
     card("Coverage: every patch of every scene", "Each point = one patch × 30-frame clip. Empty regions are content combinations no scene has; add a scene there if they matter (e.g. fast motion with high detail).",
       `<div class="local">${sel("s-x", "x", feats.map(k => ({ v: k, t: fn(k) })), SCN.x)} ${sel("s-y", "y", feats.map(k => ({ v: k, t: fn(k) })), SCN.y)}</div><div id="s-sc" class="chart" style="height:420px"></div>`) +
     card("Per-scene summary", "Median and 90th percentile over patches. To see what these look like, run <code>scene_content_view.py</code> and open each scene's <code>visuals/content_sheet.png</code>.",
@@ -637,6 +692,7 @@ function rScenes() {
         { h: "Detail median", f: r => fmtF(r.detail_hf_med) }, { h: "Detail p90", f: r => fmtF(r.detail_hf_p90) },
         { h: "Newly visible median", f: r => r.disocc_frac_med === null ? "–" : (100 * r.disocc_frac_med).toFixed(1) + "%" },
         { h: "Newly visible p90", f: r => r.disocc_frac_p90 === null ? "–" : (100 * r.disocc_frac_p90).toFixed(1) + "%" }], rows));
+  [["t-sp", "sp"], ["t-hp", "hp"], ["t-a1", "a1"], ["t-a2", "a2"]].forEach(([id, k]) => { const e = $(id); if (e) e.onchange = (ev) => { SCN[k] = +ev.target.value; rScenes(); }; });
   $("s-x").onchange = (e) => { SCN.x = e.target.value; rScenes(); };
   $("s-y").onchange = (e) => { SCN.y = e.target.value; rScenes(); };
   const accent = css("--s1"), muted = css("--axis");
@@ -654,6 +710,37 @@ function rScenes() {
   top.forEach((k, i) => { lb[i ? "xaxis" + (i + 1) : "xaxis"] = ax(fn(k), k === "detail_hf" ? { type: "log" } : {});
     lb[i ? "yaxis" + (i + 1) : "yaxis"] = ax("", { type: "category", showticklabels: i === 0 || stack, autorange: "reversed" }); });
   plot($("s-box"), tb, lb);
+  // ---- content over time
+  const FR = (DATA.frames || []).filter(f => scenes.includes(f.scene));
+  if (FR.length) {
+    const rowsT = [["motion_mean", "Motion", 1], ["detail_hf", "Detail", 1], ["disocc_frac", "New px %", 100]];
+    const pfS = pick && DATA.per_frame ? DATA.per_frame[pick] : null;
+    const R4 = pfS ? 1 : 0, nr = rowsT.length + R4, tt = [];
+    const multiT = !pick && FR.length <= 3;
+    rowsT.forEach(([k, lab, mul], i) => { const ya = i ? "y" + (i + 1) : "y", xa = i ? "x" + (i + 1) : "x";
+      FR.forEach((f, j) => { const on = !pick || f.scene === pick; if (!f[k]) return;
+        tt.push({ x: f[k].map((_, t) => t), y: f[k].map(v => v === null ? null : v * mul), xaxis: xa, yaxis: ya, mode: "lines", name: f.scene,
+          legendgroup: f.scene, showlegend: i === 0 && (multiT || f.scene === pick), line: { width: on ? 2 : 1, color: multiT ? cats()[j] : (on ? accent : muted) },
+          opacity: on ? 1 : 0.5, hovertemplate: `${f.scene}<br>frame %{x}<br>${lab}: %{y:.3f}<extra></extra>` }); }); });
+    if (pfS) {
+      const sp = SCN.sp ?? SPS[SPS.length - 1], hp = SCN.hp ?? DATA.default.hp;
+      const a1 = SCN.a1 ?? DATA.default.aw, a2 = SCN.a2 ?? (AWS.find(a => a >= 0.3) ?? AWS[AWS.length - 1]);
+      const C2 = ramp(2), xa = "x" + nr, ya = "y" + nr;
+      [a1, a2].forEach((a, j) => { const r = R.find(x => x.scene === pick && x.sp === sp && x.hp === hp && Math.abs(x.aw - a) < 1e-9);
+        const e = r && pfS[r.config]; if (!e) return;
+        tt.push({ x: e.map((_, t) => t), y: e, xaxis: xa, yaxis: ya, mode: "lines", name: `per-frame error, α ${awLabel(a)}`, showlegend: true,
+          line: { width: 2, color: C2[j] }, hovertemplate: `α ${awLabel(a)} · ${spLabel(sp)} · history ${hp}%<br>frame %{x}<br>error %{y:.3f}<extra></extra>` }); });
+    }
+    const nT = Math.max(...FR.map(f => (f.motion_mean || []).length)), clipB = [];
+    for (let c = 30; c < nT; c += 30) clipB.push(c);
+    const lt = layout({ grid: { rows: nr, columns: 1, pattern: "independent", ygap: 0.18 }, margin: { l: 64, r: 16, t: 16, b: 44 },
+      legend: { orientation: "h", y: -0.1, x: 0 },
+      shapes: clipB.map(c => ({ type: "line", xref: "x", yref: "paper", x0: c, x1: c, y0: 0, y1: 1, line: { color: css("--axis"), width: 1, dash: "dot" } })) });
+    const labsT = rowsT.map(r => r[1]).concat(pfS ? ["Error"] : []);
+    labsT.forEach((lab, i) => { lt[i ? "xaxis" + (i + 1) : "xaxis"] = ax(i === nr - 1 ? "Frame" : "", Object.assign({ showticklabels: i === nr - 1 }, i ? { matches: "x" } : {}));
+      lt[i ? "yaxis" + (i + 1) : "yaxis"] = ax(lab, lab === "Detail" ? { type: "log" } : {}); });
+    plot($("s-time"), tt, lt);
+  } else { $("s-time").outerHTML = empty("Per-frame content not computed yet: re-run <code>compute_features.py</code> (it only redoes the reference), then rebuild."); }
   const logy = (k) => ["detail_hf", "detail_grad"].includes(k) ? { type: "log" } : {};
   const multi = !pick && scenes.length <= 3, C = cats();
   const groups = multi ? scenes : (pick ? [pick, "__rest"] : ["__all"]);
@@ -697,7 +784,7 @@ function rTrade() {
       ["q", "f", "h"].map(m => `<div id="o-h-${m}" class="chart" style="height:${stack ? 230 * n : 250}px"></div>`).join("")) +
     card("The blur–flicker trade-off", "Each line = one history buffer size; points along it = alpha, from the lowest (labelled) to 1. Up = sharper, left = steadier, so up-and-left is better on both. Ring = the best-quality setting. If one history buffer's line sits further up-left, it improves the trade-off rather than just moving along it.",
       `<div id="o-front" class="chart" style="height:${stack ? 340 * n : 420}px"></div>`) +
-    card("Best settings per resolution", "The five highest-quality settings, with their flicker and detail ratio, for this patch selection.",
+    card("Best settings per resolution", "The five highest-quality settings, with their flicker and detail ratio, for this patch selection. <b>Quality</b> = average of the render's CGVQM patch scores. With one scene and all patches selected, the render's own CGVQM score is shown next to it: the two must match; a red value means the patch data is out of date for that scene (see Overview).",
       `<div id="o-top"></div>`);
   $("o-feat").onchange = (e) => { TO.feat = e.target.value; rTrade(); };
   $("o-grp").onchange = (e) => { TO.grp = e.target.value; rTrade(); };
@@ -760,7 +847,10 @@ function rTrade() {
     all.sort((x, y) => y.q - x.q).slice(0, 5).forEach((r, i) => top.push(Object.assign({ rank: i + 1 }, r))); });
   $("o-top").innerHTML = table([{ h: "Resolution", f: r => r.rank === 1 ? spLabel(r.sp) : "", l: 1 }, { h: "#", k: "rank" },
     { h: "α", f: r => awLabel(r.a) }, { h: "History", f: r => r.hp + "%" }, { h: "Quality", f: r => fmt(r.q) },
-    { h: "Flicker", f: r => fmt(r.f, 3) }, { h: "Detail ratio", f: r => fmt(r.h, 3) }], top);
+    { h: "Flicker", f: r => fmt(r.f, 3) }, { h: "Detail ratio", f: r => fmt(r.h, 3) },
+    ...(sc.length === 1 && TO.grp === "all" ? [{ h: "Render score (should match Quality)", f: r => { const x = R.find(z => z.scene === sc[0] && z.sp === r.sp && z.hp === r.hp && Math.abs(z.aw - r.a) < 1e-9);
+      return x && x.cgvqm !== null ? fmt(x.cgvqm) : "–"; }, cls: r => { const x = R.find(z => z.scene === sc[0] && z.sp === r.sp && z.hp === r.hp && Math.abs(z.aw - r.a) < 1e-9);
+      return x && x.cgvqm !== null && Math.abs(x.cgvqm - r.q) > 0.1 ? "warn" : ""; } }] : [])], top);
 }
 
 // ---------------------------------------------------------------- metrics
