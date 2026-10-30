@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TAA Study Dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6; --critical: #d03b3b; --good: #006300;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --ramp: #86b6ef,#6da7ec,#5598e7,#3987e5,#2a78d6,#256abf,#1c5cab,#184f95,#104281,#0d366b;
+  --seq: #cde2fb,#9ec5f4,#6da7ec,#3987e5,#256abf,#184f95,#0d366b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --accent: #3987e5; --critical: #e66767; --good: #0ca30c;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --ramp: #184f95,#1c5cab,#256abf,#2a78d6,#3987e5,#5598e7,#6da7ec,#86b6ef,#9ec5f4,#b7d3f6;
+    --seq: #0d366b,#184f95,#256abf,#3987e5,#6da7ec,#9ec5f4,#cde2fb;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --accent: #3987e5; --critical: #e66767; --good: #0ca30c;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --ramp: #184f95,#1c5cab,#256abf,#2a78d6,#3987e5,#5598e7,#6da7ec,#86b6ef,#9ec5f4,#b7d3f6;
+  --seq: #0d366b,#184f95,#256abf,#3987e5,#6da7ec,#9ec5f4,#cde2fb;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 64px; }
+header { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+.meta { color: var(--muted); font-size: 12px; }
+.bar { position: sticky; top: 0; z-index: 5; background: var(--page); padding: 12px 0 0;
+  border-bottom: 1px solid var(--grid); margin: 12px 0 20px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 10px; }
+label.f { display: flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: 13px; }
+select, button { font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
+button { cursor: pointer; }
+nav { display: flex; gap: 2px; overflow-x: auto; }
+nav button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none;
+  color: var(--ink-2); padding: 8px 12px; white-space: nowrap; }
+nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+section { display: none; }
+section.on { display: block; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; margin-bottom: 16px; }
+.card h2 { font-size: 15px; margin: 0 0 2px; }
+.card p.sub { margin: 0 0 10px; color: var(--ink-2); font-size: 13px; max-width: 80ch; }
+.local { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 8px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+.tile .v { font-size: 26px; font-weight: 600; }
+.tile .l { color: var(--ink-2); font-size: 12px; }
+.chart { width: 100%; min-height: 320px; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 5px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { color: var(--ink-2); font-weight: 600; }
+th:first-child, td:first-child, td.l, th.l { text-align: left; }
+.warn { color: var(--critical); font-weight: 600; }
+.ok { color: var(--good); }
+.empty { color: var(--ink-2); padding: 24px; text-align: center; border: 1px dashed var(--axis); border-radius: 12px; }
+code { font-size: 12px; background: var(--page); padding: 1px 5px; border-radius: 4px; }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-top: 8px; }
+</style>
+<!--PLOTLY-->
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>TAA study dashboard</h1>
+    <div class="meta" id="meta"></div>
+  </header>
+  <div class="bar">
+    <div class="filters">
+      <label class="f">Scene <select id="f-scene"></select></label>
+      <label class="f">Metric <select id="f-metric"></select></label>
+      <button id="theme" title="Switch light / dark">Theme</button>
+    </div>
+    <nav role="tablist" id="tabs"></nav>
+  </div>
+
+  <section id="t-overview"></section>
+  <section id="t-params"></section>
+  <section id="t-artifacts"></section>
+  <section id="t-content"></section>
+  <section id="t-metrics"></section>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+
+// ---------------------------------------------------------------- helpers
+const $ = (id) => document.getElementById(id);
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const list = (n) => css(n).split(",").map(s => s.trim());
+const uniq = (a) => [...new Set(a)].sort((x, y) => x - y);
+const fmt = (v, d = 2) => (v === null || v === undefined || Number.isNaN(v)) ? "–" : Number(v).toFixed(d);
+const mean = (a) => { const b = a.filter(x => x !== null && !Number.isNaN(x)); return b.length ? b.reduce((s, x) => s + x, 0) / b.length : null; };
+const median = (a) => { const b = a.filter(x => x !== null).sort((x, y) => x - y); if (!b.length) return null; const m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+const sd = (a) => { const m = mean(a); const b = a.filter(x => x !== null); return b.length > 1 ? Math.sqrt(b.reduce((s, x) => s + (x - m) ** 2, 0) / (b.length - 1)) : null; };
+const narrow = () => window.innerWidth < 760;
+const awLabel = (a) => (a < 0.1 ? a.toFixed(2) : String(+a.toFixed(2)));
+const spLabel = (sp) => `${sp}% per axis (${Math.round(sp * sp / 100)}% pixels)`;
+
+function ramp(n) {                       // ordinal: evenly spaced steps of the one-hue ramp
+  const r = list("--ramp");
+  if (n === 1) return [r[5]];
+  return Array.from({ length: n }, (_, i) => r[Math.round(i * (r.length - 1) / (n - 1))]);
+}
+function seqScale() { const s = list("--seq"); return s.map((c, i) => [i / (s.length - 1), c]); }
+function cats() { return [css("--s1"), css("--s2"), css("--s3")]; }
+
+function spearman(x, y) {
+  const pairs = x.map((v, i) => [v, y[i]]).filter(p => p[0] !== null && p[1] !== null);
+  if (pairs.length < 5) return null;
+  const rank = (a) => { const o = a.map((v, i) => [v, i]).sort((p, q) => p[0] - q[0]); const r = new Array(a.length);
+    for (let i = 0; i < o.length;) { let j = i; while (j + 1 < o.length && o[j + 1][0] === o[i][0]) j++;
+      for (let k = i; k <= j; k++) r[o[k][1]] = (i + j) / 2; i = j + 1; } return r; };
+  const rx = rank(pairs.map(p => p[0])), ry = rank(pairs.map(p => p[1]));
+  const mx = mean(rx), my = mean(ry);
+  let n = 0, dx = 0, dy = 0;
+  for (let i = 0; i < rx.length; i++) { n += (rx[i] - mx) * (ry[i] - my); dx += (rx[i] - mx) ** 2; dy += (ry[i] - my) ** 2; }
+  return dx && dy ? n / Math.sqrt(dx * dy) : null;
+}
+
+function layout(extra = {}) {
+  const ink = css("--ink"), ink2 = css("--ink-2"), grid = css("--grid"), axis = css("--axis");
+  return Object.assign({
+    paper_bgcolor: css("--surface"), plot_bgcolor: css("--surface"),
+    font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: ink2, size: 12 },
+    margin: { l: 56, r: 16, t: 36, b: 48 },
+    hoverlabel: { bgcolor: css("--surface"), bordercolor: axis, font: { color: ink } },
+    legend: { orientation: "h", y: -0.2, x: 0, font: { color: ink2 } },
+    hovermode: "closest",
+  }, extra);
+}
+function ax(title, extra = {}) {
+  return Object.assign({ title: { text: title, font: { size: 12 } }, gridcolor: css("--grid"),
+    linecolor: css("--axis"), zerolinecolor: css("--axis"), tickfont: { color: css("--muted") }, automargin: true }, extra);
+}
+function logAlphaAxis(alphas, title = "Alpha weight (log scale)") {
+  return ax(title, { type: "log", tickvals: alphas, ticktext: alphas.map(awLabel) });
+}
+const CFG = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ["lasso2d", "select2d"] };
+function plot(el, traces, lay) { Plotly.react(el, traces, lay, CFG); }
+
+function table(cols, rows) {
+  const th = cols.map(c => `<th class="${c.l ? "l" : ""}">${c.h}</th>`).join("");
+  const tr = rows.map(r => "<tr>" + cols.map(c => `<td class="${c.l ? "l" : ""} ${c.cls ? c.cls(r) : ""}">${c.f ? c.f(r) : (r[c.k] ?? "–")}</td>`).join("") + "</tr>").join("");
+  return `<div class="tablewrap"><table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+}
+function card(title, sub, inner) { return `<div class="card"><h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ""}${inner}</div>`; }
+function empty(msg) { return `<div class="empty">${msg}</div>`; }
+function sel(id, label, options, value) {
+  return `<label class="f">${label} <select id="${id}">${options.map(o => `<option value="${o.v}" ${String(o.v) === String(value) ? "selected" : ""}>${o.t}</option>`).join("")}</select></label>`;
+}
+
+// ---------------------------------------------------------------- state
+const S = { scene: "__all__", metric: DATA.metrics[0] || "cgvqm", tab: "overview",
+  hpA: DATA.default.hp, spC: null, hpC: DATA.default.hp, featC: DATA.content_keys[0] || null, yC: "best_aw" };
+const R = DATA.renders;
+const SPS = uniq(R.map(r => r.sp)).reverse();
+const HPS = uniq(R.map(r => r.hp));
+const AWS = uniq(R.map(r => r.aw));
+S.spC = SPS[SPS.length - 1] ?? null;
+const metricName = (m) => ({ cgvqm: "CGVQM", cvvdp: "CVVDP (JOD)" }[m] || m);
+const scenesSel = () => S.scene === "__all__" ? DATA.scenes : [S.scene];
+
+// metric values for the selected scene(s); with several scenes, centre each scene x resolution first
+function curveValues(rows, key, centre) {
+  if (!centre) return rows.map(r => r[key]);
+  return rows.map(r => r[key] === null ? null : r[key] - r._centre);
+}
+function withCentre(rows, key) {
+  const m = {};
+  rows.forEach(r => { const k = r.scene + "|" + r.sp; (m[k] = m[k] || []).push(r[key]); });
+  const c = {}; Object.entries(m).forEach(([k, v]) => c[k] = mean(v));
+  return rows.map(r => Object.assign({}, r, { _centre: c[r.scene + "|" + r.sp] }));
+}
+// average over scenes for each (sp, hp, aw)
+function aggregate(rows, key, centre) {
+  const vals = curveValues(rows, key, centre);
+  const g = {};
+  rows.forEach((r, i) => { const k = `${r.sp}|${r.hp}|${r.aw}`; (g[k] = g[k] || { sp: r.sp, hp: r.hp, aw: r.aw, v: [], rows: [] }); g[k].v.push(vals[i]); g[k].rows.push(r); });
+  return Object.values(g).map(o => ({ sp: o.sp, hp: o.hp, aw: o.aw, y: mean(o.v), sd: sd(o.v), n: o.v.filter(x => x !== null).length, rows: o.rows }));
+}
+
+// ---------------------------------------------------------------- tabs
+const TABS = [["overview", "Overview"], ["params", "Parameters"], ["artifacts", "Artifacts"], ["content", "Content"], ["metrics", "Metrics"]];
+function initChrome() {
+  $("meta").textContent = `Built ${DATA.generated} · ${DATA.scenes.length} scene(s) · ${R.length} renders · ${DATA.root}`;
+  $("f-scene").innerHTML = `<option value="__all__">All scenes</option>` + DATA.scenes.map(s => `<option>${s}</option>`).join("");
+  $("f-metric").innerHTML = (DATA.metrics.length ? DATA.metrics : ["cgvqm"]).map(m => `<option value="${m}">${metricName(m)}</option>`).join("");
+  $("tabs").innerHTML = TABS.map(([k, t]) => `<button role="tab" data-t="${k}" aria-selected="${k === S.tab}">${t}</button>`).join("");
+  $("tabs").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; S.tab = b.dataset.t; render(); };
+  $("f-scene").onchange = (e) => { S.scene = e.target.value; render(); };
+  $("f-metric").onchange = (e) => { S.metric = e.target.value; render(); };
+  $("theme").onclick = () => {
+    const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.dataset.theme = cur === "dark" ? "light" : "dark"; render();
+  };
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(render, 200); });
+}
+function render() {
+  document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === S.tab));
+  TABS.forEach(([k]) => $("t-" + k).classList.toggle("on", k === S.tab));
+  ({ overview: rOverview, params: rParams, artifacts: rArtifacts, content: rContent, metrics: rMetrics })[S.tab]();
+}
+
+// ---------------------------------------------------------------- overview
+function rOverview() {
+  const el = $("t-overview");
+  if (!R.length && !DATA.cells.length) {
+    el.innerHTML = empty("No scores yet. Run <code>score_taa.py</code> (and <code>compute_features.py</code>), then re-run <code>build_dashboard.py</code>.");
+    return;
+  }
+  const ov = DATA.overview.filter(o => scenesSel().includes(o.scene));
+  const tot = (k) => ov.reduce((s, o) => s + (o[k] || 0), 0);
+  const tiles = [["Scenes", ov.length], ["Renders scored", tot("renders")], ["Patch cells", tot("patch_cells")],
+    ["Flagged (out of range)", tot("flagged")], ["Possible outliers", tot("outliers")]];
+  let h = `<div class="tiles">${tiles.map(([l, v]) => `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("")}</div>`;
+  h += card("Per scene", "CGVQM score range per scene. <b>Flagged</b> = outside 0–100 (broken render or reference). <b>Possible outliers</b> = far from their alpha-neighbours on the same curve; open the render and check it.",
+    table([{ h: "Scene", k: "scene", l: 1 }, { h: "Renders", k: "renders" },
+      { h: "CGVQM min", f: r => fmt(r.cgvqm_min) }, { h: "median", f: r => fmt(r.cgvqm_median) }, { h: "max", f: r => fmt(r.cgvqm_max) },
+      { h: "Flagged", f: r => r.flagged ? `⚠ ${r.flagged}` : "0", cls: r => r.flagged ? "warn" : "" },
+      { h: "Possible outliers", f: r => r.outliers ? `⚠ ${r.outliers}` : "0", cls: r => r.outliers ? "warn" : "" },
+      { h: "CVVDP", f: r => r.has_cvvdp ? "yes" : "–" }, { h: "Patch cells", k: "patch_cells" }], ov));
+  const bad = R.filter(r => scenesSel().includes(r.scene) && (r.outlier || r.flag));
+  if (bad.length) h += card("Renders to check", "Sorted by how far they sit from their neighbours. Re-render any that look wrong; the generator re-queues deleted renders.",
+    table([{ h: "Scene", k: "scene", l: 1 }, { h: "Config", k: "config", l: 1 }, { h: "CGVQM", f: r => fmt(r.cgvqm) },
+      { h: "Off neighbours by", f: r => fmt(r.neighbor_dev) }, { h: "Why", f: r => r.flag ? "⚠ out of range" : "⚠ outlier", cls: () => "warn", l: 1 }],
+      bad.sort((a, b) => Math.abs(b.neighbor_dev || 99) - Math.abs(a.neighbor_dev || 99))));
+  const leg = DATA.legacy.filter(r => scenesSel().includes(r.scene));
+  if (leg.length) h += card("Legacy check", "Old-factorial settings re-rendered. <b>Old</b> vs <b>new @87% ref</b> should match closely if the pipeline reproduces the old results. <b>New @100% ref</b> shows the effect of the corrected reference.",
+    table([{ h: "Scene", k: "scene", l: 1 }, { h: "Config", k: "config", l: 1 }, { h: "Old", f: r => fmt(r.old, 3) },
+      { h: "New @87% ref", f: r => fmt(r.new_ref87, 3) }, { h: "Δ (new−old)", f: r => r.old === null ? "–" : fmt(r.new_ref87 - r.old, 3) },
+      { h: "New @100% ref", f: r => fmt(r.new_ref100, 3) }], leg));
+  el.innerHTML = h;
+}
+
+// ---------------------------------------------------------------- parameters
+function rParams() {
+  const el = $("t-params"), m = S.metric;
+  const rows0 = R.filter(r => scenesSel().includes(r.scene) && r[m] !== null && r[m] !== undefined);
+  if (!rows0.length) { el.innerHTML = empty(`No ${metricName(m)} scores for this selection yet.`); return; }
+  const centre = scenesSel().length > 1;
+  const rows = withCentre(rows0, m);
+  const agg = aggregate(rows, m, centre);
+  const yt = centre ? `${metricName(m)}, centred per scene & resolution` : metricName(m);
+  el.innerHTML =
+    card(`${metricName(m)} vs. alpha weight`, (centre ? "Average over scenes after subtracting each scene × resolution mean (as in the paper); hover for ±1 SD. " : "") +
+      "Lines = history buffer %, darker = larger. Dashed line = UE default α = 0.04." + (centre ? "" : " Red rings = possible outlier renders."),
+      `<div id="c-curves" class="chart" style="height:${narrow() ? 300 * SPS.length : 380}px"></div>`) +
+    card("Alpha × history buffer", "Each cell = one configuration. Darker = higher quality. The outlined cell is the best configuration for that resolution.",
+      `<div id="c-heat" class="chart" style="height:${narrow() ? 260 * SPS.length : 300}px"></div>`) +
+    card("Best configuration per scene and resolution", `Gain = best − UE default (α 0.04, history 100%), in ${metricName(m)} points. Range = best − worst over all configurations.`,
+      table([{ h: "Scene", k: "scene", l: 1 }, { h: "Resolution", f: r => spLabel(r.sp), l: 1 }, { h: "Best α", f: r => awLabel(r.best_aw) },
+        { h: "Best history %", k: "best_hp" }, { h: "Best", f: r => fmt(r.best) }, { h: "Default", f: r => fmt(r.default) },
+        { h: "Gain", f: r => (r.gain > 0 ? "+" : "") + fmt(r.gain) }, { h: "Range", f: r => fmt(r.range) }],
+        bestRows(rows0, m)));
+
+  const colors = ramp(HPS.length);
+  const n = SPS.length, stack = narrow();
+  const traces = [];
+  const yAll = agg.map(a => a.y).filter(v => v !== null);
+  const yr = [Math.min(...yAll), Math.max(...yAll)];
+  const pad = (yr[1] - yr[0]) * 0.08 || 1;
+  SPS.forEach((sp, i) => {
+    const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+    HPS.forEach((hp, j) => {
+      const pts = agg.filter(a => a.sp === sp && a.hp === hp).sort((a, b) => a.aw - b.aw);
+      traces.push({ x: pts.map(p => p.aw), y: pts.map(p => p.y), xaxis: xa, yaxis: ya, type: "scatter", mode: "lines+markers",
+        name: `history ${hp}%`, legendgroup: "hp" + hp, showlegend: i === 0,
+        line: { color: colors[j], width: 2 }, marker: { color: colors[j], size: 8, line: { color: css("--surface"), width: 2 } },
+        customdata: pts.map(p => [p.sd, p.n]),
+        hovertemplate: `α %{x}<br>history ${hp}%<br>${centre ? "centred " : ""}${metricName(m)} %{y:.2f}` + (centre ? "<br>±1 SD %{customdata[0]:.2f} (n=%{customdata[1]})" : "") + `<extra>${spLabel(sp)}</extra>` });
+    });
+    traces.push({ x: [DATA.default.aw, DATA.default.aw], y: [yr[0] - pad, yr[1] + pad], xaxis: xa, yaxis: ya, mode: "lines", hoverinfo: "skip",
+      line: { color: css("--muted"), width: 1.5, dash: "dash" }, name: "UE default α", legendgroup: "dflt", showlegend: i === 0 });
+    if (!centre) {
+      const out = rows0.filter(r => r.sp === sp && r.outlier);
+      if (out.length) traces.push({ x: out.map(r => r.aw), y: out.map(r => r[m]), xaxis: xa, yaxis: ya, mode: "markers", name: "possible outlier",
+        legendgroup: "out", showlegend: !traces.some(t => t.name === "possible outlier"),
+        marker: { size: 16, color: "rgba(0,0,0,0)", line: { color: css("--critical"), width: 2 } },
+        text: out.map(r => r.config), hovertemplate: "⚠ possible outlier<br>%{text}<br>%{y:.2f}<extra></extra>" });
+    }
+  });
+  const lay = layout({ grid: stack ? { rows: n, columns: 1, pattern: "independent", ygap: 0.25 } : { rows: 1, columns: n, pattern: "independent", xgap: 0.06 },
+    annotations: SPS.map((sp, i) => ({ text: spLabel(sp), showarrow: false, font: { color: css("--ink"), size: 12 },
+      xref: (i ? "x" + (i + 1) : "x") + " domain", yref: (i ? "y" + (i + 1) : "y") + " domain", x: 0, y: 1.08, xanchor: "left" })),
+    legend: { orientation: "h", y: stack ? -0.06 : -0.22, x: 0 } });
+  SPS.forEach((sp, i) => {
+    lay[i ? "xaxis" + (i + 1) : "xaxis"] = logAlphaAxis(AWS, "Alpha weight");
+    lay[i ? "yaxis" + (i + 1) : "yaxis"] = ax(i === 0 || stack ? yt : "", Object.assign({ range: [yr[0] - pad, yr[1] + pad] }, i ? { matches: "y" } : {}));
+  });
+  plot($("c-curves"), traces, lay);
+
+  // heatmaps
+  const ht = [];
+  const zAll = agg.map(a => a.y).filter(v => v !== null);
+  SPS.forEach((sp, i) => {
+    const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+    const z = HPS.map(hp => AWS.map(aw => { const a = agg.find(p => p.sp === sp && p.hp === hp && p.aw === aw); return a ? a.y : null; }));
+    ht.push({ type: "heatmap", x: AWS.map(awLabel), y: HPS.map(h => h + "%"), z, xaxis: xa, yaxis: ya, coloraxis: "coloraxis",
+      xgap: 2, ygap: 2, hovertemplate: `α %{x}<br>history %{y}<br>%{z:.2f}<extra>${spLabel(sp)}</extra>` });
+    let best = null;
+    HPS.forEach((hp, yi) => AWS.forEach((aw, xi) => { const v = z[yi][xi]; if (v !== null && (!best || v > best.v)) best = { v, x: awLabel(aw), y: hp + "%" }; }));
+    if (best) ht.push({ x: [best.x], y: [best.y], xaxis: xa, yaxis: ya, mode: "markers", hoverinfo: "skip", showlegend: false,
+      marker: { symbol: "square-open", size: 22, color: css("--ink"), line: { width: 2 } } });
+  });
+  const hl = layout({ grid: stack ? { rows: n, columns: 1, pattern: "independent", ygap: 0.3 } : { rows: 1, columns: n, pattern: "independent", xgap: 0.06 },
+    coloraxis: { colorscale: seqScale(), cmin: Math.min(...zAll), cmax: Math.max(...zAll),
+      colorbar: { title: { text: centre ? "centred" : metricName(m), side: "right" }, thickness: 10, outlinewidth: 0, tickfont: { color: css("--muted") } } },
+    margin: { l: 64, r: 16, t: 36, b: 56 },
+    annotations: SPS.map((sp, i) => ({ text: spLabel(sp), showarrow: false, font: { color: css("--ink"), size: 12 },
+      xref: (i ? "x" + (i + 1) : "x") + " domain", yref: (i ? "y" + (i + 1) : "y") + " domain", x: 0, y: 1.12, xanchor: "left" })) });
+  SPS.forEach((sp, i) => {
+    hl[i ? "xaxis" + (i + 1) : "xaxis"] = ax("Alpha weight", { type: "category", tickangle: -45 });
+    hl[i ? "yaxis" + (i + 1) : "yaxis"] = ax(i === 0 || stack ? "History buffer" : "", { type: "category", showticklabels: i === 0 || stack });
+  });
+  plot($("c-heat"), ht, hl);
+}
+function bestRows(rows, m) {
+  const out = [];
+  const keys = [...new Set(rows.map(r => r.scene + "|" + r.sp))];
+  keys.forEach(k => {
+    const g = rows.filter(r => r.scene + "|" + r.sp === k);
+    const b = g.reduce((a, r) => (r[m] > a[m] ? r : a));
+    const d = g.find(r => Math.abs(r.aw - DATA.default.aw) < 1e-9 && r.hp === DATA.default.hp);
+    out.push({ scene: b.scene, sp: b.sp, best_aw: b.aw, best_hp: b.hp, best: b[m], default: d ? d[m] : null,
+      gain: d ? b[m] - d[m] : null, range: Math.max(...g.map(r => r[m])) - Math.min(...g.map(r => r[m])) });
+  });
+  return out.sort((a, b) => a.scene.localeCompare(b.scene) || b.sp - a.sp);
+}
+
+// ---------------------------------------------------------------- artifacts
+function rArtifacts() {
+  const el = $("t-artifacts"), m = S.metric;
+  const rows0 = R.filter(r => scenesSel().includes(r.scene) && r.hp === S.hpA);
+  const hasArt = rows0.some(r => r.flicker !== null && r.flicker !== undefined);
+  const ctl = `<div class="local">${sel("a-hp", "History buffer", HPS.map(h => ({ v: h, t: h + "%" })), S.hpA)}</div>`;
+  if (!hasArt) { el.innerHTML = ctl + empty("No artifact measures yet. Run <code>compute_features.py</code> for these scenes, then rebuild."); bindA(); return; }
+  const centre = scenesSel().length > 1;
+  const rows = withCentre(rows0.filter(r => r[m] !== null), m);
+  const panels = [[m, centre ? `${metricName(m)} (centred)` : metricName(m), centre],
+                  ["flicker", "Flicker (luma levels / frame)", false],
+                  ["hf_ratio", "Detail ratio (render ÷ reference)", false]];
+  el.innerHTML = ctl +
+    card("Why the curve peaks", "Same x-axis for all three charts. Low α → history dominates → detail is lost (detail ratio < 1). High α → current frame dominates → flicker rises. If the quality peak sits where the two balance, the metric is responding to the artifacts players notice. Lines = resolution, darker = higher.",
+      panels.map((p, i) => `<div id="c-art${i}" class="chart" style="height:260px"></div>`).join("")) +
+    card("Does the metric track the artifacts? (patch level)", "Spearman correlation between CGVQM patch quality and each artifact measure across all patches and configurations. Negative = quality drops as the artifact grows. <b>Detail change</b> = |log₂ detail ratio| (blur and over-sharpening both count).",
+      DATA.corr.length ? table([{ h: "Scene", k: "scene", l: 1 }, { h: "Patches × configs", k: "n" }, { h: "Mean error", f: r => fmt(r.err_mae) },
+        { h: "Flicker", f: r => fmt(r.flicker) }, { h: "Detail change", f: r => fmt(r.detail_change) }, { h: "Error in disoccluded areas", f: r => fmt(r.err_disocc) }],
+        DATA.corr.filter(r => r.scene === "All scenes" || scenesSel().includes(r.scene))) : empty("Needs CGVQM patch scores (score_taa.py) joined by compute_features.py."));
+  bindA();
+  const colors = ramp(SPS.length).slice();
+  panels.forEach(([key, title, cen], i) => {
+    const agg = aggregate(rows, key, cen);
+    const tr = [...SPS].reverse().map((sp, j) => {
+      const pts = agg.filter(a => a.sp === sp).sort((a, b) => a.aw - b.aw);
+      const c = colors[SPS.length - 1 - j];
+      return { x: pts.map(p => p.aw), y: pts.map(p => p.y), mode: "lines+markers", name: spLabel(sp), legendgroup: "sp" + sp, showlegend: i === 0,
+        line: { color: c, width: 2 }, marker: { color: c, size: 8, line: { color: css("--surface"), width: 2 } },
+        hovertemplate: `α %{x}<br>${title}: %{y:.3f}<extra>${spLabel(sp)}</extra>` };
+    });
+    if (key === "hf_ratio") tr.push({ x: [AWS[0], AWS[AWS.length - 1]], y: [1, 1], mode: "lines", hoverinfo: "skip", name: "same detail as reference",
+      line: { color: css("--muted"), dash: "dash", width: 1.5 }, showlegend: true });
+    plot($("c-art" + i), tr, layout({ margin: { l: 64, r: 16, t: 28, b: i === 2 ? 48 : 28 }, showlegend: i === 0 || key === "hf_ratio",
+      legend: { orientation: "h", y: 1.18, x: 0 },
+      xaxis: logAlphaAxis(AWS, i === 2 ? "Alpha weight" : ""), yaxis: ax(title) }));
+  });
+}
+function bindA() { $("a-hp").onchange = (e) => { S.hpA = +e.target.value; rArtifacts(); }; }
+
+// ---------------------------------------------------------------- content
+const FEAT = { motion_mean: "Motion (px / frame)", disocc_frac: "Disoccluded fraction", detail_hf: "High-frequency detail",
+  detail_grad: "Gradient magnitude", contrast: "Contrast (luma SD)", luma_mean: "Mean luma", temporal_change: "Frame-to-frame change" };
+const YC = { best_aw: "Best alpha for the patch", sensitivity: "Sensitivity: best − worst over α (points)", gain_vs_default: "Gain of best α over default (points)" };
+function rContent() {
+  const el = $("t-content");
+  if (!DATA.cells.length) { el.innerHTML = empty("No patch-level data yet. Run <code>score_taa.py</code>, then <code>compute_features.py</code>, then rebuild."); return; }
+  const sps = uniq(DATA.cells.map(c => c.sp)).reverse(), hps = uniq(DATA.cells.map(c => c.hp));
+  if (!sps.includes(S.spC)) S.spC = sps[sps.length - 1];
+  if (!hps.includes(S.hpC)) S.hpC = hps[0];
+  const cells = DATA.cells.filter(c => scenesSel().includes(c.scene) && c.sp === S.spC && c.hp === S.hpC && c[S.featC] !== null);
+  const ctl = `<div class="local">${sel("c-sp", "Resolution", sps.map(s => ({ v: s, t: spLabel(s) })), S.spC)}
+    ${sel("c-hp", "History", hps.map(h => ({ v: h, t: h + "%" })), S.hpC)}
+    ${sel("c-feat", "Content feature", DATA.content_keys.map(k => ({ v: k, t: FEAT[k] || k })), S.featC)}
+    ${sel("c-y", "Show", Object.entries(YC).map(([v, t]) => ({ v, t })), S.yC)}</div>`;
+  const rho = spearman(cells.map(c => c[S.featC]), cells.map(c => c[S.yC]));
+  el.innerHTML = ctl +
+    card(`${YC[S.yC]} vs. ${FEAT[S.featC] || S.featC}`,
+      `Each point = one patch (¼ × ¼ of the frame) over one 30-frame clip. Line = median per fifth of the x-range. Spearman ρ = <b>${fmt(rho)}</b> (n = ${cells.length}). ` +
+      (S.yC === "best_aw" ? "Points are spread slightly up/down so equal values don't hide each other. A rising or falling median means the best alpha depends on this content property." : ""),
+      `<div id="c-sc" class="chart" style="height:400px"></div>`) +
+    card("Which alpha wins, patch by patch", "How many patches each alpha value scored best on. One tall bar = one alpha suits everything; a spread = the best alpha varies with content.",
+      `<div id="c-hist" class="chart" style="height:260px"></div>`);
+  ["c-sp", "c-hp", "c-feat", "c-y"].forEach(id => $(id).onchange = (e) => {
+    const v = e.target.value; ({ "c-sp": () => S.spC = +v, "c-hp": () => S.hpC = +v, "c-feat": () => S.featC = v, "c-y": () => S.yC = v })[id](); rContent(); });
+
+  const sc = scenesSel(), multi = sc.length > 1 && sc.length <= 3, C = cats();
+  const jit = (v, i) => S.yC === "best_aw" ? v * Math.exp(((i * 7919) % 100 / 100 - 0.5) * 0.18) : v;
+  const traces = (multi ? sc : ["all"]).map((s, k) => {
+    const pts = cells.filter(c => s === "all" || c.scene === s);
+    return { x: pts.map(c => c[S.featC]), y: pts.map((c, i) => jit(c[S.yC], i)), mode: "markers", type: "scatter",
+      name: s === "all" ? "patches" : s, showlegend: multi,
+      marker: { size: 8, color: multi ? C[k] : css("--s1"), opacity: 0.55, line: { color: css("--surface"), width: 1 } },
+      customdata: pts.map(c => [c.scene, c.clip, c.row, c.col, c[S.yC]]),
+      hovertemplate: `%{customdata[0]}<br>clip %{customdata[1]}, row %{customdata[2]}, col %{customdata[3]}<br>${FEAT[S.featC] || S.featC}: %{x:.3f}<br>${YC[S.yC]}: %{customdata[4]:.3f}<extra></extra>` };
+  });
+  // binned medians
+  const xs = cells.map(c => c[S.featC]).sort((a, b) => a - b);
+  const qs = [0, 0.2, 0.4, 0.6, 0.8, 1].map(q => xs[Math.min(xs.length - 1, Math.floor(q * (xs.length - 1)))]);
+  const bins = [];
+  for (let i = 0; i < 5; i++) {
+    const inb = cells.filter(c => c[S.featC] >= qs[i] && (i === 4 ? c[S.featC] <= qs[i + 1] : c[S.featC] < qs[i + 1]));
+    if (inb.length) bins.push({ x: median(inb.map(c => c[S.featC])), y: median(inb.map(c => c[S.yC])), n: inb.length });
+  }
+  traces.push({ x: bins.map(b => b.x), y: bins.map(b => b.y), mode: "lines+markers", name: "median per fifth",
+    line: { color: css("--ink"), width: 2 }, marker: { size: 9, color: css("--ink"), line: { color: css("--surface"), width: 2 } },
+    customdata: bins.map(b => b.n), hovertemplate: `median ${YC[S.yC]}: %{y:.3f}<br>n = %{customdata}<extra></extra>` });
+  plot($("c-sc"), traces, layout({ xaxis: ax(FEAT[S.featC] || S.featC),
+    yaxis: S.yC === "best_aw" ? logAlphaAxis(AWS, "Best alpha") : ax(YC[S.yC]), legend: { orientation: "h", y: -0.18, x: 0 } }));
+
+  const counts = AWS.map(a => cells.filter(c => Math.abs(c.best_aw - a) < 1e-9).length);
+  plot($("c-hist"), [{ type: "bar", x: AWS.map(awLabel), y: counts, marker: { color: css("--s1") }, width: 0.6,
+    hovertemplate: "α %{x}: best for %{y} patches<extra></extra>" }],
+    layout({ xaxis: ax("Alpha weight", { type: "category" }), yaxis: ax("Patches where this α is best"), bargap: 0.3, showlegend: false }));
+}
+
+// ---------------------------------------------------------------- metrics
+function rMetrics() {
+  const el = $("t-metrics");
+  if (!DATA.metrics.includes("cvvdp") || !DATA.metrics.includes("cgvqm")) {
+    el.innerHTML = empty("Only one metric scored so far. To compare, run <code>score_taa.py --metrics cgvqm cvvdp</code>, then rebuild."); return;
+  }
+  const sc = scenesSel(), rows = R.filter(r => sc.includes(r.scene) && r.cgvqm !== null && r.cvvdp !== null);
+  const per = sc.map(s => { const g = rows.filter(r => r.scene === s); return { scene: s, n: g.length, rho: spearman(g.map(r => r.cgvqm), g.map(r => r.cvvdp)) }; });
+  el.innerHTML = card("CGVQM vs. CVVDP", "One point per render. Agreement within a scene is what matters (each scene has its own baseline). Where they disagree is where a user study is most informative.",
+    `<div id="c-mx" class="chart" style="height:420px"></div>`) +
+    card("Rank agreement per scene", "Spearman ρ between the two metrics over all renders of a scene. 1 = same ranking.",
+      table([{ h: "Scene", k: "scene", l: 1 }, { h: "Renders", k: "n" }, { h: "Spearman ρ", f: r => fmt(r.rho) }], per));
+  const multi = sc.length <= 3, C = cats();
+  const tr = (multi ? sc : ["all"]).map((s, k) => { const g = rows.filter(r => s === "all" || r.scene === s);
+    return { x: g.map(r => r.cgvqm), y: g.map(r => r.cvvdp), mode: "markers", name: s === "all" ? "renders" : s, showlegend: multi,
+      marker: { size: 8, color: multi ? C[k] : css("--s1"), opacity: 0.7, line: { color: css("--surface"), width: 1 } },
+      text: g.map(r => `${r.scene}<br>${r.config}`), hovertemplate: "%{text}<br>CGVQM %{x:.2f}<br>CVVDP %{y:.3f}<extra></extra>" }; });
+  plot($("c-mx"), tr, layout({ xaxis: ax("CGVQM"), yaxis: ax("CVVDP (JOD)") }));
+}
+
+if (typeof Plotly === "undefined") {
+  document.body.innerHTML = '<div class="wrap"><div class="empty">The chart library did not load. Install it with <code>pip install plotly</code> and rebuild (it is then embedded and works offline), or connect to the internet.</div></div>';
+} else { initChrome(); render(); }
+</script>
+</body>
+</html>
