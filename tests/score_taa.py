@@ -52,6 +52,7 @@ import argparse
 import subprocess
 
 import numpy as np
+
 # ----------------------------------------------------------------------------
 # CONFIG -- keep CGVQM identical to the paper (compute_metrics.py)
 # ----------------------------------------------------------------------------
@@ -105,20 +106,31 @@ def load_job(scene_dir, job):
 # CGVQM  (same math as run_cgvqm_with_tensors in compute_metrics.py)
 # ============================================================================
 
+def find_project_dir(explicit=None):
+    """Repo root containing src/cgvqm: the given path, else this script's folder or any parent
+    (so the script works from the repo root or from tests/), else the current directory."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = [explicit] if explicit else []
+    d = here
+    while True:
+        candidates.append(d)
+        parent = os.path.dirname(d)
+        if parent == d:
+            break
+        d = parent
+    candidates.append(os.getcwd())
+    for c in candidates:
+        if c and os.path.isdir(os.path.join(c, "src", "cgvqm")):
+            return c
+    raise SystemExit("Could not find src/cgvqm. Pass --project-dir <path to the PerceptualTAA repo root>.")
+
+
 class CGVQMScorer:
     def __init__(self, project_dir, device):
         import torch
-        TESTS_DIR   = os.path.dirname(os.path.abspath(__file__))
-        PROJECT_DIR = os.path.dirname(TESTS_DIR)
-        sys.path.insert(0, PROJECT_DIR)  # <-- This makes 'src' visible from the tests folder!
         sys.path.append(os.path.join(project_dir, "src"))
-
-        SRC_DIR = os.path.join(PROJECT_DIR, "src")
-        sys.path.insert(0, SRC_DIR)
-        sys.path.insert(0, os.path.join(SRC_DIR, "cgvqm"))
-        # sys.path.append(os.path.join(project_dir, "src", "cgvqm"))
-
-        from src.cgvqm.cgvqm import CGVQM, CGVQM_TYPE, preprocess
+        sys.path.append(os.path.join(project_dir, "src", "cgvqm"))
+        from cgvqm.cgvqm import CGVQM, CGVQM_TYPE, preprocess
         from torchvision.models.video import resnet
 
         self.torch, self.preprocess = torch, preprocess
@@ -126,7 +138,7 @@ class CGVQMScorer:
         ctype = getattr(CGVQM_TYPE, CGVQM_CONFIG["cgvqm_type"])
         model = resnet.r3d_18(weights=resnet.R3D_18_Weights.DEFAULT).to(device)
         model.__class__ = CGVQM
-        wdir = os.path.join(PROJECT_DIR, "src", "cgvqm", "weights")
+        wdir = os.path.join(project_dir, "src", "cgvqm", "weights")
         if ctype == CGVQM_TYPE.CGVQM_2:
             model.init_weights(os.path.join(wdir, "cgvqm-2.pickle"), num_layers=3)
         else:
@@ -218,13 +230,19 @@ def pairs_for_scene(manifest):
     return out
 
 
-def run_scene(scene_dir, scorers, overwrite):
+def run_scene(scene_dir, scorers, overwrite, only=None):
     with open(os.path.join(scene_dir, "manifest.json")) as f:
         manifest = json.load(f)
     name = manifest["scene"]["name"]
     fps = manifest["render_settings"]["fps"]
     ref_jobs = {j["config"]: j for j in manifest["jobs"] if j["config"].startswith("ssaa16_")}
     pairs = pairs_for_scene(manifest)
+    if only:                                   # re-score just these renders (always overwritten)
+        pairs = [(j, r) for j, r in pairs if j["config"] in only]
+        missing = set(only) - {j["config"] for j, _ in pairs}
+        if missing:
+            print(f"  (not in this scene's manifest: {sorted(missing)})")
+        overwrite = True
     out_dir = os.path.join(scene_dir, "scores")
     os.makedirs(out_dir, exist_ok=True)
 
@@ -352,9 +370,11 @@ def main():
     g.add_argument("--all", action="store_true")
     ap.add_argument("--metrics", nargs="+", default=["cgvqm"], choices=["cgvqm", "cvvdp"])
     ap.add_argument("--device", default=None, help="cuda / cpu (default: cuda if available)")
-    ap.add_argument("--project-dir", default=os.path.dirname(os.path.abspath(__file__)),
+    ap.add_argument("--project-dir", default=None,
                     help="repo root containing src/cgvqm (default: this script's folder)")
     ap.add_argument("--overwrite", action="store_true", help="re-score renders that already have scores")
+    ap.add_argument("--only", nargs="+", metavar="CONFIG",
+                    help="re-score only these renders, e.g. --only sp087_aw0.300_hp150_ns08_fs1.00 (implies overwrite)")
     ap.add_argument("--old-scores", nargs="*", default=[], metavar="SCENE=PATH",
                     help="old factorial scores.json per scene, for the legacy comparison")
     args = ap.parse_args()
@@ -367,7 +387,7 @@ def main():
 
     scorers = {}
     if "cgvqm" in args.metrics:
-        scorers["cgvqm"] = CGVQMScorer(args.project_dir, device)
+        scorers["cgvqm"] = CGVQMScorer(find_project_dir(args.project_dir), device)
     if "cvvdp" in args.metrics:
         # Note: the paper's CVVDP run assumed a 'standard_4k' display. The renders
         # are 1080p, so 'standard_fhd' may be the more defensible choice --
@@ -376,7 +396,7 @@ def main():
 
     all_problems = {}
     for s in scenes:
-        p = run_scene(os.path.join(root, s), scorers, args.overwrite)
+        p = run_scene(os.path.join(root, s), scorers, args.overwrite, set(args.only) if args.only else None)
         if p:
             all_problems[s] = len(p)
 
