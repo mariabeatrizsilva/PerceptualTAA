@@ -1,171 +1,337 @@
 """
-generate_factorial_jobs.py
---------------------------
-Unreal Engine Movie Render Queue script for a full 3^4 factorial TAA sweep.
-Outputs frames to: tests/{scene_name}/full_factorial/{combo_name}/0001.png ...
-Also renders the 16SSAA reference to: tests/{scene_name}/16SSAA/
+generate_taa_jobs.py  (dataset v2)
+----------------------------------
+Populates Unreal's Movie Render Queue with a full-grid TAA sweep for one or
+more scenes. Run inside the UE Python console / editor utility of the project
+that contains the scenes (scenes from other projects are skipped automatically).
 
-HOW TO USE:
-  1. Set SCENE_CONFIG to your scene (level path, sequence path, output name).
-  2. Paste/run this script in the Unreal Engine Python console or editor utility.
-  3. Open Movie Render Queue and render all jobs.
+DESIGN (see notes at bottom of file for rationale)
+  Varied (full grid):   screen percentage (sp) x alpha weight (aw) x history % (hp)
+  Fixed at UE default:  num samples (ns) = 8, filter size (fs) = 1.0
+  Per scene also:       1 x 16-SSAA reference at 100% screen percentage
+                        1 x aux job writing motion vectors + depth (EXR)
+                        (optional) legacy-check jobs that reproduce the old
+                        factorial setup, to verify the pipeline
 
-OUTPUT STRUCTURE:
-  tests/
-    {scene_name}/
-      16SSAA/
-        0001.png ...
-      full_factorial/
-        aw0.04_ns4_fs0.1_hp100/
-          0001.png ...
-        aw0.04_ns4_fs0.1_hp150/
-          ...
+OUTPUT LAYOUT  (everything for a scene lives under one folder)
+  {OUTPUT_ROOT}/{scene}/
+      manifest.json                         <- every job + its exact params
+      reference/ssaa16_sp100/0001.png ...
+      taa/sp050_aw0.040_hp100_ns08_fs1.00/0001.png ...
+      aux/motion_depth/{render_pass}/0001.exr ...
+      legacy_check/...                      (only if enabled)
+  Later, encode_and_verify.py turns every PNG folder into a lossless video:
+      videos/reference/ssaa16_sp100.mkv
+      videos/taa/sp050_aw0.040_hp100_ns08_fs1.00.mkv
+
+NAMING
+  Config names contain EVERY registered TAA parameter (varied or fixed), in a
+  fixed order, zero-padded to fixed width. So:
+    - names sort correctly in file browsers
+    - adding a new varied parameter later never makes old names ambiguous
+      (just register it in PARAMS; old names stay valid because the fixed
+      value was always written)
+  Don't parse names in analysis code -- read manifest.json instead.
+
+USAGE
+  1. Edit SCENES / SWEEP below if needed.
+  2. Open the UE project, run this script in the Python console.
+  3. Movie Render Queue -> Render (Local).
+  4. Repeat in each project that holds pilot scenes.
 """
 
-import unreal
 import os
+import json
 import itertools
+import datetime
+
+import unreal
 
 # ============================================================================
-# SCENE CONFIGURATION — fill in your scene details here
+# 1. GLOBAL SETTINGS
 # ============================================================================
-SCENE_CONFIG = {
-    "scene_name": "resto-fwd",          # used for folder naming
-    "level_path":  "/Game/RestaurantScene/Maps/Showcase", 
-    "sequence_path":   "/Game/RestaurantScene/Cinematics/Flythrough2",
-    "screen_percentage": 87,
+
+DATASET_VERSION = "v2"
+OUTPUT_ROOT = os.path.expanduser(f"~/Documents/PerceptualTAA/data_{DATASET_VERSION}")
+
+OUTPUT_RESOLUTION = (1920, 1080)
+FPS = 30
+
+# Warm-up: TAA needs a filled history buffer. Without warm-up, the first
+# ~1/alpha frames are unconverged (at alpha=0.02 that's ~50 frames = 1.7 s of a
+# 5 s clip), which would unfairly penalise low alpha values.
+WARMUP_FRAMES = 60
+
+CLEAR_QUEUE_FIRST = False   # True = wipe whatever is already in MRQ
+SKIP_EXISTING = True        # skip jobs whose PNGs or encoded video already exist
+
+# ============================================================================
+# 2. SCENES  (pilot = 5; add the rest from scenes.yaml to scale up)
+# ============================================================================
+# "project" must match the .uproject name; only scenes belonging to the
+# currently open project are queued.
+
+SCENES = [
+    # Newproj -- known high / medium sensitivity from the factorial study
+    {"name": "fantasticvillage-open", "project": "Newproj",
+     "level": "/Game/Fantastic_Village_Pack/maps/map_village_day",
+     "sequence": "/Game/Fantastic_Village_Pack/animations/Cam_LevelSequence"},
+    {"name": "oldmine", "project": "Newproj",
+     "level": "/Game/Scene_OldMine/Maps/Industrial_OldMine",
+     "sequence": "/Game/Scene_OldMine/Sequences/seq1-reg"},
+    # Wildwest -- known flat / insensitive
+    {"name": "resto-fwd", "project": "Wildwest",
+     "level": "/Game/RestaurantScene/Maps/Showcase",
+     "sequence": "/Game/RestaurantScene/Cinematics/Flythrough2"},
+    # New content types: dense foliage, and rotation-heavy camera motion
+    {"name": "lightfoliage", "project": "NatureEnvs",
+     "level": "/Game/Light_Foliage/Maps/Showcase",
+     "sequence": "/Game/Light_Foliage/Flythrough"},
+    {"name": "subway-turn", "project": "SubwayTrain",
+     "level": "/Game/SubwayTrain/Maps/Demonstration",
+     "sequence": "/Game/SubwayTrain/Flythrough"},
+]
+
+# ============================================================================
+# 3. PARAMETER REGISTRY  (every parameter that can appear in a config name)
+# ============================================================================
+# Order here = order in the config name. To vary a new parameter later, add it
+# here (with its default in FIXED) and then move it into SWEEP.
+
+PARAMS = {
+    "sp": {"cvar": "r.ScreenPercentage",                    "fmt": "{:03d}",   "cast": int},
+    "aw": {"cvar": "r.TemporalAACurrentFrameWeight",        "fmt": "{:.3f}",   "cast": float},
+    "hp": {"cvar": "r.TemporalAA.HistoryScreenPercentage",  "fmt": "{:03d}",   "cast": int},
+    "ns": {"cvar": "r.TemporalAASamples",                   "fmt": "{:02d}",   "cast": int},
+    "fs": {"cvar": "r.TemporalAAFilterSize",                "fmt": "{:.2f}",   "cast": float},
 }
 
-# Base output root — two levels up from tests/{scene_name}/
-# Assumes this project lives at e.g. ~/Documents/PerceptualTAA/
-OUTPUT_ROOT = os.path.expanduser("~/Documents/PerceptualTAA/tests")
+SWEEP = {
+    # 100/87/50 % per axis = 100/75/25 % of pixels. Add 71 (=50 % pixels) for the full run.
+    "sp": [100, 87, 50],
+    # Dense near the UE default (0.04), fills the old 0.2-0.5 gap, keeps the flicker end.
+    "aw": [0.02, 0.04, 0.08, 0.12, 0.2, 0.3, 0.4, 0.5, 0.7, 1.0],
+    # Same 4 levels as the original paper sweep.
+    "hp": [100, 125, 150, 200],
+}
+
+FIXED = {"ns": 8, "fs": 1.0}   # UE defaults; negligible effect in the factorial study
 
 # ============================================================================
-# FACTORIAL PARAMETER GRID — 3 levels each => 3^4 = 81 combinations
+# 4. OPTIONAL LEGACY CHECK
 # ============================================================================
-FACTORIAL_PARAMS = {
-    "alpha_weight": {
-        "cvar": "r.TemporalAACurrentFrameWeight",
-        "values": [0.04, 0.5, 1],
-        "short": "aw",
-    },
-    "num_samples": {
-        "cvar": "r.TemporalAASamples",
-        "values": [4, 16, 64],
-        "short": "ns",
-    },
-    "filter_size": {
-        "cvar": "r.TemporalAAFilterSize",
-        "values": [0.1, 0.5, 1.0],
-        "short": "fs",
-    },
-    "hist_percent": {
-        "cvar": "r.TemporalAA.HistoryScreenPercentage",
-        "values": [100, 150, 200],
-        "short": "hp",
-    },
-}
+# Re-renders a few combos exactly as the old factorial test did (87 % screen
+# percentage, ns=16, fs=1.0, no warm-up, reference ALSO at 87 %). Scoring these
+# against the legacy reference should reproduce the old scores.json values;
+# scoring them against the new 100 % reference shows how much the old
+# reference choice mattered. Only useful for scenes in the old factorial study.
+LEGACY_CHECK_SCENES = ["fantasticvillage-open", "oldmine", "resto-fwd"]
+LEGACY_COMBOS = [  # (aw, hp) at sp=87, ns=16, fs=1.0
+    (0.04, 100), (0.04, 200), (1.0, 100), (1.0, 200),
+]
+
+# Aux passes (built into MRQ's plugin content)
+AUX_MATERIALS = [
+    "/MovieRenderPipeline/Materials/MovieRenderQueue_MotionVectors",
+    "/MovieRenderPipeline/Materials/MovieRenderQueue_WorldDepth",
+]
+
 
 # ============================================================================
 # HELPERS
 # ============================================================================
 
-def get_output_dir(scene_name):
-    return os.path.join(OUTPUT_ROOT, scene_name)
-
-
-def base_job_config(queue, level_path, sequence_path):
-    """Allocate a new job and return (job, config) with shared render settings."""
-    job = queue.allocate_new_job(unreal.MoviePipelineExecutorJob)
-    job.map = unreal.SoftObjectPath(level_path)
-    job.sequence = unreal.SoftObjectPath(sequence_path)
-
-    config = job.get_configuration()
-
-    # Deferred render pass
-    deferred = config.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
-    deferred.disable_multisample_effects = False
-
-    # Output: PNG, 1080p, 30fps
-    output = config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-    output.output_resolution = unreal.IntPoint(1920, 1080)
-    output.output_frame_rate = unreal.FrameRate(30, 1)
-    output.zero_pad_frame_numbers = 4
-    output.file_name_format = "{frame_number}"
-
-    png = config.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
-    png.write_alpha = True
-
-    return job, config
-
-
-def create_reference_job(scene_name, level_path, sequence_path):
-    """16SSAA reference render — no TAA, 16 spatial samples."""
-    subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
-    queue = subsystem.get_queue()
-
-    job, config = base_job_config(queue, level_path, sequence_path)
-    job.job_name = "16SSAA reference"
-
-    # Anti-aliasing: no TAA, 16 spatial samples
-    aa = config.find_or_add_setting_by_class(unreal.MoviePipelineAntiAliasingSetting)
-    aa.spatial_sample_count = 16
-    aa.override_anti_aliasing = True
-    aa.anti_aliasing_method = unreal.AntiAliasingMethod.AAM_NONE
-
-    # Screen percentage
-    cvars = config.find_or_add_setting_by_class(unreal.MoviePipelineConsoleVariableSetting)
-    cvars.add_or_update_console_variable("r.ScreenPercentage", SCENE_CONFIG["screen_percentage"])
-
-    # Output path
-    output = config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-    output.output_directory = unreal.DirectoryPath(
-        os.path.join(get_output_dir(scene_name), "16SSAA")
-    )
-
-    print(f"Created reference job: 16SSAA -> {output.output_directory.path}")
-    return job
-
-
-def combo_name(param_names, values):
-    """Build a short readable name like aw0.04_ns4_fs0.1_hp100."""
+def config_name(values):
+    """{'sp':50,'aw':0.04,...} -> 'sp050_aw0.040_hp100_ns08_fs1.00' (all params, fixed order)."""
     parts = []
-    for pname, val in zip(param_names, values):
-        short = FACTORIAL_PARAMS[pname]["short"]
-        parts.append(f"{short}{val}")
+    for key, spec in PARAMS.items():
+        parts.append(key + spec["fmt"].format(spec["cast"](values[key])))
     return "_".join(parts)
 
 
-def create_factorial_job(scene_name, level_path, sequence_path, param_names, values):
-    """One job for a single parameter combination."""
-    subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
-    queue = subsystem.get_queue()
+def _try_set(obj, prop, value):
+    """Set an editor property, warning (not crashing) if this UE version lacks it."""
+    try:
+        obj.set_editor_property(prop, value)
+        return True
+    except Exception as e:
+        unreal.log_warning(f"[generate_taa_jobs] could not set {type(obj).__name__}.{prop}: {e}")
+        return False
 
-    job, config = base_job_config(queue, level_path, sequence_path)
 
-    name = combo_name(param_names, values)
-    job.job_name = f"factorial_{name}"
+def already_rendered(png_dir, video_path):
+    if os.path.exists(video_path):
+        return True
+    return os.path.isdir(png_dir) and any(f.endswith(".png") for f in os.listdir(png_dir))
 
-    # TAA anti-aliasing
+
+def new_job(queue, scene, job_name, out_dir, file_fmt="{frame_number}"):
+    job = queue.allocate_new_job(unreal.MoviePipelineExecutorJob)
+    job.job_name = job_name
+    job.map = unreal.SoftObjectPath(scene["level"])
+    job.sequence = unreal.SoftObjectPath(scene["sequence"])
+    config = job.get_configuration()
+
+    deferred = config.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
+    deferred.disable_multisample_effects = False
+
+    out = config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
+    out.output_resolution = unreal.IntPoint(*OUTPUT_RESOLUTION)
+    out.output_frame_rate = unreal.FrameRate(FPS, 1)
+    out.zero_pad_frame_numbers = 4
+    out.file_name_format = file_fmt
+    out.output_directory = unreal.DirectoryPath(out_dir)
+    return job, config
+
+
+def set_aa(config, method, spatial_samples, warmup):
     aa = config.find_or_add_setting_by_class(unreal.MoviePipelineAntiAliasingSetting)
-    aa.spatial_sample_count = 1
     aa.override_anti_aliasing = True
-    aa.anti_aliasing_method = unreal.AntiAliasingMethod.AAM_TEMPORAL_AA
+    aa.anti_aliasing_method = method
+    aa.spatial_sample_count = spatial_samples
+    if warmup > 0:
+        _try_set(aa, "engine_warm_up_count", warmup)
+        _try_set(aa, "render_warm_up_frames", True)
+        _try_set(aa, "render_warm_up_count", warmup)
+    return aa
 
-    # CVars: all 4 parameters + screen percentage
-    cvars = config.find_or_add_setting_by_class(unreal.MoviePipelineConsoleVariableSetting)
-    cvars.add_or_update_console_variable("r.ScreenPercentage", SCENE_CONFIG["screen_percentage"])
-    for pname, val in zip(param_names, values):
-        cvar = FACTORIAL_PARAMS[pname]["cvar"]
-        cvars.add_or_update_console_variable(cvar, val)
 
-    # Output path
-    output = config.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-    output.output_directory = unreal.DirectoryPath(
-        os.path.join(get_output_dir(scene_name), "full_factorial", name)
-    )
+def set_cvars(config, values):
+    cv = config.find_or_add_setting_by_class(unreal.MoviePipelineConsoleVariableSetting)
+    for key, val in values.items():
+        cv.add_or_update_console_variable(PARAMS[key]["cvar"], PARAMS[key]["cast"](val))
 
-    return job, name
+
+def add_png(config):
+    png = config.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
+    png.write_alpha = False   # RGB only: smaller files, and metrics ignore alpha
+
+
+def enable_aux_passes(config):
+    """Turn on MRQ's built-in motion-vector and depth post-process passes."""
+    deferred = config.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
+    try:
+        passes = list(deferred.get_editor_property("additional_post_process_materials"))
+    except Exception as e:
+        unreal.log_warning(f"[generate_taa_jobs] no additional_post_process_materials on this UE version: {e}")
+        return False
+    wanted = set(AUX_MATERIALS)
+    found = set()
+    for p in passes:
+        mat = p.get_editor_property("material")
+        path = mat.get_path_name().split(".")[0] if mat else ""
+        if path in wanted:
+            _try_set(p, "enabled", True)
+            found.add(path)
+    for path in wanted - found:
+        p = unreal.MoviePipelinePostProcessPass()
+        _try_set(p, "enabled", True)
+        _try_set(p, "material", unreal.load_asset(path))
+        passes.append(p)
+    deferred.set_editor_property("additional_post_process_materials", passes)
+    _try_set(deferred, "render_main_pass", False)   # only the aux passes are needed here
+    return True
+
+
+# ============================================================================
+# JOB BUILDERS
+# ============================================================================
+
+def build_scene(queue, scene):
+    name = scene["name"]
+    root = os.path.join(OUTPUT_ROOT, name)
+    manifest = {
+        "dataset_version": DATASET_VERSION,
+        "scene": scene,
+        "created": datetime.datetime.now().isoformat(timespec="seconds"),
+        "render_settings": {"output_resolution": OUTPUT_RESOLUTION, "fps": FPS,
+                            "warmup_frames": WARMUP_FRAMES,
+                            "engine_version": unreal.SystemLibrary.get_engine_version()},
+        "sweep": SWEEP, "fixed": FIXED,
+        "jobs": [],
+    }
+    n_new = n_skip = 0
+
+    def add(kind, cfg, params, build_fn):
+        nonlocal n_new, n_skip
+        png_dir = os.path.join(root, kind, cfg)
+        video = os.path.join(root, "videos", kind, cfg + ".mkv")
+        manifest["jobs"].append({"kind": kind, "config": cfg, "params": params,
+                                 "png_dir": os.path.relpath(png_dir, root),
+                                 "video": os.path.relpath(video, root)})
+        if SKIP_EXISTING and already_rendered(png_dir, video):
+            n_skip += 1
+            return
+        build_fn(png_dir)
+        n_new += 1
+
+    # --- reference: 16x SSAA, no TAA, ALWAYS 100 % screen percentage
+    def ref_fn(out_dir):
+        _, c = new_job(queue, scene, f"{name}/reference/ssaa16_sp100", out_dir)
+        set_aa(c, unreal.AntiAliasingMethod.AAM_NONE, 16, WARMUP_FRAMES)
+        set_cvars(c, {"sp": 100})
+        add_png(c)
+    add("reference", "ssaa16_sp100", {"sp": 100, "spatial_samples": 16, "aa": "none"}, ref_fn)
+
+    # --- aux: motion vectors + depth, 100 %, 1 sample, EXR
+    def aux_fn(out_dir):
+        _, c = new_job(queue, scene, f"{name}/aux/motion_depth", out_dir,
+                       file_fmt="{render_pass}/{frame_number}")
+        set_aa(c, unreal.AntiAliasingMethod.AAM_NONE, 1, WARMUP_FRAMES)
+        set_cvars(c, {"sp": 100})
+        enable_aux_passes(c)
+        exr = c.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_EXR)
+        _try_set(exr, "compression", unreal.EXRCompressionFormat.ZIP)
+    aux_dir = os.path.join(root, "aux", "motion_depth")
+    manifest["jobs"].append({"kind": "aux", "config": "motion_depth",
+                             "params": {"passes": AUX_MATERIALS},
+                             "png_dir": os.path.relpath(aux_dir, root), "video": None})
+    if not (SKIP_EXISTING and os.path.isdir(aux_dir) and os.listdir(aux_dir)):
+        aux_fn(aux_dir); n_new += 1
+    else:
+        n_skip += 1
+
+    # --- main TAA grid
+    keys = list(SWEEP.keys())
+    for combo in itertools.product(*[SWEEP[k] for k in keys]):
+        values = dict(FIXED)
+        values.update(dict(zip(keys, combo)))
+        cfg = config_name(values)
+
+        def taa_fn(out_dir, values=values, cfg=cfg):
+            _, c = new_job(queue, scene, f"{name}/taa/{cfg}", out_dir)
+            set_aa(c, unreal.AntiAliasingMethod.AAM_TEMPORAL_AA, 1, WARMUP_FRAMES)
+            set_cvars(c, values)
+            add_png(c)
+        add("taa", cfg, {k: PARAMS[k]["cast"](v) for k, v in values.items()}, taa_fn)
+
+    # --- optional legacy check (old factorial settings: sp87 everywhere, no warm-up)
+    if name in LEGACY_CHECK_SCENES:
+        def legacy_ref_fn(out_dir):
+            _, c = new_job(queue, scene, f"{name}/legacy_check/ssaa16_sp087", out_dir)
+            set_aa(c, unreal.AntiAliasingMethod.AAM_NONE, 16, 0)
+            set_cvars(c, {"sp": 87})
+            add_png(c)
+        add("legacy_check", "ssaa16_sp087", {"sp": 87, "spatial_samples": 16, "aa": "none",
+                                             "warmup_frames": 0}, legacy_ref_fn)
+        for aw, hp in LEGACY_COMBOS:
+            values = {"sp": 87, "aw": aw, "hp": hp, "ns": 16, "fs": 1.0}
+            cfg = config_name(values)
+
+            def legacy_fn(out_dir, values=values, cfg=cfg):
+                _, c = new_job(queue, scene, f"{name}/legacy_check/{cfg}", out_dir)
+                set_aa(c, unreal.AntiAliasingMethod.AAM_TEMPORAL_AA, 1, 0)
+                set_cvars(c, values)
+                add_png(c)
+            p = {k: PARAMS[k]["cast"](v) for k, v in values.items()}
+            p["warmup_frames"] = 0
+            p["old_factorial_name"] = f"aw{aw:g}_ns16_fs1.0_hp{hp}"
+            add("legacy_check", cfg, p, legacy_fn)
+
+    os.makedirs(root, exist_ok=True)
+    with open(os.path.join(root, "manifest.json"), "w") as f:
+        json.dump(manifest, f, indent=2)
+    return n_new, n_skip
 
 
 # ============================================================================
@@ -173,32 +339,53 @@ def create_factorial_job(scene_name, level_path, sequence_path, param_names, val
 # ============================================================================
 
 def main():
-    scene_name    = SCENE_CONFIG["scene_name"]
-    level_path    = SCENE_CONFIG["level_path"]
-    sequence_path = SCENE_CONFIG["sequence_path"]
+    project = unreal.SystemLibrary.get_game_name()
+    subsystem = unreal.get_editor_subsystem(unreal.MoviePipelineQueueSubsystem)
+    queue = subsystem.get_queue()
+    if CLEAR_QUEUE_FIRST:
+        queue.delete_all_jobs()
 
-    print(f"\n=== Generating full factorial TAA jobs for scene: {scene_name} ===")
-    print(f"Output root: {get_output_dir(scene_name)}\n")
+    mine = [s for s in SCENES if s["project"] == project]
+    others = [s["name"] for s in SCENES if s["project"] != project]
+    print(f"\n=== TAA dataset {DATASET_VERSION} | project '{project}' ===")
+    print(f"Output root: {OUTPUT_ROOT}")
+    if not mine:
+        print(f"No scenes configured for project '{project}'. Check the 'project' fields in SCENES.")
+        return
+    if others:
+        print(f"Skipping scenes from other projects (run there): {others}")
 
-    # 1. Reference job
-    create_reference_job(scene_name, level_path, sequence_path)
+    grid = 1
+    for v in SWEEP.values():
+        grid *= len(v)
+    print(f"Grid: {' x '.join(f'{k}({len(v)})' for k, v in SWEEP.items())} = {grid} TAA jobs/scene "
+          f"+ reference + aux{' + legacy check' if LEGACY_CHECK_SCENES else ''}\n")
 
-    # 2. All 3^4 = 81 factorial combinations
-    param_names = list(FACTORIAL_PARAMS.keys())
-    value_lists = [FACTORIAL_PARAMS[p]["values"] for p in param_names]
+    total_new = total_skip = 0
+    for scene in mine:
+        n_new, n_skip = build_scene(queue, scene)
+        total_new += n_new
+        total_skip += n_skip
+        print(f"  {scene['name']}: {n_new} jobs queued, {n_skip} skipped (already rendered)")
 
-    total = 0
-    for combo in itertools.product(*value_lists):
-        try:
-            job, name = create_factorial_job(scene_name, level_path, sequence_path, param_names, combo)
-            print(f"  Created: {name}")
-            total += 1
-        except Exception as e:
-            unreal.log_error(f"Failed to create job for {combo}: {e}")
-
-    print(f"\n=== Done: {total} factorial jobs + 1 reference job = {total + 1} total ===")
-    print("Open Movie Render Queue and press Render to start.")
+    print(f"\n=== Done: {total_new} jobs queued, {total_skip} skipped ===")
+    print("Open Movie Render Queue -> Render (Local). Then run encode_and_verify.py.")
 
 
 if __name__ == "__main__":
     main()
+
+
+# ============================================================================
+# RATIONALE (for the paper's methods section / future you)
+# ============================================================================
+# - ns and fs fixed: factorial study showed main effects < 0.3 CGVQM points.
+# - aw and hp crossed: they interact (factorial), so they must be varied jointly.
+# - sp crossed with both: resolution dependence is the paper's central finding.
+# - Reference at 100 % for every resolution: quality is measured against the
+#   ideal full-resolution image. (The old factorial test rendered its reference
+#   at 87 %, i.e. it measured distance to a degraded target.)
+# - Warm-up: so low-alpha configs aren't scored on an unconverged history.
+# - PNG without alpha, then lossless video (encode_and_verify.py): bit-identical
+#   to PNG, roughly half the size. Lossy H.264 (crf 10-15, yuv420p) is NOT
+#   identical and its artifacts would contaminate the metric.
