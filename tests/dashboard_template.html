@@ -95,7 +95,9 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
   </div>
 
   <section id="t-overview"></section>
+  <section id="t-scenes"></section>
   <section id="t-params"></section>
+  <section id="t-trade"></section>
   <section id="t-artifacts"></section>
   <section id="t-content"></section>
   <section id="t-inter"></section>
@@ -202,7 +204,7 @@ function aggregate(rows, key, centre) {
 }
 
 // ---------------------------------------------------------------- tabs
-const TABS = [["overview", "Overview"], ["params", "Parameters"], ["artifacts", "Artifacts"], ["content", "Content"], ["inter", "Interactions"], ["metrics", "Metrics"]];
+const TABS = [["overview", "Overview"], ["scenes", "Scenes"], ["params", "Parameters"], ["trade", "Trade-offs"], ["artifacts", "Artifacts"], ["content", "Content"], ["inter", "Interactions"], ["metrics", "Metrics"]];
 function initChrome() {
   $("meta").textContent = `Built ${DATA.generated} · ${DATA.scenes.length} scene(s) · ${R.length} renders · ${DATA.root}`;
   $("f-scene").innerHTML = `<option value="__all__">All scenes</option>` + DATA.scenes.map(s => `<option>${s}</option>`).join("");
@@ -221,7 +223,7 @@ function initChrome() {
 function render() {
   document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === S.tab));
   TABS.forEach(([k]) => $("t-" + k).classList.toggle("on", k === S.tab));
-  ({ overview: rOverview, params: rParams, artifacts: rArtifacts, content: rContent, inter: rInter, metrics: rMetrics })[S.tab]();
+  ({ overview: rOverview, scenes: rScenes, trade: rTrade, params: rParams, artifacts: rArtifacts, content: rContent, inter: rInter, metrics: rMetrics })[S.tab]();
 }
 
 // ---------------------------------------------------------------- overview
@@ -390,7 +392,7 @@ function rArtifacts() {
 function bindA() { $("a-hp").onchange = (e) => { S.hpA = +e.target.value; rArtifacts(); }; }
 
 // ---------------------------------------------------------------- content
-const FEAT = { motion_mean: "Motion (px / frame)", disocc_frac: "Disoccluded fraction", detail_hf: "High-frequency detail",
+const FEAT = { motion_mean: "Motion (px / frame)", disocc_frac: "Newly visible fraction", detail_hf: "High-frequency detail",
   detail_grad: "Gradient magnitude", contrast: "Contrast (luma SD)", luma_mean: "Mean luma", temporal_change: "Frame-to-frame change" };
 const YC = { best_aw: "Best alpha for the patch", sensitivity: "Sensitivity: best − worst over α (points)", gain_vs_default: "Gain of best α over default (points)" };
 function rContent() {
@@ -610,6 +612,155 @@ function rInter() {
   $("i-gain-t").innerHTML = table([{ h: "Resolution", f: r => spLabel(r.sp), l: 1 },
     ...rules.map(([nm]) => ({ h: nm, f: r => (r[nm] > 0 ? "+" : "") + fmt(r[nm], 3) })),
     { h: "One α per res.: α chosen", f: r => r.alphas || "–" }], gainRows);
+}
+
+// ---------------------------------------------------------------- scenes (content coverage)
+const SCN = { x: "motion_mean", y: "detail_hf" };
+function rScenes() {
+  const el = $("t-scenes");
+  if (!DATA.content || !DATA.content.length) { el.innerHTML = empty("No content features yet. Run <code>compute_features.py</code> (needs only the reference videos), then rebuild."); return; }
+  const feats = DATA.content_keys, fn = (k) => FEAT[k] || k;
+  const scenes = [...new Set(DATA.content.map(c => c.scene))].sort();
+  const pick = S.scene === "__all__" ? null : S.scene;
+  const pct = (a, q) => { const b = a.filter(x => x !== null).sort((x, y) => x - y); return b.length ? b[Math.min(b.length - 1, Math.floor(q * (b.length - 1)))] : null; };
+  const rows = scenes.map(s => { const c = DATA.content.filter(x => x.scene === s), r = { scene: s, n: c.length };
+    ["motion_mean", "detail_hf", "disocc_frac"].forEach(k => { const v = c.map(x => x[k]); r[k + "_med"] = pct(v, 0.5); r[k + "_p90"] = pct(v, 0.9); }); return r; });
+  const top = ["motion_mean", "detail_hf", "disocc_frac"].filter(k => feats.includes(k));
+  el.innerHTML =
+    card("How the scenes differ in content", "One box per scene: the spread of patch values (box = middle half, line = median, whiskers = typical range). Shows how much of the content range the scene set covers, the representativeness question R2 raised. Pick a scene in the filter to highlight it.",
+      `<div id="s-box" class="chart" style="height:${Math.max(260, 26 * scenes.length + 90) * (narrow() ? top.length : 1)}px"></div>`) +
+    card("Coverage: every patch of every scene", "Each point = one patch × 30-frame clip. Empty regions are content combinations no scene has; add a scene there if they matter (e.g. fast motion with high detail).",
+      `<div class="local">${sel("s-x", "x", feats.map(k => ({ v: k, t: fn(k) })), SCN.x)} ${sel("s-y", "y", feats.map(k => ({ v: k, t: fn(k) })), SCN.y)}</div><div id="s-sc" class="chart" style="height:420px"></div>`) +
+    card("Per-scene summary", "Median and 90th percentile over patches. To see what these look like, run <code>scene_content_view.py</code> and open each scene's <code>visuals/content_sheet.png</code>.",
+      table([{ h: "Scene", k: "scene", l: 1 }, { h: "Patches", k: "n" },
+        { h: "Motion median", f: r => fmt(r.motion_mean_med) }, { h: "Motion p90", f: r => fmt(r.motion_mean_p90) },
+        { h: "Detail median", f: r => fmtF(r.detail_hf_med) }, { h: "Detail p90", f: r => fmtF(r.detail_hf_p90) },
+        { h: "Newly visible median", f: r => r.disocc_frac_med === null ? "–" : (100 * r.disocc_frac_med).toFixed(1) + "%" },
+        { h: "Newly visible p90", f: r => r.disocc_frac_p90 === null ? "–" : (100 * r.disocc_frac_p90).toFixed(1) + "%" }], rows));
+  $("s-x").onchange = (e) => { SCN.x = e.target.value; rScenes(); };
+  $("s-y").onchange = (e) => { SCN.y = e.target.value; rScenes(); };
+  const accent = css("--s1"), muted = css("--axis");
+  const stack = narrow(), n = top.length, tb = [];
+  top.forEach((k, i) => {
+    const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+    scenes.forEach(s => { const v = DATA.content.filter(c => c.scene === s).map(c => c[k]);
+      const on = !pick || pick === s;
+      tb.push({ type: "box", x: v, y: v.map(() => s), name: s, orientation: "h", xaxis: xa, yaxis: ya, showlegend: false,
+        boxpoints: false, line: { color: on ? accent : muted, width: 1.5 }, fillcolor: on ? accent + "33" : muted + "33",
+        hovertemplate: `${s}<br>${fn(k)}: %{x:.3f}<extra></extra>` }); });
+  });
+  const lb = layout({ grid: stack ? { rows: n, columns: 1, pattern: "independent", ygap: 0.12 } : { rows: 1, columns: n, pattern: "independent", xgap: 0.04 },
+    margin: { l: 140, r: 16, t: 20, b: 48 } });
+  top.forEach((k, i) => { lb[i ? "xaxis" + (i + 1) : "xaxis"] = ax(fn(k), k === "detail_hf" ? { type: "log" } : {});
+    lb[i ? "yaxis" + (i + 1) : "yaxis"] = ax("", { type: "category", showticklabels: i === 0 || stack, autorange: "reversed" }); });
+  plot($("s-box"), tb, lb);
+  const logy = (k) => ["detail_hf", "detail_grad"].includes(k) ? { type: "log" } : {};
+  const multi = !pick && scenes.length <= 3, C = cats();
+  const groups = multi ? scenes : (pick ? [pick, "__rest"] : ["__all"]);
+  const st = groups.map((g, k) => { const pts = DATA.content.filter(c => g === "__all" || (g === "__rest" ? c.scene !== pick : c.scene === g));
+    const col = multi ? C[k] : (g === "__rest" ? muted : accent);
+    return { x: pts.map(c => c[SCN.x]), y: pts.map(c => c[SCN.y]), mode: "markers", type: "scatter",
+      name: g === "__all" ? "all patches" : g === "__rest" ? "other scenes" : g, showlegend: g !== "__all",
+      marker: { size: 7, color: col, opacity: g === "__rest" ? 0.35 : 0.6, line: { color: css("--surface"), width: 1 } },
+      text: pts.map(c => `${c.scene} · clip ${c.clip}, row ${c.row}, col ${c.col}`),
+      hovertemplate: `%{text}<br>${fn(SCN.x)}: %{x:.3f}<br>${fn(SCN.y)}: %{y:.3f}<extra></extra>` }; });
+  if (pick) st.reverse();
+  plot($("s-sc"), st, layout({ xaxis: ax(fn(SCN.x), logy(SCN.x)), yaxis: ax(fn(SCN.y), logy(SCN.y)), legend: { orientation: "h", y: -0.18, x: 0 } }));
+}
+
+// ---------------------------------------------------------------- trade-offs (config vs flicker / detail)
+const TO = { feat: "motion_mean", grp: "all" };
+function rTrade() {
+  const el = $("t-trade");
+  if (!DATA.curves || !DATA.curves.length) { el.innerHTML = empty("Needs CGVQM patch scores and artifact measures: run <code>score_taa.py</code>, then <code>compute_features.py</code>, then rebuild."); return; }
+  const A = DATA.curve_aws, sc = scenesSel(), fn = (k) => FEAT[k] || k;
+  const byId = {}; DATA.content.forEach(c => byId[c.id] = c);
+  const content = DATA.content.filter(c => sc.includes(c.scene));
+  const feats = DATA.content_keys; if (!feats.includes(TO.feat)) TO.feat = feats[0];
+  const v = content.map(c => c[TO.feat]).filter(x => x !== null).sort((a, b) => a - b);
+  const E = [v[Math.floor(v.length / 3)], v[Math.floor(2 * v.length / 3)]];
+  const grpOf = (c) => { const x = byId[c][TO.feat]; return x < E[0] ? "low" : x < E[1] ? "medium" : "high"; };
+  const ids = new Set(content.map(c => c.id));
+  const curves = DATA.curves.filter(k => ids.has(k.c) && (TO.grp === "all" || grpOf(k.c) === TO.grp));
+  const sps = uniq(curves.map(k => k.sp)).reverse(), hps = uniq(curves.map(k => k.hp));
+  const agg = {};
+  curves.forEach(k => { const key = k.sp + "|" + k.hp; const a = agg[key] = agg[key] || { q: A.map(() => []), f: A.map(() => []), h: A.map(() => []) };
+    A.forEach((_, i) => { if (k.q[i] !== null) a.q[i].push(k.q[i]); if (k.f[i] !== null) a.f[i].push(k.f[i]); if (k.h[i] !== null) a.h[i].push(k.h[i]); }); });
+  const M = (sp, hp, m, i) => { const a = agg[sp + "|" + hp]; return a && a[m][i].length ? mean(a[m][i]) : null; };
+  const N = (sp, hp, i) => { const a = agg[sp + "|" + hp]; return a ? a.q[i].length : 0; };
+  const stack = narrow(), n = sps.length;
+  const grpLabel = { all: "all patches", low: `low ${fn(TO.feat).toLowerCase()} (< ${fmtF(E[0])})`, medium: `medium (${fmtF(E[0])}–${fmtF(E[1])})`, high: `high (≥ ${fmtF(E[1])})` };
+  el.innerHTML =
+    `<div class="local">${sel("o-feat", "Split patches by", feats.map(k => ({ v: k, t: fn(k) })), TO.feat)}
+      ${sel("o-grp", "Show", Object.entries(grpLabel).map(([v, t]) => ({ v, t })), TO.grp)}</div>` +
+    card("Each setting's quality, flicker and detail", `Three heatmaps with the same layout: alpha across, history buffer down, one panel per resolution. Read them together: a setting with high quality should avoid both flicker (middle) and lost detail (bottom, blue). Patches: ${grpLabel[TO.grp]}${sc.length > 1 ? `, ${sc.length} scenes pooled` : ""}.`,
+      ["q", "f", "h"].map(m => `<div id="o-h-${m}" class="chart" style="height:${stack ? 230 * n : 250}px"></div>`).join("")) +
+    card("The blur–flicker trade-off", "Each line = one history buffer size; points along it = alpha, from the lowest (labelled) to 1. Up = sharper, left = steadier, so up-and-left is better on both. Ring = the best-quality setting. If one history buffer's line sits further up-left, it improves the trade-off rather than just moving along it.",
+      `<div id="o-front" class="chart" style="height:${stack ? 340 * n : 420}px"></div>`) +
+    card("Best settings per resolution", "The five highest-quality settings, with their flicker and detail ratio, for this patch selection.",
+      `<div id="o-top"></div>`);
+  $("o-feat").onchange = (e) => { TO.feat = e.target.value; rTrade(); };
+  $("o-grp").onchange = (e) => { TO.grp = e.target.value; rTrade(); };
+
+  // heatmaps
+  const spec = { q: ["Quality (CGVQM patch mean)", list("--seq").map((c, i, a) => [i / (a.length - 1), c]), null],
+    f: ["Flicker (luma levels / frame)", list("--seq").map((c, i, a) => [i / (a.length - 1), c]), null],
+    h: ["Detail ratio (log₂: blue lost, red extra)", [[0, "#1c5cab"], [0.25, "#86b6ef"], [0.5, css("--grid")], [0.75, "#f19a99"], [1, "#b42d2d"]], "div"] };
+  ["q", "f", "h"].forEach(m => {
+    const tr = [], allz = [];
+    sps.forEach((sp, i) => { const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+      const z = hps.map(hp => A.map((_, j) => { const val = M(sp, hp, m, j); return val === null ? null : (m === "h" ? Math.log2(val) : val); }));
+      z.flat().forEach(x => x !== null && allz.push(x));
+      const raw = hps.map(hp => A.map((_, j) => M(sp, hp, m, j)));
+      tr.push({ type: "heatmap", x: A.map(awLabel), y: hps.map(x => x + "%"), z, customdata: raw, xaxis: xa, yaxis: ya, coloraxis: "coloraxis", xgap: 2, ygap: 2,
+        hovertemplate: `α %{x} · history %{y}<br>${spec[m][0].split(" (")[0]}: %{customdata:.3f}<extra>${spLabel(sp)}</extra>` }); });
+    const lim = m === "h" ? Math.max(0.05, ...allz.map(Math.abs)) : null;
+    const lay = layout({ grid: stack ? { rows: n, columns: 1, pattern: "independent", ygap: 0.3 } : { rows: 1, columns: n, pattern: "independent", xgap: 0.05 },
+      margin: { l: 64, r: 16, t: 40, b: 50 },
+      annotations: [{ text: spec[m][0], showarrow: false, xref: "paper", yref: "paper", x: 0, y: 1.16, xanchor: "left", font: { color: css("--ink"), size: 12 } },
+        ...sps.map((sp, i) => ({ text: spLabel(sp), showarrow: false, font: { color: css("--ink-2"), size: 11 },
+          xref: (i ? "x" + (i + 1) : "x") + " domain", yref: (i ? "y" + (i + 1) : "y") + " domain", x: 1, y: 1.08, xanchor: "right" }))],
+      coloraxis: Object.assign({ colorscale: spec[m][1], colorbar: { thickness: 10, outlinewidth: 0, tickfont: { color: css("--muted") } } },
+        m === "h" ? { cmin: -lim, cmax: lim, colorbar: { thickness: 10, outlinewidth: 0, tickfont: { color: css("--muted") },
+          tickvals: [-lim, 0, lim], ticktext: [`×${(2 ** -lim).toFixed(2)}`, "×1", `×${(2 ** lim).toFixed(2)}`] } } : { cmin: Math.min(...allz), cmax: Math.max(...allz) }) });
+    sps.forEach((sp, i) => { lay[i ? "xaxis" + (i + 1) : "xaxis"] = ax("", { type: "category", tickangle: -45 });
+      lay[i ? "yaxis" + (i + 1) : "yaxis"] = ax("", { type: "category", showticklabels: i === 0 || stack }); });
+    plot($("o-h-" + m), tr, lay);
+  });
+
+  // frontier
+  const colors = ramp(hps.length), fr = [];
+  sps.forEach((sp, i) => { const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+    let best = null;
+    hps.forEach((hp, j) => { const pts = A.map((a, k) => ({ a, f: M(sp, hp, "f", k), h: M(sp, hp, "h", k), q: M(sp, hp, "q", k), n: N(sp, hp, k) })).filter(p => p.f !== null && p.h !== null);
+      pts.forEach(p => { if (p.q !== null && (!best || p.q > best.q)) best = Object.assign({ hp }, p); });
+      fr.push({ x: pts.map(p => p.f), y: pts.map(p => p.h), xaxis: xa, yaxis: ya, mode: "lines+markers+text", name: `history ${hp}%`,
+        legendgroup: "hp" + hp, showlegend: i === 0, line: { color: colors[j], width: 2 }, marker: { color: colors[j], size: 8, line: { color: css("--surface"), width: 2 } },
+        text: pts.map((p, k) => (j === hps.length - 1 && (k === 0 || k === pts.length - 1 || Math.abs(p.a - DATA.default.aw) < 1e-9)) ? `α ${awLabel(p.a)}` : ""),
+        textposition: "middle right", textfont: { size: 10, color: css("--ink-2") },
+        customdata: pts.map(p => [p.a, p.q, p.n]),
+        hovertemplate: `α %{customdata[0]} · history ${hp}%<br>flicker %{x:.3f}<br>detail ratio %{y:.3f}<br>quality %{customdata[1]:.2f} (n=%{customdata[2]})<extra>${spLabel(sp)}</extra>` }); });
+    if (best) fr.push({ x: [best.f], y: [best.h], xaxis: xa, yaxis: ya, mode: "markers", showlegend: i === 0, name: "best quality",
+      marker: { size: 20, color: "rgba(0,0,0,0)", line: { color: css("--ink"), width: 2 } },
+      hovertemplate: `best: α ${awLabel(best.a)}, history ${best.hp}%<br>quality ${best.q.toFixed(2)}<extra></extra>` });
+    fr.push({ x: [0, Math.max(...fr.filter(t => t.xaxis === xa).flatMap(t => t.x))], y: [1, 1], xaxis: xa, yaxis: ya, mode: "lines", hoverinfo: "skip",
+      line: { color: css("--muted"), dash: "dash", width: 1.5 }, name: "same detail as reference", showlegend: i === 0 }); });
+  const lf = layout({ grid: stack ? { rows: n, columns: 1, pattern: "independent", ygap: 0.22 } : { rows: 1, columns: n, pattern: "independent", xgap: 0.06 },
+    annotations: sps.map((sp, i) => ({ text: spLabel(sp), showarrow: false, font: { color: css("--ink"), size: 12 },
+      xref: (i ? "x" + (i + 1) : "x") + " domain", yref: (i ? "y" + (i + 1) : "y") + " domain", x: 0, y: 1.08, xanchor: "left" })),
+    legend: { orientation: "h", y: stack ? -0.05 : -0.18, x: 0 } });
+  sps.forEach((sp, i) => { lf[i ? "xaxis" + (i + 1) : "xaxis"] = ax("Flicker (luma levels / frame) →  less steady", { rangemode: "tozero" });
+    lf[i ? "yaxis" + (i + 1) : "yaxis"] = ax(i === 0 || stack ? "Detail ratio ↑ sharper" : "", i ? { matches: "y" } : {}); });
+  plot($("o-front"), fr, lf);
+
+  // top-5 table
+  const top = [];
+  sps.forEach(sp => { const all = [];
+    hps.forEach(hp => A.forEach((a, k) => { const q = M(sp, hp, "q", k); if (q !== null) all.push({ sp, hp, a, q, f: M(sp, hp, "f", k), h: M(sp, hp, "h", k) }); }));
+    all.sort((x, y) => y.q - x.q).slice(0, 5).forEach((r, i) => top.push(Object.assign({ rank: i + 1 }, r))); });
+  $("o-top").innerHTML = table([{ h: "Resolution", f: r => r.rank === 1 ? spLabel(r.sp) : "", l: 1 }, { h: "#", k: "rank" },
+    { h: "α", f: r => awLabel(r.a) }, { h: "History", f: r => r.hp + "%" }, { h: "Quality", f: r => fmt(r.q) },
+    { h: "Flicker", f: r => fmt(r.f, 3) }, { h: "Detail ratio", f: r => fmt(r.h, 3) }], top);
 }
 
 // ---------------------------------------------------------------- metrics
