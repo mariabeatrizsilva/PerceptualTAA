@@ -52,7 +52,6 @@ import argparse
 import subprocess
 
 import numpy as np
-
 # ----------------------------------------------------------------------------
 # CONFIG -- keep CGVQM identical to the paper (compute_metrics.py)
 # ----------------------------------------------------------------------------
@@ -109,9 +108,17 @@ def load_job(scene_dir, job):
 class CGVQMScorer:
     def __init__(self, project_dir, device):
         import torch
+        TESTS_DIR   = os.path.dirname(os.path.abspath(__file__))
+        PROJECT_DIR = os.path.dirname(TESTS_DIR)
+        sys.path.insert(0, PROJECT_DIR)  # <-- This makes 'src' visible from the tests folder!
         sys.path.append(os.path.join(project_dir, "src"))
-        sys.path.append(os.path.join(project_dir, "src", "cgvqm"))
-        from cgvqm.cgvqm import CGVQM, CGVQM_TYPE, preprocess
+
+        SRC_DIR = os.path.join(PROJECT_DIR, "src")
+        sys.path.insert(0, SRC_DIR)
+        sys.path.insert(0, os.path.join(SRC_DIR, "cgvqm"))
+        # sys.path.append(os.path.join(project_dir, "src", "cgvqm"))
+
+        from src.cgvqm.cgvqm import CGVQM, CGVQM_TYPE, preprocess
         from torchvision.models.video import resnet
 
         self.torch, self.preprocess = torch, preprocess
@@ -119,7 +126,7 @@ class CGVQMScorer:
         ctype = getattr(CGVQM_TYPE, CGVQM_CONFIG["cgvqm_type"])
         model = resnet.r3d_18(weights=resnet.R3D_18_Weights.DEFAULT).to(device)
         model.__class__ = CGVQM
-        wdir = os.path.join(project_dir, "src", "cgvqm", "weights")
+        wdir = os.path.join(PROJECT_DIR, "src", "cgvqm", "weights")
         if ctype == CGVQM_TYPE.CGVQM_2:
             model.init_weights(os.path.join(wdir, "cgvqm-2.pickle"), num_layers=3)
         else:
