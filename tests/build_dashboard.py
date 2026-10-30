@@ -20,6 +20,10 @@ Sections
                patch-level correlations between CGVQM and each artifact measure
   Content      per patch: which alpha scored best, and how much alpha mattered,
                against the patch's motion / detail / disocclusion
+  Interactions how alpha, history %, resolution, motion and detail act together
+               (patch level): alpha curves split by content, best alpha per
+               motion x detail, history gain by content, and the held-out gain
+               from content-aware alpha vs. UE default / one alpha per resolution
   Metrics      CGVQM vs. CVVDP agreement (if CVVDP was scored)
 
 USAGE
@@ -196,6 +200,32 @@ def patch_correlations(patches):
     return rows
 
 
+def curve_payload(patches):
+    """Compact per-patch alpha curves for the interaction plots.
+    content: one entry per (scene, clip, row, col) with its content features.
+    curves:  one entry per (patch, resolution, history) with arrays over alpha
+             of CGVQM patch quality (q), flicker (f) and detail ratio (h)."""
+    if patches.empty or "cgvqm_patch_quality" not in patches:
+        return [], [], []
+    p = patches[patches["kind"] == "taa"].dropna(subset=["cgvqm_patch_quality"])
+    if p.empty:
+        return [], [], []
+    aws = sorted(p["aw"].unique().tolist())
+    ck = ["scene", "clip", "row", "col"]
+    feats = [k for k in CONTENT_KEYS if k in p]
+    content = p.groupby(ck)[feats].first().reset_index()
+    content["id"] = np.arange(len(content))
+    p = p.merge(content[ck + ["id"]], on=ck)
+    curves = []
+    for (cid, sp, hp), g in p.groupby(["id", "sp", "hp"]):
+        g = g.set_index("aw")
+        arr = lambda col, d: [None if (a not in g.index or not np.isfinite(g.at[a, col])) else round(float(g.at[a, col]), d)
+                              for a in aws]
+        curves.append({"c": int(cid), "sp": int(sp), "hp": int(hp),
+                       "q": arr("cgvqm_patch_quality", 3), "f": arr("flicker", 3), "h": arr("hf_ratio", 4)})
+    return aws, records(content), curves
+
+
 def legacy_rows(scores, old_scores):
     if scores.empty:
         return []
@@ -235,6 +265,7 @@ def build(root, out, old_scores_args):
             old_scores[scene] = json.load(f)
 
     cells = cell_table(patches)
+    curve_aws, content_cells, curves = curve_payload(patches)
     metrics = [m for m in ("cgvqm", "cvvdp") if m in rt]
     scenes = sorted(set(rt["scene"]) if not rt.empty else set()
                     | (set(patches["scene"]) if not patches.empty else set()))
@@ -268,6 +299,9 @@ def build(root, out, old_scores_args):
         "cells": records(cells) if not cells.empty else [],
         "corr": [_clean(r) for r in patch_correlations(patches)],
         "legacy": [_clean(r) for r in legacy_rows(scores, old_scores)],
+        "curve_aws": curve_aws,
+        "content": content_cells,
+        "curves": curves,
     }
 
     try:

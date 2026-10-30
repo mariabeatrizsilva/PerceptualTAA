@@ -45,6 +45,8 @@ h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
   border-bottom: 1px solid var(--grid); margin: 12px 0 20px; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 10px; }
 label.f { display: flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: 13px; }
+select { max-width: 100%; }
+label.f { max-width: 100%; }
 select, button { font: inherit; color: var(--ink); background: var(--surface);
   border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; }
 button { cursor: pointer; }
@@ -96,6 +98,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; margin-
   <section id="t-params"></section>
   <section id="t-artifacts"></section>
   <section id="t-content"></section>
+  <section id="t-inter"></section>
   <section id="t-metrics"></section>
 </div>
 
@@ -199,7 +202,7 @@ function aggregate(rows, key, centre) {
 }
 
 // ---------------------------------------------------------------- tabs
-const TABS = [["overview", "Overview"], ["params", "Parameters"], ["artifacts", "Artifacts"], ["content", "Content"], ["metrics", "Metrics"]];
+const TABS = [["overview", "Overview"], ["params", "Parameters"], ["artifacts", "Artifacts"], ["content", "Content"], ["inter", "Interactions"], ["metrics", "Metrics"]];
 function initChrome() {
   $("meta").textContent = `Built ${DATA.generated} · ${DATA.scenes.length} scene(s) · ${R.length} renders · ${DATA.root}`;
   $("f-scene").innerHTML = `<option value="__all__">All scenes</option>` + DATA.scenes.map(s => `<option>${s}</option>`).join("");
@@ -218,7 +221,7 @@ function initChrome() {
 function render() {
   document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.t === S.tab));
   TABS.forEach(([k]) => $("t-" + k).classList.toggle("on", k === S.tab));
-  ({ overview: rOverview, params: rParams, artifacts: rArtifacts, content: rContent, metrics: rMetrics })[S.tab]();
+  ({ overview: rOverview, params: rParams, artifacts: rArtifacts, content: rContent, inter: rInter, metrics: rMetrics })[S.tab]();
 }
 
 // ---------------------------------------------------------------- overview
@@ -440,6 +443,173 @@ function rContent() {
   plot($("c-hist"), [{ type: "bar", x: AWS.map(awLabel), y: counts, marker: { color: css("--s1") }, width: 0.6,
     hovertemplate: "α %{x}: best for %{y} patches<extra></extra>" }],
     layout({ xaxis: ax("Alpha weight", { type: "category" }), yaxis: ax("Patches where this α is best"), bargap: 0.3, showlegend: false }));
+}
+
+// ---------------------------------------------------------------- interactions (R1)
+const IN = { feat: "motion_mean", feat2: "detail_hf", y: "q", hp: DATA.default.hp, hpCmp: null };
+const fmtF = (v) => v === null || v === undefined ? "–" : (Math.abs(v) < 1 ? v.toFixed(3) : Math.abs(v) < 100 ? v.toFixed(1) : v.toFixed(0));
+const YI = { q: "Relative quality", f: "Flicker (luma levels / frame)", h: "Detail ratio (render ÷ reference)" };
+function rInter() {
+  const el = $("t-inter");
+  if (!DATA.curves || !DATA.curves.length) {
+    el.innerHTML = empty("Needs CGVQM patch scores and content features: run <code>score_taa.py</code>, then <code>compute_features.py</code>, then rebuild."); return;
+  }
+  const A = DATA.curve_aws, sc = scenesSel();
+  const content = DATA.content.filter(c => sc.includes(c.scene));
+  const byId = {}; DATA.content.forEach(c => byId[c.id] = c);
+  const ids = new Set(content.map(c => c.id));
+  const curves = DATA.curves.filter(k => ids.has(k.c));
+  if (!curves.length) { el.innerHTML = empty("No patch curves for this selection."); return; }
+  const sps = uniq(curves.map(k => k.sp)).reverse(), hps = uniq(curves.map(k => k.hp));
+  const feats = DATA.content_keys;
+  if (!hps.includes(IN.hp)) IN.hp = hps[0];
+  if (IN.hpCmp === null || !hps.includes(IN.hpCmp) || IN.hpCmp === hps[0]) IN.hpCmp = hps[hps.length - 1];
+  if (!feats.includes(IN.feat)) IN.feat = feats[0];
+  if (!feats.includes(IN.feat2) || IN.feat2 === IN.feat) IN.feat2 = feats.find(f => f !== IN.feat) || feats[0];
+  const di = A.reduce((b, a, i) => Math.abs(a - DATA.default.aw) < Math.abs(A[b] - DATA.default.aw) ? i : b, 0);
+
+  // tertiles over the selected patches (content only -> no information about quality leaks in)
+  const edges = (k) => { const v = content.map(c => c[k]).filter(x => x !== null).sort((a, b) => a - b);
+    return [v[Math.floor(v.length / 3)], v[Math.floor(2 * v.length / 3)]]; };
+  const E1 = edges(IN.feat), E2 = edges(IN.feat2);
+  const bin = (v, e) => v === null || v === undefined ? null : (v < e[0] ? 0 : v < e[1] ? 1 : 2);
+  const b1 = (k) => bin(byId[k.c][IN.feat], E1), b2 = (k) => bin(byId[k.c][IN.feat2], E2);
+  const fn = (k) => FEAT[k] || k;
+  const groupNames = (e) => [`low (< ${fmtF(e[0])})`, `medium (${fmtF(e[0])}–${fmtF(e[1])})`, `high (≥ ${fmtF(e[1])})`];
+  const G1 = groupNames(E1), G2 = groupNames(E2);
+  const rel = (q) => { const m = mean(q); return q.map(v => v === null ? null : v - m); };
+  const avgCurve = (list, f) => A.map((_, i) => { const v = list.map(k => f(k)[i]).filter(x => x !== null && x !== undefined);
+    return { y: v.length ? mean(v) : null, se: v.length > 1 ? sd(v) / Math.sqrt(v.length) : null, n: v.length }; });
+  const argmax = (arr) => arr.reduce((b, v, i) => (v !== null && (b < 0 || v > arr[b]) ? i : b), -1);
+  const panelGrid = (n, stack) => stack ? { rows: n, columns: 1, pattern: "independent", ygap: 0.28 } : { rows: 1, columns: n, pattern: "independent", xgap: 0.06 };
+  const panelTitles = (list, y = 1.1) => list.map((sp, i) => ({ text: spLabel(sp), showarrow: false, font: { color: css("--ink"), size: 12 },
+    xref: (i ? "x" + (i + 1) : "x") + " domain", yref: (i ? "y" + (i + 1) : "y") + " domain", x: 0, y, xanchor: "left" }));
+  const stack = narrow(), n = sps.length, h = stack ? 290 * n : 380;
+
+  el.innerHTML =
+    `<div class="local">${sel("i-feat", "Content feature", feats.map(k => ({ v: k, t: fn(k) })), IN.feat)}
+      ${sel("i-feat2", "Second feature", feats.map(k => ({ v: k, t: fn(k) })), IN.feat2)}
+      ${sel("i-hp", "History", hps.map(x => ({ v: x, t: x + "%" })), IN.hp)}</div>` +
+    `<p class="sub" style="color:var(--ink-2);font-size:13px;margin:0 0 12px;max-width:90ch">Unit = one patch (¼ × ¼ of the frame) over one 30-frame clip, the finer-grained measurement R1 asked for. Patches are split into thirds by the content feature, using only the selected scenes. ${sc.length > 1 ? `${sc.length} scenes pooled; each patch's curve is compared with itself, so scene baselines drop out.` : ""}</p>` +
+    card(`1 · Does ${fn(IN.feat).toLowerCase()} change how alpha matters?`,
+      `Alpha curves averaged within each third of patches, one panel per resolution. <b>Relative quality</b> = each patch's CGVQM minus its own average over α, so patches that are simply easier or harder don't skew the curves. Rings = the peak of each quality curve. If the peaks move between groups, the best alpha depends on this content property (the alpha × content interaction in R1's model). Switch to flicker or detail ratio to see <i>why</i>.`,
+      `<div class="local">${sel("i-y", "Show", Object.entries(YI).map(([v, t]) => ({ v, t })), IN.y)}</div><div id="i-curves" class="chart" style="height:${h}px"></div>`) +
+    card(`2 · Best alpha for each ${fn(IN.feat).toLowerCase()} × ${fn(IN.feat2).toLowerCase()} combination`,
+      `Each cell = patches in that combination of thirds; the label is the alpha with the highest average quality there (n = patches). Different values across the grid = both features matter, and how.`,
+      `<div id="i-heat" class="chart" style="height:${stack ? 280 * n : 320}px"></div>`) +
+    card(`3 · When does a bigger history buffer help?`,
+      `Quality gain of the larger history buffer over 100%, per patch, averaged within thirds of ${fn(IN.feat).toLowerCase()}. Above 0 = the larger buffer helps.`,
+      `<div class="local">${sel("i-hpc", "Compare history", hps.filter(x => x !== hps[0]).map(x => ({ v: x, t: `${x}% vs ${hps[0]}%` })), IN.hpCmp)}</div><div id="i-hist" class="chart" style="height:${h}px"></div>`) +
+    card(`4 · How much would choosing alpha by content gain?`,
+      (sc.length > 1 ? `<b>Held-out test:</b> each rule is learned on the other scenes and scored on the scene left out, repeated for every scene. ` :
+        `<b>In-sample only</b> (one scene selected): rules are learned and scored on the same patches, so this is optimistic. Select "All scenes" for the held-out test. `) +
+      `Bars = average patch-quality gain over UE's default α = ${DATA.default.aw}, at history ${IN.hp}%. If "α by ${fn(IN.feat).toLowerCase()} × ${fn(IN.feat2).toLowerCase()}" beats "one α per resolution", content-adaptive alpha adds value beyond a resolution lookup table (R2's point). The per-patch best is an upper bound no real rule can reach.`,
+      `<div id="i-gain" class="chart" style="height:340px"></div><div id="i-gain-t"></div>`);
+
+  [["i-feat", v => IN.feat = v], ["i-feat2", v => IN.feat2 = v], ["i-hp", v => IN.hp = +v], ["i-y", v => IN.y = v], ["i-hpc", v => IN.hpCmp = +v]]
+    .forEach(([id, f]) => { const s = $(id); if (s) s.onchange = (e) => { f(e.target.value); rInter(); }; });
+
+  const C3 = ramp(3);
+  // ---- 1: curves by thirds
+  const t1 = [], yfun = IN.y === "q" ? (k => rel(k.q)) : (k => k[IN.y]);
+  sps.forEach((sp, i) => {
+    const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+    [0, 1, 2].forEach(b => {
+      const list = curves.filter(k => k.sp === sp && k.hp === IN.hp && b1(k) === b);
+      const c = avgCurve(list, yfun);
+      t1.push({ x: A, y: c.map(p => p.y), xaxis: xa, yaxis: ya, mode: "lines+markers", name: `${fn(IN.feat)}: ${G1[b]}`,
+        legendgroup: "b" + b, showlegend: i === 0, line: { color: C3[b], width: 2 },
+        marker: { color: C3[b], size: 8, line: { color: css("--surface"), width: 2 } },
+        customdata: c.map(p => [p.se, p.n]),
+        hovertemplate: `α %{x}<br>%{y:.3f} ± %{customdata[0]:.3f} (SE)<br>n = %{customdata[1]} patches<extra>${G1[b]} · ${spLabel(sp)}</extra>` });
+      if (IN.y === "q") { const m = argmax(c.map(p => p.y)); if (m >= 0) t1.push({ x: [A[m]], y: [c[m].y], xaxis: xa, yaxis: ya, mode: "markers",
+        showlegend: false, hoverinfo: "skip", marker: { size: 18, color: "rgba(0,0,0,0)", line: { color: C3[b], width: 2 } } }); }
+    });
+    if (IN.y === "h") t1.push({ x: [A[0], A[A.length - 1]], y: [1, 1], xaxis: xa, yaxis: ya, mode: "lines", hoverinfo: "skip",
+      line: { color: css("--muted"), dash: "dash", width: 1.5 }, name: "same detail as reference", showlegend: i === 0 });
+  });
+  const l1 = layout({ grid: panelGrid(n, stack), annotations: panelTitles(sps), legend: { orientation: "h", y: stack ? -0.05 : -0.22, x: 0 } });
+  sps.forEach((sp, i) => { l1[i ? "xaxis" + (i + 1) : "xaxis"] = logAlphaAxis(A, "Alpha weight");
+    l1[i ? "yaxis" + (i + 1) : "yaxis"] = ax(i === 0 || stack ? YI[IN.y].split(" (")[0] : "", i ? { matches: "y" } : {}); });
+  plot($("i-curves"), t1, l1);
+
+  // ---- 2: best alpha heatmap (feat columns x feat2 rows)
+  const t2 = [];
+  sps.forEach((sp, i) => {
+    const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+    const z = [], txt = [];
+    [0, 1, 2].forEach(r => { const zr = [], tr = [];
+      [0, 1, 2].forEach(cb => { const list = curves.filter(k => k.sp === sp && k.hp === IN.hp && b1(k) === cb && b2(k) === r);
+        const c = avgCurve(list, k => rel(k.q)); const m = argmax(c.map(p => p.y));
+        zr.push(m >= 0 ? Math.log10(A[m]) : null); tr.push(m >= 0 ? `α ${awLabel(A[m])}<br>n=${list.length}` : "n=0"); });
+      z.push(zr); txt.push(tr); });
+    t2.push({ type: "heatmap", x: ["low", "medium", "high"], y: ["low", "medium", "high"], z, text: txt, texttemplate: "%{text}",
+      textfont: { color: css("--ink"), size: 11 }, xaxis: xa, yaxis: ya, coloraxis: "coloraxis", xgap: 2, ygap: 2,
+      hovertemplate: `${fn(IN.feat)}: %{x}<br>${fn(IN.feat2)}: %{y}<br>%{text}<extra>${spLabel(sp)}</extra>` });
+  });
+  const lz = Math.log10(A[0]), hz = Math.log10(A[A.length - 1]);
+  const l2 = layout({ grid: panelGrid(n, stack), annotations: panelTitles(sps, 1.12), margin: { l: 72, r: 16, t: 36, b: 56 },
+    coloraxis: { colorscale: list("--seq").map((c, i, a) => [i / (a.length - 1), c]), cmin: lz, cmax: hz,
+      colorbar: { title: { text: "best α", side: "right" }, tickvals: A.filter((_, i) => i % 2 === 0 || i === A.length - 1).map(a => Math.log10(a)), ticktext: A.filter((_, i) => i % 2 === 0 || i === A.length - 1).map(awLabel), thickness: 10, outlinewidth: 0, tickfont: { color: css("--muted") } } } });
+  sps.forEach((sp, i) => { l2[i ? "xaxis" + (i + 1) : "xaxis"] = ax(fn(IN.feat), { type: "category" });
+    l2[i ? "yaxis" + (i + 1) : "yaxis"] = ax(i === 0 || stack ? fn(IN.feat2) : "", { type: "category", showticklabels: i === 0 || stack }); });
+  plot($("i-heat"), t2, l2);
+
+  // ---- 3: history gain by thirds
+  const base = hps[0], t3 = [];
+  const pair = {}; curves.forEach(k => { if (k.hp === base || k.hp === IN.hpCmp) (pair[k.c + "|" + k.sp] = pair[k.c + "|" + k.sp] || {})[k.hp] = k; });
+  sps.forEach((sp, i) => {
+    const xa = i ? "x" + (i + 1) : "x", ya = i ? "y" + (i + 1) : "y";
+    [0, 1, 2].forEach(b => {
+      const list = Object.values(pair).filter(p => p[base] && p[IN.hpCmp] && p[base].sp === sp && b1(p[base]) === b)
+        .map(p => ({ g: p[IN.hpCmp].q.map((v, j) => v === null || p[base].q[j] === null ? null : v - p[base].q[j]) }));
+      const c = avgCurve(list, k => k.g);
+      t3.push({ x: A, y: c.map(p => p.y), xaxis: xa, yaxis: ya, mode: "lines+markers", name: `${fn(IN.feat)}: ${G1[b]}`, legendgroup: "b" + b,
+        showlegend: i === 0, line: { color: C3[b], width: 2 }, marker: { color: C3[b], size: 8, line: { color: css("--surface"), width: 2 } },
+        customdata: c.map(p => [p.se, p.n]), hovertemplate: `α %{x}<br>gain %{y:.3f} ± %{customdata[0]:.3f}<br>n = %{customdata[1]}<extra>${G1[b]} · ${spLabel(sp)}</extra>` });
+    });
+    t3.push({ x: [A[0], A[A.length - 1]], y: [0, 0], xaxis: xa, yaxis: ya, mode: "lines", hoverinfo: "skip", showlegend: false, line: { color: css("--axis"), width: 1.5 } });
+  });
+  const l3 = layout({ grid: panelGrid(n, stack), annotations: panelTitles(sps), legend: { orientation: "h", y: stack ? -0.05 : -0.22, x: 0 } });
+  sps.forEach((sp, i) => { l3[i ? "xaxis" + (i + 1) : "xaxis"] = logAlphaAxis(A, "Alpha weight");
+    l3[i ? "yaxis" + (i + 1) : "yaxis"] = ax(i === 0 || stack ? `Gain of ${IN.hpCmp}% over ${base}% (points)` : "", i ? { matches: "y" } : {}); });
+  plot($("i-hist"), t3, l3);
+
+  // ---- 4: content-aware alpha, held out by scene
+  const rules = [["One α per resolution", () => "all"], [`α by ${fn(IN.feat).toLowerCase()}`, k => "" + b1(k)],
+    [`α by ${fn(IN.feat).toLowerCase()} × ${fn(IN.feat2).toLowerCase()}`, k => b1(k) + "|" + b2(k)], ["Per-patch best (upper bound)", null]];
+  const sceneOf = (k) => byId[k.c].scene;
+  const gainRows = [];
+  sps.forEach(sp => {
+    const P = curves.filter(k => k.sp === sp && k.hp === IN.hp && k.q[di] !== null);
+    const folds = sc.length > 1 ? sc.map(s => [P.filter(k => sceneOf(k) !== s), P.filter(k => sceneOf(k) === s)]) : [[P, P]];
+    const row = { sp };
+    rules.forEach(([name, keyf]) => {
+      const gains = [], chosen = [];
+      folds.forEach(([train, test]) => {
+        if (!test.length) return;
+        if (!keyf) { test.forEach(k => { const m = argmax(k.q); gains.push(k.q[m] - k.q[di]); }); return; }
+        const pick = (list) => argmax(avgCurve(list, k => k.q).map(p => p.y));
+        const glob = pick(train), groups = {};
+        train.forEach(k => (groups[keyf(k)] = groups[keyf(k)] || []).push(k));
+        const best = {}; Object.entries(groups).forEach(([g, l]) => best[g] = pick(l));
+        test.forEach(k => { const m = best[keyf(k)] ?? glob; if (m >= 0 && k.q[m] !== null) gains.push(k.q[m] - k.q[di]); });
+        if (name === "One α per resolution") chosen.push(A[glob]);
+      });
+      row[name] = mean(gains); row[name + "_n"] = gains.length;
+      if (chosen.length) row.alphas = [...new Set(chosen.map(awLabel))].join(", ");
+    });
+    gainRows.push(row);
+  });
+  const CR = ramp(sps.length);
+  const t4 = [...sps].reverse().map((sp, j) => { const r = gainRows.find(g => g.sp === sp);
+    return { type: "bar", name: spLabel(sp), x: rules.map(x => x[0]), y: rules.map(x => r[x[0]]), marker: { color: CR[sps.length - 1 - j] },
+      hovertemplate: `%{x}<br>+%{y:.3f} points over default<extra>${spLabel(sp)}</extra>` }; });
+  plot($("i-gain"), t4, layout({ barmode: "group", bargap: 0.3, bargroupgap: 0.08, xaxis: ax(""), yaxis: ax("Gain over UE default (points)"),
+    legend: { orientation: "h", y: -0.2, x: 0 } }));
+  $("i-gain-t").innerHTML = table([{ h: "Resolution", f: r => spLabel(r.sp), l: 1 },
+    ...rules.map(([nm]) => ({ h: nm, f: r => (r[nm] > 0 ? "+" : "") + fmt(r[nm], 3) })),
+    { h: "One α per res.: α chosen", f: r => r.alphas || "–" }], gainRows);
 }
 
 // ---------------------------------------------------------------- metrics
