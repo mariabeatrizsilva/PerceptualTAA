@@ -324,6 +324,7 @@
 <body>
 
 <header>
+  <a href="https://mariabeatrizsilva.github.io/publications/tuning-for-perception/" style="color:var(--muted);text-decoration:none;font-size:12px;margin-right:12px;">&larr; paper</a>
   <h1>PerceptualTAA</h1>
   <span>quality explorer · choose your metric</span>
     <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border2);border-radius:4px;overflow:hidden;">
@@ -543,12 +544,18 @@ async function loadData() {
   setStatus('loading dataset.json…', false, 'status');
   setStatus('loading dataset.json…', false, 'status-overall');
   try {
+    // CGVQM is required; CVVDP is optional. If it is missing, the
+    // CVVDP toggle and the two metric-comparison views are hidden.
     const [resCG, resCVVDP] = await Promise.all([
       fetch(DATASETS.CGVQM),
-      fetch(DATASETS.CVVDP)
+      fetch(DATASETS.CVVDP).catch(() => null)
     ]);
+    if (!resCG.ok) throw new Error(`could not load ${DATASETS.CGVQM} (${resCG.status})`);
     datasets.CGVQM  = await resCG.json();
-    datasets.CVVDP  = await resCVVDP.json();
+    if (resCVVDP && resCVVDP.ok) {
+      try { datasets.CVVDP = await resCVVDP.json(); } catch (_) {}
+    }
+    if (!datasets.CVVDP) disableCVVDP();
     dataset = datasets[activeMetric];
     const n = Object.keys(dataset).length;
     setStatus(`dataset loaded · ${n} scenes`, true, 'status');
@@ -556,7 +563,7 @@ async function loadData() {
     init();
     drawOverall();
   } catch(e) {
-    setStatus(`ERROR: ${e.message} — serve via python -m http.server`, false, 'status');
+    setStatus(`ERROR: ${e.message} `, false, 'status');
     setStatus(`ERROR: ${e.message}`, false, 'status-overall');
   }
 }
@@ -696,7 +703,17 @@ function syncRefSelectors() {
   });
 }
 
+function disableCVVDP() {
+  document.querySelectorAll('.metric-btn[data-metric="CVVDP"], [data-otab="comparison"], [data-tab="metriccomp"]')
+    .forEach(el => { el.style.display = 'none'; });
+  const metricToggle = document.querySelector('.metric-btn[data-metric="CGVQM"]')?.parentElement;
+  if (metricToggle) metricToggle.style.display = 'none';
+  const sub = document.querySelector('header span');
+  if (sub) sub.textContent = 'quality explorer · cgvqm';
+}
+
 function drawSceneComparison() {
+  if (!datasets.CVVDP) return;
   const wrap = document.getElementById('scene-comparison-wrap');
   wrap.innerHTML = '';
   if (!activeScene || !activeParam) return;
@@ -1381,6 +1398,7 @@ function drawHeatmaps() {
 let expandedComparisonParam = null;
 
 function drawComparison() {
+  if (!datasets.CVVDP) return;
   const grid = document.getElementById('comparison-grid');
   grid.innerHTML = '';
 
