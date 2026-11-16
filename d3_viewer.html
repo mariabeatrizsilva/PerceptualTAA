@@ -56,13 +56,6 @@
     padding: 6px 14px; cursor: pointer; transition: background 0.15s, color 0.15s;
   }
  .metric-btn:hover  { color: var(--text); }
-  .intro {
-    padding: 14px 32px 16px; border-bottom: 1px solid var(--border); background: var(--surface);
-    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6;
-    color: var(--text);
-  }
-  .intro p { max-width: 95ch; }
-  .intro b { font-weight: 600; }
  .metric-btn.active { background: var(--accent); color: #ffffff; }
 
   /* ── Top-level tabs ─────────────────────────────────────── */
@@ -342,11 +335,6 @@
   </div>
 
 </header>
-
-<div class="intro">
-  <p>Interactive results from <b>Tuning for Perception</b>, a study of how four Temporal Anti-Aliasing (TAA) settings (temporal accumulation, history resolution, jitter samples and filter size) change the perceived quality of Unreal Engine renders, measured with the CGVQM perceptual video metric against a 16&times; supersampled reference.
-  Start with <b>Overall</b> to see which setting matters most across scenes, or open <b>Scene Explorer</b> to inspect one scene at a time.</p>
-</div>
 
 <!-- ═══════════════════════════════════════════════════════════
      TOP-LEVEL TABS
