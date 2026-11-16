@@ -31,6 +31,10 @@ USAGE
   python build_dashboard.py --root ~/Documents/PerceptualTAA/data_v2
   python build_dashboard.py --root ... --old-scores oldmine=tests/oldmine/scores.json
   then open data_v2/dashboard.html in a browser
+
+  For the public GitHub Pages copy (no local paths, Plotly from CDN, hidden scenes left out):
+  python tests/build_dashboard.py --root ~/Documents/PerceptualTAA/data_v2 \
+      --public --exclude oldmine-warm --out dashboard/index.html
 """
 
 import os
@@ -286,9 +290,15 @@ def legacy_rows(scores, old_scores):
 # MAIN
 # ============================================================================
 
-def build(root, out, old_scores_args):
+def build(root, out, old_scores_args, exclude=(), public=False):
     scores = load_scores(root)
     patches = load_patches(root)
+    exclude = set(exclude)
+    if exclude:
+        if not scores.empty:
+            scores = scores[~scores["scene"].isin(exclude)]
+        if not patches.empty:
+            patches = patches[~patches["scene"].isin(exclude)]
     rt = render_table(scores, patches)
     if not rt.empty:
         rt = mark_outliers(rt)
@@ -301,6 +311,8 @@ def build(root, out, old_scores_args):
     cells = cell_table(patches)
     curve_aws, content_cells, curves = curve_payload(patches)
     frames, per_frame = frame_payload(root)
+    frames = [f for f in frames if f["scene"] not in exclude]
+    per_frame = {k: v for k, v in per_frame.items() if k not in exclude}
     checks = patch_check(rt, patches)
     metrics = [m for m in ("cgvqm", "cvvdp") if m in rt]
     scenes = sorted(set(rt["scene"]) if not rt.empty else set()
@@ -326,7 +338,8 @@ def build(root, out, old_scores_args):
 
     data = {
         "generated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "root": root,
+        "root": "" if public else root,
+        "public": bool(public),
         "default": {"aw": DEFAULT_AW, "hp": DEFAULT_HP},
         "scenes": scenes,
         "metrics": metrics,
@@ -345,6 +358,8 @@ def build(root, out, old_scores_args):
     }
 
     try:
+        if public:
+            raise ImportError("public build: load Plotly from the CDN")
         import plotly
         js_path = os.path.join(os.path.dirname(plotly.__file__), "package_data", "plotly.min.js")
         plotly_tag = "<script>" + open(js_path, encoding="utf-8").read() + "</script>"
@@ -357,8 +372,11 @@ def build(root, out, old_scores_args):
     html = open(tmpl_path, encoding="utf-8").read()
     payload = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
     html = html.replace("<!--PLOTLY-->", plotly_tag).replace("/*DATA*/null", payload)
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         f.write(html)
+    if exclude:
+        print(f"Excluded: {', '.join(sorted(exclude))}")
     print(f"Scenes: {', '.join(scenes) or '(none yet)'}")
     print(f"Renders: {len(data['renders'])}  patch cells: {len(data['cells'])}  metrics: {metrics}")
     print(f"Plotly {how}")
@@ -371,9 +389,14 @@ def main():
     ap.add_argument("--out", default=None, help="output HTML (default: {root}/dashboard.html)")
     ap.add_argument("--old-scores", nargs="*", default=[], metavar="SCENE=PATH",
                     help="old factorial scores.json per scene, for the legacy check table")
+    ap.add_argument("--exclude", nargs="*", default=[], metavar="SCENE",
+                    help="scenes to leave out of the dashboard entirely")
+    ap.add_argument("--public", action="store_true",
+                    help="build for the web: omit the local data path and load Plotly from the CDN")
     args = ap.parse_args()
     root = os.path.expanduser(args.root)
-    build(root, args.out or os.path.join(root, "dashboard.html"), args.old_scores)
+    build(root, args.out or os.path.join(root, "dashboard.html"), args.old_scores,
+          exclude=args.exclude, public=args.public)
 
 
 if __name__ == "__main__":

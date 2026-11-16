@@ -209,7 +209,8 @@ function aggregate(rows, key, centre) {
 // ---------------------------------------------------------------- tabs
 const TABS = [["overview", "Overview"], ["scenes", "Scenes"], ["params", "Parameters"], ["trade", "Trade-offs"], ["artifacts", "Artifacts"], ["content", "Content"], ["inter", "Interactions"], ["metrics", "Metrics"]];
 function initChrome() {
-  $("meta").textContent = `Built ${DATA.generated} · ${DATA.scenes.length} scene(s) · ${R.length} renders · ${DATA.root}`;
+  $("meta").innerHTML = (DATA.public ? `<a href="../d3_viewer.html" style="color:inherit">← quality explorer</a> · ` : "") +
+    `Built ${DATA.generated} · ${DATA.scenes.length} scene(s) · ${R.length} renders` + (DATA.root ? ` · ${DATA.root}` : "");
   $("f-scene").innerHTML = `<option value="__all__">All scenes</option>` + DATA.scenes.map(s => `<option>${s}</option>`).join("");
   $("f-metric").innerHTML = (DATA.metrics.length ? DATA.metrics : ["cgvqm"]).map(m => `<option value="${m}">${metricName(m)}</option>`).join("");
   $("tabs").innerHTML = TABS.map(([k, t]) => `<button role="tab" data-t="${k}" aria-selected="${k === S.tab}">${t}</button>`).join("");
