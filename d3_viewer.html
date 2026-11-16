@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PerceptualTAA — Quality Explorer</title>
+<title>Tuning for Perception — TAA Quality Explorer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -56,6 +56,13 @@
     padding: 6px 14px; cursor: pointer; transition: background 0.15s, color 0.15s;
   }
  .metric-btn:hover  { color: var(--text); }
+  .intro {
+    padding: 14px 32px 16px; border-bottom: 1px solid var(--border); background: var(--surface);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.6;
+    color: var(--text);
+  }
+  .intro p { max-width: 95ch; }
+  .intro b { font-weight: 600; }
  .metric-btn.active { background: var(--accent); color: #ffffff; }
 
   /* ── Top-level tabs ─────────────────────────────────────── */
@@ -327,7 +334,7 @@
 
 <header>
   <a href="https://mariabeatrizsilva.github.io/publications/tuning-for-perception/" style="color:var(--muted);text-decoration:none;font-size:12px;margin-right:12px;">&larr; paper</a>
-  <h1>PerceptualTAA</h1>
+  <h1>Tuning for Perception</h1>
   <span>quality explorer · choose your metric</span>
     <div style="margin-left:auto;display:flex;gap:0;border:1px solid var(--border2);border-radius:4px;overflow:hidden;">
     <button class="metric-btn active" data-metric="CGVQM">CGVQM</button>
@@ -335,6 +342,11 @@
   </div>
 
 </header>
+
+<div class="intro">
+  <p>Interactive results from <b>Tuning for Perception</b>, a study of how four Temporal Anti-Aliasing (TAA) settings (temporal accumulation, history resolution, jitter samples and filter size) change the perceived quality of Unreal Engine renders, measured with the CGVQM perceptual video metric against a 16&times; supersampled reference.
+  Start with <b>Overall</b> to see which setting matters most across scenes, or open <b>Scene Explorer</b> to inspect one scene at a time.</p>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════
      TOP-LEVEL TABS
@@ -357,8 +369,8 @@
   <div class="overall-main">    <div>
       <div class="section-heading">Overall Analysis</div>
     <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
-        This page shows overall trends that have been  <span style="color:var(--accent);font-weight:600;"> aggregated over all scenes</span> (i.e. scores per each parameter have been averaged over all scenes). 
-        <br> The bar to the left lets you <span style="color:var(--accent);font-weight:600;">select which scenes you'd like to have considered </span> in the plots below.
+        This page shows overall trends that have been  <span style="color:var(--accent);font-weight:600;"> aggregated over all scenes</span> (i.e. scores for each parameter have been averaged over all scenes). 
+        <br> The list on the left lets you <span style="color:var(--accent);font-weight:600;">select which scenes you'd like to have considered </span> in the plots below.
         <br> Use the  <span style="color:var(--accent);font-weight:600;">Scene Explorer tab</span> to look at statistics for individual scenes.</div>
     </div>
 
@@ -377,7 +389,7 @@
         <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
           A value of <span style="color:var(--good);">+2%</span> means that setting outperforms the average; <span style="color:var(--bad);">−2%</span> means it underperforms.
           <!-- <div style="margin-top:6px;">For each resolution, the % change values are computed per scene first, then averaged across all selected scenes — so each scene contributes equally regardless of its absolute score level.</div> -->
-          <div style="margin-top:6px;color:var(--muted);font-size:10px;"> These values are averaged over all the scenes to obtain general trends. Toggle scenes that contribute to the average in the sidebar</div>
+          <div style="margin-top:6px;color:var(--muted);font-size:10px;"> These values are averaged over all the scenes to obtain general trends. Toggle which scenes contribute to the average in the sidebar.</div>
           </div>
         </div>
       </div>
@@ -390,7 +402,7 @@
     <div style="font-size:11px;color:var(--muted);line-height:1.8;">
       <span style="color:var(--accent);font-weight:600;">Effect size</span> — max score − min score across all tested values of a parameter, per scene per resolution.
       <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
-        For example, an effect size of <span style="color:var(--text);font-weight:600;">36.43</span> for <em>alpha weight</em> at 50% resolution means the score varied by 36.43 points depending on which value was used.
+        For example, an effect size of <span style="color:var(--text);font-weight:600;">24.87</span> for <em>alpha weight</em> in <em>oldmine</em> at 50% resolution means the score varied by 24.87 points depending on which value was used.
         <div style="margin-top:6px;color:var(--muted);font-size:10px;">Larger values mean that parameter has more influence on quality at that resolution.</div>
       </div>
     </div>
@@ -432,7 +444,7 @@
   <main>
     <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
       Select a <span style="color:var(--text);">scene</span> and <span style="color:var(--text);">parameter</span> from the sidebar, then explore the tabs below.
-      Use the <span style="color:var(--text);">Series</span> toggles to show or hide individual re% solutions.<br>
+      Use the <span style="color:var(--text);">Series</span> toggles to show or hide individual resolutions.<br>
     </div>
 
     <div>
@@ -450,7 +462,7 @@
     <!-- Chart tab -->
     <div class="tab-panel active" id="tab-chart">
        <div style="font-size:11px;color:var(--muted);line-height:1.8;">
-        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how CGVQM or CVVDP score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
+        <span style="color:var(--accent);font-weight:600;">Parameter vs. quality</span> — each line shows how the quality score changes as the selected parameter varies, for a single resolution. Higher score = better perceptual quality.
         <div style="margin-top:8px;padding-left:12px;border-left:2px solid var(--border2);">
            The cards below summarise the best value per resolution.
           <div style="margin-top:6px;color:var(--muted);font-size:10px;">Drag to zoom into a region · Double-click to reset · Toggle resolutions in the sidebar</div>
@@ -471,7 +483,7 @@
     <!-- Sensitivity bar chart tab -->
     <div class="tab-panel" id="tab-sensitivity">
       <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
-        <span style="color:var(--accent);font-weight:600;">Effect size</span> = max score − min score across all tested values of a parameter, at a given resolution at a given resolution, for the <span style="color:var(--text);">currently selected scene</span>.
+        <span style="color:var(--accent);font-weight:600;">Effect size</span> = max score − min score across all tested values of a parameter, at a given resolution, for the <span style="color:var(--text);">currently selected scene</span>.
         A taller bar means that parameter has a stronger influence on quality at that resolution.
         Bars are grouped by parameter; colours indicate resolution.
       </div>
@@ -483,7 +495,7 @@
       <div class="table-section">
       <div style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.7;">
           Rows = tested parameter values. Columns = resolutions.
-          <span style="color:var(--good);font-weight:600;">Green</span> = best score in that resolution,
+          <span style="color:var(--good);font-weight:600;">Green</span> = best score at that resolution,
           <span style="color:var(--bad);font-weight:600;">red</span> = worst.
           Footer shows the best and worst value and the total score range per resolution.
         </div>
