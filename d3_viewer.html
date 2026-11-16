@@ -8,27 +8,27 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:      #0d0f14;
-    --surface: #13161e;
-    --border:  #1f2433;
-    --border2: #2a3045;
-    --text:    #e2e8f0;
-    --muted:   #64748b;
-    --accent:  #38bdf8;
-    --good:    #34d399;
-    --warn:    #fbbf24;
-    --bad:     #f87171;
-    --c0: #38bdf8;
-    --c1: #818cf8;
-    --c2: #f472b6;
-    --c3: #fb923c;
-    --c4: #34d399;
-    --c5: #fbbf24;
+    --bg:      #f7f6f3;
+    --surface: #ffffff;
+    --border:  #e7e5e0;
+    --border2: #d6d3cc;
+    --text:    #1c1b19;
+    --muted:   #6b6862;
+    --accent:  #1f6fb2;
+    --good:    #15803d;
+    --warn:    #b45309;
+    --bad:     #c2410c;
+    --c0: #1f6fb2;
+    --c1: #6d4fc2;
+    --c2: #c2367a;
+    --c3: #d9661f;
+    --c4: #15803d;
+    --c5: #b45309;
     /* resolution colours */
-    --r50:  #e74c3c;
-    --r71:  #e67e22;
-    --r87:  #3498db;
-    --r100: #2ecc71;
+    --r50:  #c0392b;
+    --r71:  #d9771f;
+    --r87:  #2a72b8;
+    --r100: #1e8a4c;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -56,7 +56,7 @@
     padding: 6px 14px; cursor: pointer; transition: background 0.15s, color 0.15s;
   }
  .metric-btn:hover  { color: var(--text); }
- .metric-btn.active { background: var(--accent); color: #0d0f14; }
+ .metric-btn.active { background: var(--accent); color: #ffffff; }
 
   /* ── Top-level tabs ─────────────────────────────────────── */
   .top-tabs {
@@ -154,6 +154,8 @@
   .grid path { display: none; }
   .series-line { fill: none; stroke-width: 2; }
   .series-dot  { stroke: var(--bg); stroke-width: 2; cursor: crosshair; }
+  .best-card, .chart-card, .heatmap-card { box-shadow: 0 1px 2px rgba(28,27,25,0.04); }
+  #tooltip { box-shadow: 0 4px 14px rgba(28,27,25,0.12); }
 
   /* ── Best-value cards ────────────────────────────────────── */
   .best-cards { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
@@ -522,12 +524,14 @@ const DATASETS = {
   CGVQM: 'dataset.json',
   CVVDP: 'dataset_cvvdp.json'
 };
+// Scenes present in the data files but not shown in the viewer.
+const HIDDEN_SCENES = ['oldmine-warm'];
 let activeMetric = 'CGVQM';
 const COLOR_VARS   = ['--c0','--c1','--c2','--c3','--c4','--c5'];
 const PARAMS       = ['alpha_weight', 'filter_size', 'hist_percent', 'num_samples'];
 const RESOLUTIONS  = [50, 71, 87, 100];
 const HIST_MIN_VAL = 100;
-const RES_COLORS   = { 50: '#e74c3c', 71: '#e67e22', 87: '#3498db', 100: '#2ecc71' };
+const RES_COLORS   = { 50: '#c0392b', 71: '#d9771f', 87: '#2a72b8', 100: '#1e8a4c' };
 
 // ── State ─────────────────────────────────────────────────────────
 let dataset          = {};
@@ -555,6 +559,7 @@ async function loadData() {
     if (resCVVDP && resCVVDP.ok) {
       try { datasets.CVVDP = await resCVVDP.json(); } catch (_) {}
     }
+    for (const d of Object.values(datasets)) HIDDEN_SCENES.forEach(sc => delete d[sc]);
     if (!datasets.CVVDP) disableCVVDP();
     dataset = datasets[activeMetric];
     const n = Object.keys(dataset).length;
@@ -1358,10 +1363,10 @@ function drawHeatmaps() {
     card.innerHTML = `<div class="heatmap-card-title">${param.replace(/_/g,' ')}</div><div class="heatmap-wrap" id="hm-${param}"></div>`;
     grid.appendChild(card);
 
-    // build colour scale: white → accent blue
+    // build colour scale: near-white → accent blue
     const colorScale = d3.scaleSequential()
       .domain([0, maxES])
-      .interpolator(d3.interpolate('#1f2433', '#38bdf8'));
+      .interpolator(d3.interpolate('#f1f4f8', '#1f5f9e'));
 
     let html = `<table class="hm-table"><thead><tr>
       <th>Scene</th>
@@ -1374,7 +1379,7 @@ function drawHeatmaps() {
         const es    = data[si][ri];
         const bg    = colorScale(es);
         const light = es > maxES * 0.5;
-        html += `<td style="background:${bg};color:${light ? '#0d0f14' : 'var(--text)'}">${es.toFixed(2)}</td>`;
+        html += `<td style="background:${bg};color:${light ? '#ffffff' : 'var(--text)'}">${es.toFixed(2)}</td>`;
       });
       html += '</tr>';
     });
@@ -1385,7 +1390,7 @@ function drawHeatmaps() {
       const avg = d3.mean(scenes.map((_,si) => data[si][ri]));
       const bg  = colorScale(avg);
       const light = avg > maxES * 0.5;
-      html += `<td style="background:${bg};color:${light ? '#0d0f14' : 'var(--text)'};font-weight:600">${avg.toFixed(2)}</td>`;
+      html += `<td style="background:${bg};color:${light ? '#ffffff' : 'var(--text)'};font-weight:600">${avg.toFixed(2)}</td>`;
     });
     html += '</tr></tbody></table>';
 
